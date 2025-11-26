@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DUC LOI - Clone Voice (Không cần API) - Modded
 // @namespace    mmx-secure
-// @version      27.0
+// @version      28.0
 // @description  Tạo audio giọng nói clone theo ý của bạn. Không giới hạn. Thêm chức năng Ghép hội thoại, Đổi văn bản hàng loạt & Thiết lập dấu câu (bao gồm dấu xuống dòng).
 // @author       HUỲNH ĐỨC LỢI ( Zalo: 0835795597) - Đã chỉnh sửa
 // @match        https://www.minimax.io/audio*
@@ -2838,29 +2838,40 @@ async function uSTZrHUt_IC() {
 
         // CẢI THIỆN: Nếu chưa xử lý đủ chunk, tìm và xử lý chunk còn thiếu
         // QUAN TRỌNG: Chỉ xử lý khi thực sự có chunk chưa được xử lý VÀ không đang được xử lý
+        // Đồng bộ trạng thái dựa trên CẢ chunkStatus và window.chunkBlobs để tránh lệch trạng thái
         if (processedChunks < totalChunks) {
-            // Tìm các chunk chưa được xử lý (pending hoặc undefined) VÀ không đang được xử lý
-            const remainingChunks = [];
             const processingChunks = window.processingChunks || new Set();
-            
+            const missingByBlob = [];   // Chunk bị đánh dấu success nhưng blob null / thiếu
+            const missingByStatus = []; // Chunk pending/undefined hoặc failed nhưng chưa có timeout
+
             for (let i = 0; i < totalChunks; i++) {
                 const status = window.chunkStatus && window.chunkStatus[i];
-                // Chỉ thêm vào danh sách nếu:
-                // 1. Status là pending hoặc undefined (chưa xử lý)
-                // 2. VÀ không đang được xử lý (không có trong processingChunks)
-                // 3. VÀ không có timeout đang chạy cho chunk này
-                if ((!status || status === 'pending') && !processingChunks.has(i)) {
-                    // Kiểm tra xem có timeout đang chạy cho chunk này không
-                    const hasTimeout = window.chunkTimeoutIds && window.chunkTimeoutIds[i];
-                    if (!hasTimeout) {
-                        remainingChunks.push(i);
+                const blob = window.chunkBlobs && window.chunkBlobs[i];
+                const hasTimeout = window.chunkTimeoutIds && window.chunkTimeoutIds[i];
+
+                // Một chunk chỉ được coi là "đã xử lý" khi VỪA có blob VỪA có status success/failed
+                const isProcessed = !!blob && (status === 'success' || status === 'failed');
+
+                if (!isProcessed) {
+                    // Bỏ qua những chunk đang xử lý hoặc đang có timeout
+                    if (processingChunks.has(i) || hasTimeout) continue;
+
+                    // ƯU TIÊN 1: Những chunk bị đánh dấu success nhưng blob bị null => lỗi thiếu blob
+                    if (!blob && status === 'success') {
+                        missingByBlob.push(i);
+                    } else {
+                        // ƯU TIÊN 2: Những chunk pending/undefined/failed chưa có blob hợp lệ
+                        missingByStatus.push(i);
                     }
                 }
             }
 
+            // Ưu tiên xử lý các chunk bị thiếu blob trước, sau đó mới đến các chunk pending
+            const remainingChunks = missingByBlob.length > 0 ? missingByBlob : missingByStatus;
+
             if (remainingChunks.length > 0) {
                 // CHỈ reset khi có chunk thực sự chưa được xử lý (không đang trong quá trình xử lý)
-                addLogEntry(`⏳ Phát hiện ${remainingChunks.length} chunk chưa được xử lý (không đang xử lý): ${remainingChunks.map(i => i + 1).join(', ')}`, 'warning');
+                addLogEntry(`⏳ Phát hiện ${remainingChunks.length} chunk chưa được xử lý (không đang xử lý, có thể thiếu blob): ${remainingChunks.map(i => i + 1).join(', ')}`, 'warning');
                 addLogEntry(`🔄 Kích hoạt cơ chế xử lý chunk thiếu: Reset giao diện và nhảy đến chunk chưa xử lý...`, 'info');
                 
                 // Khởi tạo biến retry nếu chưa có
@@ -2989,8 +3000,23 @@ async function uSTZrHUt_IC() {
         window.chunkStatus.push('pending');
     }
 
-    // Logic thông minh: Tìm nút và click với retry
-    try {
+        // Logic thông minh: Tìm nút và click với retry
+        try {
+        // BẢO VỆ: Nếu không ở chế độ retry cuối và chunk này đã success + có blob, bỏ qua và nhảy sang chunk tiếp theo
+        if (!window.isFinalCheck) {
+            const status = window.chunkStatus && window.chunkStatus[ttuo$y_KhCV];
+            const blob = window.chunkBlobs && window.chunkBlobs[ttuo$y_KhCV];
+            if (blob && status === 'success') {
+                addLogEntry(`⏭️ [Chunk ${ttuo$y_KhCV + 1}] Đã có blob hợp lệ và trạng thái 'success', bỏ qua và nhảy sang chunk tiếp theo`, 'info');
+                ttuo$y_KhCV++;
+                // Nếu đã vượt quá số chunk, đánh dấu hoàn thành và gọi lại uSTZrHUt_IC để vào nhánh kiểm tra cuối
+                if (ttuo$y_KhCV >= SI$acY.length) {
+                    ttuo$y_KhCV = SI$acY.length;
+                }
+                setTimeout(uSTZrHUt_IC, 500);
+                return;
+            }
+        }
         // Nếu đang trong giai đoạn kiểm tra cuối (RETRY MODE)
         if (window.isFinalCheck) {
             // QUAN TRỌNG: Chỉ xử lý các chunk thất bại, bỏ qua các chunk đã thành công
