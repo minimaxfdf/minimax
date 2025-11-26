@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DUC LOI - Clone Voice (Không cần API) - Modded
 // @namespace    mmx-secure
-// @version      28.0
+// @version      29.0
 // @description  Tạo audio giọng nói clone theo ý của bạn. Không giới hạn. Thêm chức năng Ghép hội thoại, Đổi văn bản hàng loạt & Thiết lập dấu câu (bao gồm dấu xuống dòng).
 // @author       HUỲNH ĐỨC LỢI ( Zalo: 0835795597) - Đã chỉnh sửa
 // @match        https://www.minimax.io/audio*
@@ -1246,7 +1246,7 @@ button:disabled {
         
         <div id="gemini-quota-display" style="color: #8be9fd; font-weight: bold; margin-left: 15px; margin-top: 10px; font-size: 14px;">Đang tải quota...</div>
         </div> 
-    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <h2>Log hoạt động</h2> <div id="log-container" class="log-container"> <div class="log-entry">Sẵn sàng theo dõi văn bản chunk</div> </div> <button id="clear-log-btn" class="clear-log-btn">Xóa log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 26.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
+    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <h2>Log hoạt động</h2> <div id="log-container" class="log-container"> <div class="log-entry">Sẵn sàng theo dõi văn bản chunk</div> </div> <button id="clear-log-btn" class="clear-log-btn">Xóa log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 29.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
     <div class="text-input-options">
         <div class="input-tabs">
             <button id="text-tab" class="tab-btn active">Nhập trực tiếp</button>
@@ -1334,7 +1334,7 @@ button:disabled {
         </div>
         <small style="color: #94a3b8; font-size: 12px; margin-top: 5px; display: block;">
             💡 Khi bật: Ưu tiên tách tại dòng trống. Khi tắt: Bỏ qua dòng trống, tách theo dấu câu.<br>
-            🔧 Chunk mặc định: 850 ký tự
+            🔧 Chunk mặc định: 800 ký tự
         </small>
     </div>
     <div id="gemini-text-stats"><span>Ký tự: 0</span><span>Từ: 0</span><span>Câu: 0</span><span>Đoạn: 0</span></div>
@@ -2108,9 +2108,9 @@ const aZpcvyD_mnWYN_qgEq=DHk$uTvcFuLEMnixYuADkCeA;let SI$acY=[],ZTQj$LF$o=[],ttu
 
     // Trả về tên file hoàn chỉnh với đuôi .mp3
     return fileName + '.mp3';
-}function nWHrScjZnIyNYzztyEWwM(RHDrdenxMcTQywSbrFGWcRi,supYmMedzDRWZEr){const j$DXl$iN=AP$u_huhInYfTj;if(supYmMedzDRWZEr===-parseInt(0x1)*-parseInt(0x9ff)+parseInt(0x4)*parseInt(0x6d7)+Math.trunc(0x49)*-parseInt(0x83))return;const W_gEcM_tWt=Math[j$DXl$iN(0x238)](RHDrdenxMcTQywSbrFGWcRi/supYmMedzDRWZEr*(Number(parseInt(0x24f2))*0x1+-parseInt(0x1af3)+parseInt(-0x99b)));pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=W_gEcM_tWt+j$DXl$iN(0x1c3)+RHDrdenxMcTQywSbrFGWcRi+'/'+supYmMedzDRWZEr+')';}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 600, minLength = 500, maxLength = 850) {
-    // Mặc định chunk lớn 850 ký tự
-    const actualMaxLength = 850;
+}function nWHrScjZnIyNYzztyEWwM(RHDrdenxMcTQywSbrFGWcRi,supYmMedzDRWZEr){const j$DXl$iN=AP$u_huhInYfTj;if(supYmMedzDRWZEr===-parseInt(0x1)*-parseInt(0x9ff)+parseInt(0x4)*parseInt(0x6d7)+Math.trunc(0x49)*-parseInt(0x83))return;const W_gEcM_tWt=Math[j$DXl$iN(0x238)](RHDrdenxMcTQywSbrFGWcRi/supYmMedzDRWZEr*(Number(parseInt(0x24f2))*0x1+-parseInt(0x1af3)+parseInt(-0x99b)));pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=W_gEcM_tWt+j$DXl$iN(0x1c3)+RHDrdenxMcTQywSbrFGWcRi+'/'+supYmMedzDRWZEr+')';}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 600, minLength = 500, maxLength = 800) {
+    // Mặc định chunk lớn 800 ký tự
+    const actualMaxLength = 800;
     const chunks = [];
     if (!text || typeof text !== 'string') {
         return chunks;
@@ -2119,7 +2119,7 @@ const aZpcvyD_mnWYN_qgEq=DHk$uTvcFuLEMnixYuADkCeA;let SI$acY=[],ZTQj$LF$o=[],ttu
     let currentText = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
 
     // ƯU TIÊN: Nếu văn bản có dòng trống phân tách đoạn, tách theo đoạn NGAY LẬP TỨC
-    // Điều này giúp văn bản < 850 ký tự nhưng có 2-3 đoạn vẫn tách thành nhiều chunk đúng ý
+    // Điều này giúp văn bản < 800 ký tự nhưng có 2-3 đoạn vẫn tách thành nhiều chunk đúng ý
     // CHỈ áp dụng khi công tắc được bật (mặc định là tắt)
     const enableBlankLineChunking = document.getElementById('enable-blank-line-chunking')?.checked ?? false;
     if (enableBlankLineChunking && /\n\s*\n+/.test(currentText)) {
@@ -2300,9 +2300,9 @@ function normalizeChunkText(text) {
 }
 
 // Hàm tách chunk thông minh - luôn dùng hàm tách chunk cũ
-function smartSplitter(text, maxLength = 850) {
-    // Mặc định chunk lớn 850 ký tự
-    const actualMaxLength = 850;
+function smartSplitter(text, maxLength = 800) {
+    // Mặc định chunk lớn 800 ký tự
+    const actualMaxLength = 800;
 
     if (!text || typeof text !== 'string') {
         return [];
@@ -3691,14 +3691,6 @@ function igyo$uwVChUzI() {
                             }
                         }
                         
-                        // =======================================================
-                        // == KIỂM TRA DUNG LƯỢNG BLOB: 39.01 KB - 40.0 KB ==
-                        // =======================================================
-                        const MIN_SIZE_KB = 39.01;
-                        const MAX_SIZE_KB = 40.0;
-                        const MIN_SIZE_BYTES = MIN_SIZE_KB * 1024; // 39.01 KB = 39946.24 bytes
-                        const MAX_SIZE_BYTES = MAX_SIZE_KB * 1024; // 40.0 KB = 40960 bytes
-                        
                         // Kiểm tra blob có tồn tại không
                         if (!qILAV) {
                             addLogEntry(`❌ [Chunk ${currentChunkIndex + 1}] Blob không tồn tại - không hợp lệ!`, 'error');
@@ -3781,107 +3773,104 @@ function igyo$uwVChUzI() {
                             }
                             return; // Dừng xử lý, không lưu blob
                         }
-                        
-                        // Kiểm tra dung lượng trong khoảng 39.01 - 40.0 KB
+
+                        // Luôn kiểm tra dung lượng và sóng âm cho mọi blob
                         const chunkSizeKB = qILAV.size / 1024;
-                        const isInSuspiciousRange = chunkSizeKB >= MIN_SIZE_KB && chunkSizeKB <= MAX_SIZE_KB;
-                        
-                        if (isInSuspiciousRange) {
-                            addLogEntry(`🔍 [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB nằm trong khoảng ${MIN_SIZE_KB} - ${MAX_SIZE_KB} KB. Đang kiểm tra sóng âm...`, 'warning');
-                            
-                            // Kiểm tra sóng âm
-                            const hasWaveform = await checkAudioWaveform(qILAV);
-                            
-                            if (!hasWaveform) {
-                                // Không có sóng âm → báo lỗi
-                                addLogEntry(`❌ [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB trong khoảng ${MIN_SIZE_KB} - ${MAX_SIZE_KB} KB và KHÔNG có sóng âm - không hợp lệ!`, 'error');
-                                addLogEntry(`🔄 Kích hoạt cơ chế reset và đánh dấu thất bại...`, 'warning');
-                                
-                                // Hủy bỏ đánh dấu success (đã đánh dấu ở trên)
-                                if (window.chunkStatus) {
-                                    window.chunkStatus[currentChunkIndex] = 'failed';
-                                }
-                                
-                                // Thêm vào danh sách failedChunks
-                                if (!window.failedChunks) window.failedChunks = [];
-                                if (!window.failedChunks.includes(currentChunkIndex)) {
-                                    window.failedChunks.push(currentChunkIndex);
-                                }
-                                
-                                // QUAN TRỌNG: Đảm bảo vị trí này để trống (null) để sau này retry có thể lưu vào
-                                if (typeof window.chunkBlobs === 'undefined') {
-                                    window.chunkBlobs = new Array(SI$acY.length).fill(null);
-                                }
-                                // Đảm bảo window.chunkBlobs có đủ độ dài
-                                while (window.chunkBlobs.length <= currentChunkIndex) {
-                                    window.chunkBlobs.push(null);
-                                }
-                                window.chunkBlobs[currentChunkIndex] = null; // Đảm bảo vị trí này để trống
-                                
-                                // ĐỒNG BỘ HÓA ZTQj$LF$o: Đảm bảo ZTQj$LF$o cũng để trống
-                                while (ZTQj$LF$o.length <= currentChunkIndex) {
-                                    ZTQj$LF$o.push(null);
-                                }
-                                ZTQj$LF$o[currentChunkIndex] = null; // Đảm bảo vị trí này để trống
-                                
-                                addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Đã đánh dấu thất bại và để trống vị trí ${currentChunkIndex} để retry sau`, 'info');
-                                
-                                // Xóa khỏi processingChunks
-                                if (typeof window.processingChunks !== 'undefined') {
-                                    window.processingChunks.delete(currentChunkIndex);
-                                }
-                                
-                                // Reset flag sendingChunk khi chunk thất bại
-                                if (window.sendingChunk === currentChunkIndex) {
-                                    window.sendingChunk = null;
-                                }
-                                
-                                // Dừng observer nếu đang chạy
-                                if (xlgJHLP$MATDT$kTXWV) {
-                                    xlgJHLP$MATDT$kTXWV.disconnect();
-                                    xlgJHLP$MATDT$kTXWV = null;
-                                }
-                                // Reset flag để cho phép thiết lập observer mới
-                                window.isSettingUpObserver = false;
-                                
-                                // Clear timeout 60 giây cho chunk này
-                                if (typeof window.chunkTimeoutIds !== 'undefined' && window.chunkTimeoutIds[currentChunkIndex]) {
-                                    clearTimeout(window.chunkTimeoutIds[currentChunkIndex]);
-                                    delete window.chunkTimeoutIds[currentChunkIndex];
-                                }
-                                
-                                // Reset web interface - CHỈ reset khi 1 chunk cụ thể render lỗi
-                                await resetWebInterface();
-                                
-                                addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB trong khoảng ${MIN_SIZE_KB} - ${MAX_SIZE_KB} KB và không có sóng âm.`, 'warning');
-                                
-                                // Xử lý retry: Nếu đang trong retry mode, tiếp tục retry chunk hiện tại
-                                // Nếu không phải retry mode, nhảy sang chunk tiếp theo
-                                if (window.isFinalCheck) {
-                                    // Đang trong retry mode: tiếp tục retry chunk hiện tại cho đến khi thành công
-                                    addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Retry thất bại, sẽ tiếp tục retry chunk này...`, 'warning');
-                                    addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
-                                    addLogEntry(`💡 Chunk ${currentChunkIndex + 1} sẽ được retry vô hạn cho đến khi thành công`, 'info');
-                                    // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
-                                    ttuo$y_KhCV = currentChunkIndex;
-                                    setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi retry lại chunk này
-                                } else {
-                                    // Không phải retry mode: nhảy sang chunk tiếp theo
-                                    window.retryCount = 0; // Reset bộ đếm retry
-                                    ttuo$y_KhCV = currentChunkIndex + 1; // Chuyển sang chunk tiếp theo
-                                    addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
-                                    addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
-                                    addLogEntry(`💡 Chunk có dung lượng ${MIN_SIZE_KB} - ${MAX_SIZE_KB} KB và không có sóng âm sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
-                                    setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi tiếp tục với chunk tiếp theo
-                                }
-                                return; // Dừng xử lý, không lưu blob
-                            } else {
-                                // Có sóng âm → hợp lệ, tiếp tục bình thường
-                                addLogEntry(`✅ [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB trong khoảng ${MIN_SIZE_KB} - ${MAX_SIZE_KB} KB nhưng CÓ sóng âm - Hợp lệ!`, 'info');
+
+                        addLogEntry(`🔍 [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB. Đang kiểm tra sóng âm...`, 'info');
+
+                        // Kiểm tra sóng âm cho mọi chunk
+                        const hasWaveform = await checkAudioWaveform(qILAV);
+
+                        if (!hasWaveform) {
+                            // Không có sóng âm → báo lỗi
+                            addLogEntry(`❌ [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB và KHÔNG có sóng âm - không hợp lệ!`, 'error');
+                            addLogEntry(`🔄 Kích hoạt cơ chế reset và đánh dấu thất bại...`, 'warning');
+
+                            // Hủy bỏ đánh dấu success (đã đánh dấu ở trên)
+                            if (window.chunkStatus) {
+                                window.chunkStatus[currentChunkIndex] = 'failed';
                             }
+
+                            // Thêm vào danh sách failedChunks
+                            if (!window.failedChunks) window.failedChunks = [];
+                            if (!window.failedChunks.includes(currentChunkIndex)) {
+                                window.failedChunks.push(currentChunkIndex);
+                            }
+
+                            // QUAN TRỌNG: Đảm bảo vị trí này để trống (null) để sau này retry có thể lưu vào
+                            if (typeof window.chunkBlobs === 'undefined') {
+                                window.chunkBlobs = new Array(SI$acY.length).fill(null);
+                            }
+                            // Đảm bảo window.chunkBlobs có đủ độ dài
+                            while (window.chunkBlobs.length <= currentChunkIndex) {
+                                window.chunkBlobs.push(null);
+                            }
+                            window.chunkBlobs[currentChunkIndex] = null; // Đảm bảo vị trí này để trống
+
+                            // ĐỒNG BỘ HÓA ZTQj$LF$o: Đảm bảo ZTQj$LF$o cũng để trống
+                            while (ZTQj$LF$o.length <= currentChunkIndex) {
+                                ZTQj$LF$o.push(null);
+                            }
+                            ZTQj$LF$o[currentChunkIndex] = null; // Đảm bảo vị trí này để trống
+
+                            addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Đã đánh dấu thất bại và để trống vị trí ${currentChunkIndex} để retry sau`, 'info');
+
+                            // Xóa khỏi processingChunks
+                            if (typeof window.processingChunks !== 'undefined') {
+                                window.processingChunks.delete(currentChunkIndex);
+                            }
+
+                            // Reset flag sendingChunk khi chunk thất bại
+                            if (window.sendingChunk === currentChunkIndex) {
+                                window.sendingChunk = null;
+                            }
+
+                            // Dừng observer nếu đang chạy
+                            if (xlgJHLP$MATDT$kTXWV) {
+                                xlgJHLP$MATDT$kTXWV.disconnect();
+                                xlgJHLP$MATDT$kTXWV = null;
+                            }
+                            // Reset flag để cho phép thiết lập observer mới
+                            window.isSettingUpObserver = false;
+
+                            // Clear timeout 60 giây cho chunk này
+                            if (typeof window.chunkTimeoutIds !== 'undefined' && window.chunkTimeoutIds[currentChunkIndex]) {
+                                clearTimeout(window.chunkTimeoutIds[currentChunkIndex]);
+                                delete window.chunkTimeoutIds[currentChunkIndex];
+                            }
+
+                            // Reset web interface - CHỈ reset khi 1 chunk cụ thể render lỗi
+                            await resetWebInterface();
+
+                            addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB và không có sóng âm.`, 'warning');
+
+                            // Xử lý retry: Nếu đang trong retry mode, tiếp tục retry chunk hiện tại
+                            // Nếu không phải retry mode, nhảy sang chunk tiếp theo
+                            if (window.isFinalCheck) {
+                                // Đang trong retry mode: tiếp tục retry chunk hiện tại cho đến khi thành công
+                                addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Retry thất bại, sẽ tiếp tục retry chunk này...`, 'warning');
+                                addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
+                                addLogEntry(`💡 Chunk ${currentChunkIndex + 1} sẽ được retry vô hạn cho đến khi thành công`, 'info');
+                                // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
+                                ttuo$y_KhCV = currentChunkIndex;
+                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi retry lại chunk này
+                            } else {
+                                // Không phải retry mode: nhảy sang chunk tiếp theo
+                                window.retryCount = 0; // Reset bộ đếm retry
+                                ttuo$y_KhCV = currentChunkIndex + 1; // Chuyển sang chunk tiếp theo
+                                addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
+                                addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
+                                addLogEntry(`💡 Chunk không có sóng âm sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
+                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi tiếp tục với chunk tiếp theo
+                            }
+                            return; // Dừng xử lý, không lưu blob
+                        } else {
+                            // Có sóng âm → hợp lệ, tiếp tục bình thường
+                            addLogEntry(`✅ [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB và CÓ sóng âm - Hợp lệ!`, 'info');
                         }
                         // =======================================================
-                        // == END: KIỂM TRA DUNG LƯỢNG BLOB ==
+                        // == END: KIỂM TRA DUNG LƯỢNG & SÓNG ÂM BLOB ==
                         // =======================================================
                         
                         // Log xác nhận kiểm tra dung lượng đã chạy và blob hợp lệ
@@ -5327,8 +5316,8 @@ async function waitForVoiceModelReady() {
 
                 // 3. Chuẩn bị cho lần render mới
                 if (typeof window.SI$acY !== 'undefined') {
-                    // Mặc định chunk lớn 850 ký tự
-                    const actualMaxLength = 850;
+                    // Mặc định chunk lớn 800 ký tự
+                    const actualMaxLength = 800;
                     window.SI$acY = chiaVanBanThongMinh(newText, 600, 500, actualMaxLength);
                     console.log(`Tổng văn bản: ${newText.length} ký tự`);
                     console.log(`Số chunk được tách: ${window.SI$acY.length}`);
