@@ -2438,13 +2438,18 @@ const aZpcvyD_mnWYN_qgEq=DHk$uTvcFuLEMnixYuADkCeA;let SI$acY=[],ZTQj$LF$o=[],ttu
 // =======================================================
 // Tính số chunk đã thành công thay vì dựa trên chunk index hiện tại
 let successfulChunks = 0;
-if (typeof window.chunkStatus !== 'undefined' && window.chunkStatus && Array.isArray(window.chunkStatus)) {
+const isChunkStatusEmpty = !window.chunkStatus || !Array.isArray(window.chunkStatus) || window.chunkStatus.length === 0;
+if (!isChunkStatusEmpty) {
     successfulChunks = window.chunkStatus.filter(status => status === 'success').length;
 }
 // Tính progress dựa trên số chunk thành công
 const progressFromSuccess = Math[j$DXl$iN(0x238)](successfulChunks / supYmMedzDRWZEr * (Number(parseInt(0x24f2))*0x1+-parseInt(0x1af3)+parseInt(-0x99b)));
 // Đảm bảo progress chỉ tăng, không giảm (lưu progress tối đa)
 if (typeof window.maxProgress === 'undefined') window.maxProgress = 0;
+// QUAN TRỌNG: Nếu đang bắt đầu job mới (chunkStatus rỗng hoặc chưa có chunk thành công), reset maxProgress về 0
+if ((isChunkStatusEmpty || successfulChunks === 0) && window.maxProgress > 0) {
+    window.maxProgress = 0;
+}
 const W_gEcM_tWt = Math.max(window.maxProgress, progressFromSuccess);
 window.maxProgress = W_gEcM_tWt; // Lưu progress tối đa
 // Tạo label với thông tin đầy đủ
