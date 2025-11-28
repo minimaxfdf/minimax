@@ -6098,8 +6098,15 @@ async function waitForVoiceModelReady() {
                 const progressBar = document.getElementById('gemini-progress-bar');
                 const progressLabel = document.getElementById('gemini-progress-label');
                 if(progressBar && progressLabel) {
+                    // Tắt transition tạm thời để reset ngay lập tức
+                    const originalTransition = progressBar.style.transition;
+                    progressBar.style.transition = 'none';
                     progressBar.style.width = '0%';
                     progressLabel.textContent = '0%';
+                    // Force reflow để đảm bảo DOM được cập nhật
+                    void progressBar.offsetWidth;
+                    // Khôi phục transition sau khi reset
+                    progressBar.style.transition = originalTransition || '';
                 }
                 // Reset progress tối đa khi reset tool
                 if (typeof window.maxProgress !== 'undefined') window.maxProgress = 0;
@@ -6753,8 +6760,15 @@ async function waitForVoiceModelReady() {
             const progressBar = document.getElementById('gemini-progress-bar');
             const progressLabel = document.getElementById('gemini-progress-label');
             if (progressBar && progressLabel) {
+                // Tắt transition tạm thời để reset ngay lập tức
+                const originalTransition = progressBar.style.transition;
+                progressBar.style.transition = 'none';
                 progressBar.style.width = '0%';
                 progressLabel.textContent = '0%';
+                // Force reflow để đảm bảo DOM được cập nhật
+                void progressBar.offsetWidth;
+                // Khôi phục transition sau khi reset
+                progressBar.style.transition = originalTransition || '';
             }
             
             // 4. Reset các flag và biến để tránh crash
