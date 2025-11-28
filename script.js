@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DUC LOI - Clone Voice (Không cần API) - Modded
 // @namespace    mmx-secure
-// @version      33.0
+// @version      35.0
 // @description  Tạo audio giọng nói clone theo ý của bạn. Không giới hạn. Thêm chức năng Ghép hội thoại, Đổi văn bản hàng loạt & Thiết lập dấu câu (bao gồm dấu xuống dòng).
 // @author       HUỲNH ĐỨC LỢI ( Zalo: 0835795597) - Đã chỉnh sửa
 // @match        https://www.minimax.io/audio*
@@ -1244,9 +1244,9 @@ button:disabled {
 }`;
     const APP_HTML = `<div id="gemini-col-1" class="gemini-column"> <div class="column-header"><div class="logo-user"><a href="" tager="_blank"><div class="logo"><img src="https://minimax.buhaseo.com/wp-content/uploads/2025/08/logo-minimax.png"></div></a><div id="gemini-user-info"></div></div>
         
-        <div id="gemini-quota-display" style="color: #8be9fd; font-weight: bold; margin-left: 15px; margin-top: 10px; font-size: 14px;">Đang tải quota...</div>
+        <div id="gemini-quota-display" style="color: #8be9fd; font-weight: bold; margin-left: 15px; margin-top: 10px; font-size: 14px;">Loading quota...</div>
         </div> 
-    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <h2>Log hoạt động</h2> <div id="log-container" class="log-container"> <div class="log-entry">Sẵn sàng theo dõi văn bản chunk</div> </div> <button id="clear-log-btn" class="clear-log-btn">Xóa log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 33.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
+    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <h2>Activity Log</h2> <div id="log-container" class="log-container"> <div class="log-entry">Ready to monitor chunks...</div> </div> <button id="clear-log-btn" class="clear-log-btn">Clear Log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 35.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div><button id="settings-toggle-btn">⚙️ Cài đặt</button></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
     <div class="text-input-options">
         <div class="input-tabs">
             <button id="text-tab" class="tab-btn active">Nhập trực tiếp</button>
@@ -1279,6 +1279,8 @@ button:disabled {
         </div>
     </div>
 
+    <button id="gemini-start-queue-btn" disabled style="width: 100%; margin-top: 15px;">Bắt đầu tạo âm thanh</button>
+
     <div class="sales-announcement">
         <h3>🎉 CHƯƠNG TRÌNH SALE – HOA HỒNG VĨNH VIỄN 💰</h3>
         <div class="sales-content">
@@ -1309,7 +1311,9 @@ button:disabled {
             </div>
         </div>
     </div>
- </div> </div> <div id="gemini-col-2-right">     <!-- Ô nhập tên file tùy chỉnh -->
+ </div> </div> <div id="gemini-col-2-right">     <!-- Nút History -->
+            <button id="open-history-btn" style="background-color: #bd93f9; color: #282a36; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s ease; margin-bottom: 15px;">📚 History</button>
+            <!-- Ô nhập tên file tùy chỉnh -->
             <div class="custom-filename-section" style="margin-top: 15px;">
                 <label for="custom-filename-input" style="display: block; margin-bottom: 8px; color: #bd93f9; font-weight: 600; font-size: 14px;">
                     🏷️ Tên file âm thanh (tùy chọn)
@@ -1337,9 +1341,9 @@ button:disabled {
             🔧 Chunk mặc định: 800 ký tự
         </small>
     </div>
-    <div id="gemini-text-stats"><span>Ký tự: 0</span><span>Từ: 0</span><span>Câu: 0</span><span>Đoạn: 0</span></div>
+    <div id="gemini-text-stats"><span>Characters: 0</span><span>Words: 0</span><span>Sentences: 0</span><span>Paragraphs: 0</span></div>
 
-<button id="gemini-merge-btn">Ghép đoạn hội thoại</button> <button id="gemini-start-queue-btn" disabled>Bắt đầu tạo âm thanh</button> <button id="apply-punctuation-btn" style="display:none; background-color: #ffb86c; color: #282a36; margin-top: 10px;">Áp dụng thiết lập dấu câu</button> <button id="gemini-pause-btn" style="display:none;">Tạm dừng</button> <button id="gemini-stop-btn" style="display:none;">Dừng hẳn</button> <div id="gemini-progress-container" style="display:none;"><div id="gemini-progress-bar"></div><span id="gemini-progress-label">0%</span></div> <div id="gemini-final-result" style="display:none;"> <h4>Kết quả cuối cùng</h4> <div id="gemini-time-taken"></div> <div id="gemini-waveform"></div> <div id="waveform-controls" style="display:none;"><button id="waveform-play-pause">▶️</button><a id="gemini-download-merged-btn" href="#" download="merged_output.mp3">Tải xuống âm thanh</a><button id="gemini-download-chunks-btn" style="display: none; background-color: #ffb86c; color: #282a36;">Tải các chunk (ZIP)</button></div> </div> </div> </div> </div> <div id="gemini-col-3" class="gemini-column"> <div class="column-header"><h3></h3></div> <div class="column-content banner-column"> <div class="section"> <button id="open-audio-manager-btn" style="background-color: #8be9fd; color: #282a36; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s ease; margin-bottom: 15px;">📂 Mở Kho Âm Thanh (Online)</button> <button id="open-history-btn" style="background-color: #bd93f9; color: #282a36; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s ease; margin-bottom: 15px;">📚 Lịch sử</button> </div><div id="batch-replace-section"><h4>Đổi văn bản hàng loạt</h4><div id="batch-replace-pairs"></div><div id="batch-replace-actions"><button id="add-replace-pair-btn" title="Thêm cặp từ">+</button><button id="execute-replace-btn">Thực hiện đổi</button></div></div> <button id="open-punctuation-settings-btn">Thiết lập dấu câu</button> <div class="section" style="margin-top: 20px;"> <a href="https://zalo.me/g/vyajle175" target="_blank" style="display: block; background-color: #0068ff; color: #fff; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; text-align: center; text-decoration: none; cursor: pointer; transition: all 0.3s ease;">💬 Nhóm Zalo Hỗ Trợ</a> </div> </div> </div>     <textarea id="gemini-hidden-text-for-request" style="display:none;"></textarea>
+<button id="gemini-merge-btn">Ghép hội thoại</button> <button id="apply-punctuation-btn" style="display:none; background-color: #ffb86c; color: #282a36; margin-top: 10px;">Apply punctuation settings</button> <button id="gemini-pause-btn" style="display:none;">Pause</button> <button id="gemini-stop-btn" style="display:none;">Stop</button> <div id="gemini-progress-container" style="display:none;"><div id="gemini-progress-bar"></div><span id="gemini-progress-label">0%</span></div> <div id="gemini-final-result" style="display:none;"> <h4>Final result</h4> <div id="gemini-time-taken"></div> <div id="gemini-waveform"></div> <div id="waveform-controls" style="display:none;"><button id="waveform-play-pause">▶️</button><a id="gemini-download-merged-btn" href="#" download="merged_output.mp3">Download audio</a><button id="gemini-download-chunks-btn" style="display: none; background-color: #ffb86c; color: #282a36;">Download chunks (ZIP)</button></div> </div> </div> </div> </div> <div id="gemini-col-3" class="gemini-column"> <div class="column-header"><h3></h3></div> <div class="column-content banner-column"> <div class="section"> <button id="open-audio-manager-btn" style="background-color: #8be9fd; color: #282a36; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s ease; margin-bottom: 15px;">📂 Mở Kho Âm Thanh (Online)</button> </div><div id="batch-replace-section"><h4>Đổi văn bản hàng loạt</h4><div id="batch-replace-pairs"></div><div id="batch-replace-actions"><button id="add-replace-pair-btn" title="Thêm cặp từ">+</button><button id="execute-replace-btn">Thực hiện đổi</button></div></div> <button id="open-punctuation-settings-btn">Thiết lập dấu câu</button> <div class="section" style="margin-top: 20px;"> <a href="https://zalo.me/g/vyajle175" target="_blank" style="display: block; background-color: #0068ff; color: #fff; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; text-align: center; text-decoration: none; cursor: pointer; transition: all 0.3s ease;">💬 Nhóm Zalo Hỗ Trợ</a> </div> </div> </div>     <textarea id="gemini-hidden-text-for-request" style="display:none;"></textarea>
 
     <!-- Modal Kho Âm Thanh Online -->
     <div id="audio-manager-modal" class="punctuation-modal" style="display:none;">
@@ -1547,10 +1551,10 @@ button:disabled {
 
         // Kiểm tra xem biến của main.py đã tiêm vào chưa
         if (typeof window.REMAINING_CHARS === 'undefined') {
-            if (quotaDisplay) quotaDisplay.textContent = "Lỗi: Không tìm thấy Quota";
+            if (quotaDisplay) quotaDisplay.textContent = "Error: Quota not found";
             if (startButton) {
                 startButton.disabled = true;
-                startButton.textContent = 'LỖI QUOTA';
+                startButton.textContent = 'QUOTA ERROR';
             }
             return;
         }
@@ -1559,7 +1563,7 @@ button:disabled {
         
         // --- LOGIC MỚI: Xử lý -1 (Không giới hạn) ---
         if (remaining === -1) {
-            if (quotaDisplay) quotaDisplay.textContent = `Ký tự còn: Không giới hạn`;
+            if (quotaDisplay) quotaDisplay.textContent = `Characters remaining: Unlimited`;
             
             // Luôn bật nút (nếu có text)
             const mainTextarea = document.getElementById('gemini-main-textarea');
@@ -1569,15 +1573,15 @@ button:disabled {
             }
         } else if (remaining <= 0) {
             // Hết ký tự
-            if (quotaDisplay) quotaDisplay.textContent = "Ký tự còn: 0";
+            if (quotaDisplay) quotaDisplay.textContent = "Characters remaining: 0";
             if (startButton) {
                 startButton.disabled = true;
-                startButton.textContent = 'HẾT KÝ TỰ';
+                startButton.textContent = 'NO CHARACTERS LEFT';
             }
         } else {
             // Còn ký tự
             const formattedRemaining = new Intl.NumberFormat().format(remaining);
-            if (quotaDisplay) quotaDisplay.textContent = `Ký tự còn: ${formattedRemaining}`;
+            if (quotaDisplay) quotaDisplay.textContent = `Characters remaining: ${formattedRemaining}`;
             
             const mainTextarea = document.getElementById('gemini-main-textarea');
             if (startButton && startButton.disabled && mainTextarea && mainTextarea.value.trim() !== '') {
@@ -1686,10 +1690,267 @@ button:disabled {
         const logContainer = document.getElementById('log-container');
         if (logContainer) {
             logContainer.innerHTML = '';
-            addLogEntry('Log đã được xóa', 'info');
+            addLogEntry('Log cleared', 'info');
         }
     }
 
+    // =================================================================
+    // == UTILITY FUNCTIONS - CHỐNG BROWSER THROTTLING ==
+    // =================================================================
+    
+    /**
+     * Kiểm tra tab có đang active không
+     * @returns {boolean} true nếu tab đang active
+     */
+    function isTabActive() {
+        return !document.hidden && document.visibilityState === 'visible';
+    }
+    
+    /**
+     * Cố gắng "đánh thức" tab bằng cách tạo các hoạt động
+     * Mặc dù không thể force activate tab, nhưng có thể tạo một số signals
+     * @param {number} chunkIndex - Index của chunk đang xử lý
+     */
+    function tryWakeUpTab(chunkIndex) {
+        if (isTabActive()) {
+            return; // Tab đã active, không cần đánh thức
+        }
+        
+        try {
+            // Phương pháp 1: Flash title bar để thu hút sự chú ý
+            const originalTitle = document.title;
+            let flashCount = 0;
+            const maxFlashes = 3;
+            
+            const flashTitle = setInterval(() => {
+                if (flashCount >= maxFlashes * 2) {
+                    document.title = originalTitle;
+                    clearInterval(flashTitle);
+                    return;
+                }
+                
+                if (flashCount % 2 === 0) {
+                    document.title = `🔔 Chunk ${chunkIndex + 1} đang xử lý...`;
+                } else {
+                    document.title = originalTitle;
+                }
+                flashCount++;
+            }, 500);
+            
+            // Phương pháp 2: Thử tạo notification (nếu được phép)
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(`Chunk ${chunkIndex + 1} đang xử lý`, {
+                    body: 'Tab đang bị ẩn. Vui lòng kích hoạt lại tab để đảm bảo tốc độ tối ưu.',
+                    icon: 'https://www.google.com/s2/favicons?sz=64&domain=minimax.io',
+                    tag: 'chunk-processing',
+                    requireInteraction: false
+                });
+            } else if ('Notification' in window && Notification.permission === 'default') {
+                // Yêu cầu quyền notification (chỉ một lần)
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(`Chunk ${chunkIndex + 1} đang xử lý`, {
+                            body: 'Tab đang bị ẩn. Vui lòng kích hoạt lại tab để đảm bảo tốc độ tối ưu.',
+                            icon: 'https://www.google.com/s2/favicons?sz=64&domain=minimax.io',
+                            tag: 'chunk-processing'
+                        });
+                    }
+                });
+            }
+            
+            // Phương pháp 3: Tạo một số DOM events để "đánh thức" browser
+            // Dispatch một số events để browser biết có hoạt động
+            try {
+                window.dispatchEvent(new Event('focus'));
+                document.dispatchEvent(new Event('visibilitychange'));
+            } catch (e) {
+                // Bỏ qua nếu không thể dispatch
+            }
+            
+            addLogEntry(`🔔 [Chunk ${chunkIndex + 1}] Đã thử đánh thức tab (flash title, notification). Vui lòng kích hoạt lại tab để đảm bảo tốc độ tối ưu.`, 'info');
+            
+        } catch (error) {
+            // Bỏ qua nếu có lỗi
+        }
+    }
+    
+    /**
+     * Hàm delay thông minh chống browser throttle
+     * Sử dụng nhiều phương pháp kết hợp để đảm bảo delay chính xác kể cả khi tab ẩn
+     * 
+     * CHIẾN LƯỢC:
+     * - Tab active + delay ngắn: requestAnimationFrame (nhanh nhất)
+     * - Tab active + delay dài: setTimeout với interval hợp lý
+     * - Tab ẩn: Sử dụng MessageChannel để tạo "tick" không bị throttle, kết hợp timestamp checking
+     * 
+     * @param {number} ms - Số milliseconds cần delay
+     * @returns {Promise} Promise resolve sau khi delay xong
+     */
+    function smartDelay(ms) {
+        return new Promise((resolve) => {
+            const start = Date.now();
+            const isActive = isTabActive();
+            
+            // Phương pháp 1: Với delay rất ngắn và tab active, dùng requestAnimationFrame
+            if (ms < 20 && isActive) {
+                const check = () => {
+                    if (Date.now() - start >= ms) {
+                        resolve();
+                    } else {
+                        requestAnimationFrame(check);
+                    }
+                };
+                check();
+                return;
+            }
+            
+            // Phương pháp 2: Tab active với delay dài, dùng setTimeout với interval hợp lý
+            if (isActive && ms <= 1000) {
+                setTimeout(() => resolve(), ms);
+                return;
+            }
+            
+            // Phương pháp 3: Tab ẩn hoặc delay rất dài - dùng MessageChannel + polling
+            // MessageChannel postMessage KHÔNG BỊ THROTTLE, nhưng cần kết hợp với timestamp
+            try {
+                const channel = new MessageChannel();
+                let isResolved = false;
+                let checkCount = 0;
+                const maxChecks = Math.ceil(ms / 50) + 20; // Giới hạn số lần check
+                
+                channel.port1.onmessage = () => {
+                    if (isResolved) return;
+                    checkCount++;
+                    
+                    const elapsed = Date.now() - start;
+                    
+                    if (elapsed >= ms || checkCount >= maxChecks) {
+                        isResolved = true;
+                        resolve();
+                    } else {
+                        // Chưa đủ thời gian, tiếp tục check
+                        const remaining = ms - elapsed;
+                        // Sử dụng setTimeout với interval lớn hơn (50ms) để giảm số lần bị throttle
+                        // Khi tab ẩn, browser throttle setTimeout nhưng vẫn chạy, chỉ chậm hơn
+                        const nextCheckDelay = Math.min(remaining, 50);
+                        
+                        setTimeout(() => {
+                            if (!isResolved) {
+                                channel.port2.postMessage('');
+                            }
+                        }, nextCheckDelay);
+                    }
+                };
+                
+                // Bắt đầu delay - gửi message đầu tiên ngay lập tức
+                channel.port2.postMessage('');
+            } catch (e) {
+                // Nếu MessageChannel không hoạt động, fallback về phương pháp cũ
+                fallbackDelay(ms).then(resolve);
+            }
+        });
+    }
+    
+    /**
+     * Hàm delay dự phòng sử dụng kết hợp nhiều phương pháp
+     * Dùng khi MessageChannel không hoạt động (rất hiếm)
+     * @param {number} ms - Số milliseconds cần delay
+     * @returns {Promise} Promise resolve sau khi delay xong
+     */
+    function fallbackDelay(ms) {
+        return new Promise((resolve) => {
+            const start = Date.now();
+            
+            const check = () => {
+                const elapsed = Date.now() - start;
+                if (elapsed >= ms) {
+                    resolve();
+                } else {
+                    const remaining = ms - elapsed;
+                    // Ưu tiên requestAnimationFrame nếu tab active
+                    if (isTabActive() && remaining > 16) {
+                        requestAnimationFrame(check);
+                    } else {
+                        // Dùng setTimeout với interval nhỏ để giảm thiểu tích lũy delay
+                        setTimeout(check, Math.min(remaining, 50));
+                    }
+                }
+            };
+            
+            check();
+        });
+    }
+    
+    /**
+     * Lắng nghe sự kiện visibility change để cảnh báo người dùng
+     * CẢI THIỆN: Thêm debounce và kiểm tra kỹ hơn để tránh cảnh báo sai
+     */
+    function setupVisibilityListener() {
+        let lastVisibilityState = !document.hidden;
+        let warningShown = false;
+        let visibilityCheckTimeout = null;
+        let hiddenStartTime = null;
+        
+        document.addEventListener('visibilitychange', () => {
+            // Clear timeout cũ nếu có
+            if (visibilityCheckTimeout) {
+                clearTimeout(visibilityCheckTimeout);
+                visibilityCheckTimeout = null;
+            }
+            
+            const isNowVisible = !document.hidden && document.visibilityState === 'visible';
+            
+            // Kiểm tra kỹ: Phải thực sự bị ẩn (hidden = true VÀ visibilityState = 'hidden')
+            const isReallyHidden = document.hidden && document.visibilityState === 'hidden';
+            
+            if (isReallyHidden && !isNowVisible) {
+                // Tab thực sự bị ẩn - lưu thời gian bắt đầu ẩn
+                hiddenStartTime = Date.now();
+                
+                // Chỉ cảnh báo sau 1 giây để tránh cảnh báo sai (debounce)
+                visibilityCheckTimeout = setTimeout(() => {
+                    // Kiểm tra lại xem tab vẫn còn ẩn không
+                    if (document.hidden && document.visibilityState === 'hidden' && !warningShown) {
+                        addLogEntry(`⚠️ Tab đã bị ẩn! Script vẫn sẽ tiếp tục chạy nhưng có thể chậm hơn một chút.`, 'warning');
+                        addLogEntry(`💡 Tool đã sử dụng MessageChannel để chống throttle, nhưng vẫn khuyến nghị giữ tab active để đảm bảo tốc độ tối ưu.`, 'info');
+                        warningShown = true;
+                    }
+                }, 1000); // Debounce 1 giây
+                
+            } else if (isNowVisible) {
+                // Tab đã được kích hoạt lại
+                hiddenStartTime = null;
+                
+                // Luôn log khi tab được kích hoạt lại (không chỉ khi đã cảnh báo)
+                // Điều này giúp người dùng biết tab đã active và script sẽ chạy nhanh hơn
+                if (lastVisibilityState === false || warningShown) {
+                    addLogEntry(`✅ Tab đã được kích hoạt lại. Tốc độ xử lý sẽ trở lại bình thường.`, 'success');
+                    warningShown = false;
+                }
+            }
+            
+            lastVisibilityState = isNowVisible;
+        });
+        
+        // CẢI THIỆN: Kiểm tra định kỳ để phát hiện khi tab được kích hoạt lại
+        // (Một số browser có thể không trigger visibilitychange đúng cách)
+        setInterval(() => {
+            const currentlyVisible = !document.hidden && document.visibilityState === 'visible';
+            if (currentlyVisible && !lastVisibilityState && warningShown) {
+                // Tab đã được kích hoạt lại nhưng event không được trigger
+                addLogEntry(`✅ Tab đã được kích hoạt lại. Tốc độ xử lý sẽ trở lại bình thường.`, 'success');
+                warningShown = false;
+                lastVisibilityState = true;
+            } else if (!currentlyVisible && lastVisibilityState) {
+                lastVisibilityState = false;
+            }
+        }, 2000); // Kiểm tra mỗi 2 giây
+    }
+    
+    // Khởi tạo listener khi script load
+    if (typeof document !== 'undefined') {
+        setupVisibilityListener();
+    }
 
     // Add event listener for clear log button
     // =================================================================
@@ -2190,7 +2451,7 @@ window.maxProgress = W_gEcM_tWt; // Lưu progress tối đa
 let labelText = W_gEcM_tWt + j$DXl$iN(0x1c3) + successfulChunks + '/' + supYmMedzDRWZEr + ')';
 // Thêm thông tin retry nếu đang retry
 if (typeof window.isFinalCheck !== 'undefined' && window.isFinalCheck && typeof window.failedChunks !== 'undefined' && window.failedChunks && window.failedChunks.length > 0) {
-    labelText += ' 🔄 Đang xử lý lại ' + window.failedChunks.length + ' chunk lỗi...';
+    labelText += ' 🔄 Retrying ' + window.failedChunks.length + ' failed chunks...';
 }
 pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=labelText;}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 600, minLength = 500, maxLength = 800) {
     // Mặc định chunk lớn 800 ký tự
@@ -3477,12 +3738,20 @@ async function uSTZrHUt_IC() {
         window.sendingChunk = ttuo$y_KhCV;
         addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Bắt đầu gửi chunk...`, 'info');
         
+        // CẢI THIỆN: Thử "đánh thức" tab nếu đang bị ẩn trước khi gửi chunk mới
+        if (!isTabActive()) {
+            tryWakeUpTab(ttuo$y_KhCV);
+        }
+        
         // Cập nhật progress bar
         nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
         addLogEntry(`📦 [Chunk ${ttuo$y_KhCV + 1}/${SI$acY.length}] Đang gửi đi...`, 'info');
 
         // ANTI-DETECTION: Thêm delay ngẫu nhiên trước khi đặt text
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+        // CẢI THIỆN: Dùng smartDelay thay vì setTimeout để chống throttle khi tab ẩn
+        // TỐI ƯU: Giảm delay từ 1000-3000ms xuống 500-1500ms để tăng tốc độ
+        const randomDelay = Math.random() * 1000 + 500; // 500-1500ms (giảm từ 1000-3000ms)
+        await smartDelay(randomDelay);
         
         // =======================================================
         // == ĐẢM BẢO TEXT KHÔNG BỊ THAY ĐỔI BỞI VĂN BẢN MẶC ĐỊNH ==
@@ -3548,13 +3817,33 @@ async function uSTZrHUt_IC() {
             addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Không thể tạo MutationObserver: ${observerError.message}`, 'warning');
         }
         
-        // Lớp 2: Set text nhiều lần liên tiếp (8 lần) để đảm bảo
+        // Lớp 2: Set text nhiều lần liên tiếp (3 lần) để đảm bảo
         // LƯU Ý: Mỗi lần set là GÁN GIÁ TRỊ MỚI (value = chunkText), KHÔNG PHẢI APPEND
         // => KHÔNG BỊ LẶP LẠI TEXT
-        const SET_TEXT_COUNT = 8;
+        // TỐI ƯU: Giảm từ 5 xuống 3 lần và delay từ 100ms xuống 50ms để tăng tốc độ
+        // Minimax render chỉ mất 8-15s, nên cần tối ưu để mỗi chunk < 1 phút
+        const SET_TEXT_COUNT = 3; // Giảm từ 5 xuống 3
+        const MAX_SET_TEXT_TIME = 5000; // 5 giây tối đa cho việc set text (giảm từ 10s)
+        const DELAY_BETWEEN_SETS = 50; // Giảm từ 100ms xuống 50ms
+        
+        // Kiểm tra tab có đang active không (chỉ log debug, không cảnh báo vì đã có visibility listener)
+        // Loại bỏ cảnh báo ở đây để tránh trùng lặp với visibility listener
+        
         addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang set text ${SET_TEXT_COUNT} lần liên tiếp để đảm bảo...`, 'info');
         
+        const setTextStartTime = Date.now();
+        let setTextCompleted = false;
+        
         for (let i = 0; i < SET_TEXT_COUNT; i++) {
+            // Kiểm tra timeout - phát hiện delay bất thường
+            const elapsed = Date.now() - setTextStartTime;
+            if (elapsed > MAX_SET_TEXT_TIME) {
+                const delaySeconds = Math.round(elapsed / 1000);
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Phát hiện delay bất thường khi set text (${delaySeconds}s, vượt quá ${MAX_SET_TEXT_TIME / 1000}s). Có thể tab đang bị ẩn hoặc browser đang throttle.`, 'warning');
+                addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] Đã set ${i}/${SET_TEXT_COUNT} lần. Tiếp tục với số lần đã set...`, 'info');
+                break; // Thoát vòng lặp sớm nếu timeout
+            }
+            
             isSettingText = true;
             rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText; // Gán giá trị mới, không append
             
@@ -3566,19 +3855,30 @@ async function uSTZrHUt_IC() {
                 // Bỏ qua
             }
             
-            // Chờ 50ms giữa các lần set
-            await new Promise(resolve => setTimeout(resolve, 50));
+            // Dùng smartDelay thay vì setTimeout đơn thuần để chống throttle
+            await smartDelay(DELAY_BETWEEN_SETS);
             isSettingText = false;
         }
         
+        setTextCompleted = true;
+        const totalTime = Date.now() - setTextStartTime;
+        if (totalTime > 2000) {
+            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Set text mất ${Math.round(totalTime / 1000)}s (bình thường < 1s). Có thể tab đang bị ẩn.`, 'warning');
+        }
         addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set text ${SET_TEXT_COUNT} lần liên tiếp`, 'info');
         
-        // Lớp 3: setInterval giám sát liên tục trong 500ms trước khi click
-        let monitoringInterval = null;
+        // Lớp 3: Giám sát text liên tục trong 300ms trước khi click
+        // CẢI THIỆN: Thay setInterval bằng recursive setTimeout để tránh browser throttle
+        // TỐI ƯU: Giảm từ 500ms xuống 300ms để tăng tốc độ
         let monitoringCount = 0;
-        const MAX_MONITORING_COUNT = 10; // 10 lần x 50ms = 500ms
+        const MAX_MONITORING_COUNT = 6; // 6 lần x 50ms = 300ms (giảm từ 10 lần = 500ms)
+        const MONITORING_INTERVAL = 50;
+        let monitoringTimeoutId = null;
+        let monitoringStopped = false;
         
-        monitoringInterval = setInterval(() => {
+        const monitorText = () => {
+            if (monitoringStopped) return;
+            
             monitoringCount++;
             const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
             
@@ -3586,7 +3886,7 @@ async function uSTZrHUt_IC() {
                 // Text bị thay đổi, set lại ngay
                 isSettingText = true;
                 rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
-                addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] setInterval phát hiện text bị thay đổi (lần ${monitoringCount}), đã set lại`, 'warning');
+                addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Phát hiện text bị thay đổi (lần ${monitoringCount}), đã set lại`, 'warning');
                 
                 try {
                     const inputEvent = new Event('input', { bubbles: true, cancelable: true });
@@ -3598,20 +3898,26 @@ async function uSTZrHUt_IC() {
                 setTimeout(() => { isSettingText = false; }, 50);
             }
             
-            // Dừng sau 500ms
-            if (monitoringCount >= MAX_MONITORING_COUNT) {
-                clearInterval(monitoringInterval);
-                monitoringInterval = null;
+            // Tiếp tục monitoring nếu chưa đủ số lần
+            if (monitoringCount < MAX_MONITORING_COUNT && !monitoringStopped) {
+                monitoringTimeoutId = setTimeout(monitorText, MONITORING_INTERVAL);
+            } else {
+                monitoringStopped = true;
             }
-        }, 50); // Kiểm tra mỗi 50ms
+        };
         
-        // Chờ 500ms để setInterval hoàn thành giám sát
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Bắt đầu monitoring
+        monitorText();
         
-        // Dọn dẹp: Dừng setInterval nếu còn chạy
-        if (monitoringInterval) {
-            clearInterval(monitoringInterval);
-            monitoringInterval = null;
+        // Chờ 300ms để monitoring hoàn thành giám sát (dùng smartDelay để tránh throttle)
+        // TỐI ƯU: Giảm từ 500ms xuống 300ms
+        await smartDelay(300);
+        
+        // Dọn dẹp: Dừng monitoring nếu còn chạy
+        monitoringStopped = true;
+        if (monitoringTimeoutId) {
+            clearTimeout(monitoringTimeoutId);
+            monitoringTimeoutId = null;
         }
         
         // Lớp 4: Kiểm tra lần cuối và force set nếu cần
@@ -3628,7 +3934,8 @@ async function uSTZrHUt_IC() {
                 // Bỏ qua
             }
             
-            await new Promise(resolve => setTimeout(resolve, 50));
+            // Dùng smartDelay thay vì setTimeout
+            await smartDelay(50);
             isSettingText = false;
         } else {
             addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text đúng (${finalCheckText.length} ký tự)`, 'info');
@@ -3637,17 +3944,22 @@ async function uSTZrHUt_IC() {
         // Thực hiện click
         KxTOuAJu(targetButton);
         
-        // Cleanup: Dừng MutationObserver sau khi click (chờ 1 giây để đảm bảo click đã được xử lý)
+        // Cleanup: Dừng MutationObserver sau khi click (chờ 500ms để đảm bảo click đã được xử lý)
+        // TỐI ƯU: Giảm từ 1000ms xuống 500ms
         setTimeout(() => {
             if (textObserver) {
                 textObserver.disconnect();
                 textObserver = null;
                 addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã dừng MutationObserver`, 'info');
             }
-        }, 1000);
+        }, 500);
         
-        // Khởi tạo biến lưu timeout ID nếu chưa có
+        // Khởi tạo biến lưu timeout ID và tracking thời gian nếu chưa có
         if (typeof window.chunkTimeoutIds === 'undefined') window.chunkTimeoutIds = {};
+        if (typeof window.chunkStartTimes === 'undefined') window.chunkStartTimes = {};
+        
+        // Bắt đầu tracking thời gian xử lý chunk này
+        window.chunkStartTimes[ttuo$y_KhCV] = Date.now();
         
         // QUAN TRỌNG: Clear TẤT CẢ timeout cũ (cả Srnj$swt và window.chunkTimeoutIds) trước khi set timeout mới
         if (Srnj$swt) {
@@ -3659,16 +3971,39 @@ async function uSTZrHUt_IC() {
             delete window.chunkTimeoutIds[ttuo$y_KhCV];
         }
         
-        // Thiết lập timeout 60 giây cho chunk này
-        addLogEntry(`⏱️ [Chunk ${ttuo$y_KhCV + 1}] Bắt đầu render - Timeout 60 giây`, 'info');
+        // Thiết lập timeout 60 giây cho chunk này (BẮT BUỘC mỗi chunk < 1 phút)
+        // Minimax render chỉ mất 8-15s, nên 60s là đủ cho cả script + render
+        addLogEntry(`⏱️ [Chunk ${ttuo$y_KhCV + 1}] Bắt đầu xử lý - Timeout 60 giây (Bắt buộc < 1 phút/chunk)`, 'info');
+        
+        // Thiết lập cảnh báo sớm ở 45 giây
+        window.chunkTimeoutIds[`${ttuo$y_KhCV}_warning`] = setTimeout(() => {
+            const elapsed = Date.now() - (window.chunkStartTimes[ttuo$y_KhCV] || Date.now());
+            const elapsedSeconds = Math.round(elapsed / 1000);
+            if (window.chunkStatus && window.chunkStatus[ttuo$y_KhCV] !== 'success') {
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] CẢNH BÁO: Đã mất ${elapsedSeconds}s (gần đến giới hạn 60s). Minimax render thường chỉ mất 8-15s.`, 'warning');
+            }
+        }, 45000); // Cảnh báo ở 45 giây
         window.chunkTimeoutIds[ttuo$y_KhCV] = setTimeout(async () => {
-            // QUAN TRỌNG: Kiểm tra xem chunk đã thành công chưa trước khi trigger timeout
+            // QUAN TRỌNG: Kiểm tra xem chunk đã thành công chưa trước khi kích hoạt timeout
             if (window.chunkStatus && window.chunkStatus[ttuo$y_KhCV] === 'success') {
                 return; // Chunk đã thành công, không cần xử lý
             }
             
-            addLogEntry(`⏱️ [Chunk ${ttuo$y_KhCV + 1}] Timeout sau 60 giây - không có kết quả!`, 'error');
+            // Tính thời gian xử lý thực tế
+            const elapsed = window.chunkStartTimes && window.chunkStartTimes[ttuo$y_KhCV] 
+                ? Date.now() - window.chunkStartTimes[ttuo$y_KhCV] 
+                : 60000;
+            const elapsedSeconds = Math.round(elapsed / 1000);
+            
+            addLogEntry(`⏱️ [Chunk ${ttuo$y_KhCV + 1}] Timeout sau 60 giây - không có kết quả! (Đã xử lý ${elapsedSeconds}s)`, 'error');
+            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Minimax render thường chỉ mất 8-15s. Chunk này mất ${elapsedSeconds}s - có thể có vấn đề về mạng hoặc tab bị ẩn.`, 'warning');
             addLogEntry(`🔄 Kích hoạt cơ chế reset và đánh dấu thất bại...`, 'warning');
+            
+            // Clear warning timeout nếu còn chạy
+            if (window.chunkTimeoutIds && window.chunkTimeoutIds[`${ttuo$y_KhCV}_warning`]) {
+                clearTimeout(window.chunkTimeoutIds[`${ttuo$y_KhCV}_warning`]);
+                delete window.chunkTimeoutIds[`${ttuo$y_KhCV}_warning`];
+            }
             
             // Dừng observer nếu đang chạy
             if (xlgJHLP$MATDT$kTXWV) {
@@ -3976,11 +4311,12 @@ function igyo$uwVChUzI() {
                         if (status === 'pending') {
                             // OK, chunk đang pending
                         } else if (status === 'failed' && window.isFinalCheck) {
-                            // OK, chunk failed và đang trong chế độ retry
-                            addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Đang retry chunk failed...`, 'info');
+                            // OK, chunk thất bại và đang trong chế độ thử lại
+                            addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Đang thử lại chunk thất bại...`, 'info');
                         } else {
-                            // Không phải pending và không phải failed trong retry mode
-                            addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Không phải trạng thái 'pending' hoặc 'failed' trong retry mode (${status}), bỏ qua`, 'warning');
+                            // Không phải đang chờ và không phải thất bại trong chế độ thử lại
+                            const statusText = status === 'pending' ? 'đang chờ' : status === 'failed' ? 'thất bại' : status === 'success' ? 'thành công' : status;
+                            addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Không phải trạng thái 'đang chờ' hoặc 'thất bại' trong chế độ thử lại (${statusText}), bỏ qua`, 'warning');
                             return;
                         }
                     }
@@ -3998,7 +4334,26 @@ function igyo$uwVChUzI() {
                     if (typeof window.chunkTimeoutIds !== 'undefined' && window.chunkTimeoutIds[currentChunkIndex]) {
                         clearTimeout(window.chunkTimeoutIds[currentChunkIndex]);
                         delete window.chunkTimeoutIds[currentChunkIndex];
-                        addLogEntry(`⏱️ [Chunk ${currentChunkIndex + 1}] Đã clear timeout 60 giây`, 'info');
+                        
+                        // Clear warning timeout nếu có
+                        if (window.chunkTimeoutIds[`${currentChunkIndex}_warning`]) {
+                            clearTimeout(window.chunkTimeoutIds[`${currentChunkIndex}_warning`]);
+                            delete window.chunkTimeoutIds[`${currentChunkIndex}_warning`];
+                        }
+                        
+                        // Tính và log thời gian xử lý
+                        if (window.chunkStartTimes && window.chunkStartTimes[currentChunkIndex]) {
+                            const elapsed = Date.now() - window.chunkStartTimes[currentChunkIndex];
+                            const elapsedSeconds = Math.round(elapsed / 1000);
+                            addLogEntry(`⏱️ [Chunk ${currentChunkIndex + 1}] Đã clear timeout 60 giây - Đã xử lý trong ${elapsedSeconds}s`, 'info');
+                            
+                            // Cảnh báo nếu mất quá 30 giây (Minimax render chỉ mất 8-15s)
+                            if (elapsedSeconds > 30) {
+                                addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Chunk mất ${elapsedSeconds}s (Minimax render thường chỉ 8-15s). Có thể có vấn đề về mạng hoặc tab bị ẩn.`, 'warning');
+                            }
+                        } else {
+                            addLogEntry(`⏱️ [Chunk ${currentChunkIndex + 1}] Đã clear timeout 60 giây`, 'info');
+                        }
                     }
                     // Clear timeout từ igyo$uwVChUzI() nếu có
                     if (Srnj$swt) {
