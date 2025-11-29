@@ -3781,6 +3781,24 @@ async function uSTZrHUt_IC() {
         let textObserver = null;
         let isSettingText = false; // Flag để tránh vòng lặp vô hạn
         
+        // Lưu textObserver vào window để có thể disconnect khi chunk thành công
+        if (typeof window.textObservers === 'undefined') {
+            window.textObservers = {};
+        }
+        
+        // Hàm kiểm tra text mặc định chính xác (dùng chung cho MutationObserver và các lớp khác)
+        const isDefaultTextStrict = (text) => {
+            if (!text || typeof text !== 'string') return false;
+            const lowerText = text.toLowerCase().trim();
+            // Kiểm tra các từ khóa đặc trưng của text mặc định
+            const defaultTextKeywords = ['delighted', 'assist', 'voice services', 'choose a voice', 'creative audio journey', 'hello, i\'m'];
+            const hasDefaultKeywords = defaultTextKeywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
+            // Kiểm tra độ dài - text mặc định thường có độ dài cố định (~151 ký tự)
+            const isDefaultLength = text.length >= 140 && text.length <= 160;
+            // Nếu có keywords VÀ độ dài khớp -> rất có thể là text mặc định
+            return hasDefaultKeywords && isDefaultLength;
+        };
+        
         try {
             textObserver = new MutationObserver((mutations) => {
                 // Chỉ xử lý nếu không phải đang set text từ tool
@@ -3790,16 +3808,18 @@ async function uSTZrHUt_IC() {
                 
                 // Nếu text bị thay đổi và không phải text của chunk, set lại ngay
                 if (currentText !== chunkText && currentText.length > 0) {
-                    // Kiểm tra xem có phải văn bản mặc định không (chứa các từ khóa)
-                    const defaultTextKeywords = ['delighted', 'assist', 'voice services', 'choose a voice', 'creative audio journey'];
-                    const isDefaultText = defaultTextKeywords.some(keyword => 
-                        currentText.toLowerCase().includes(keyword.toLowerCase())
-                    );
+                    // Kiểm tra xem có phải văn bản mặc định không (dùng logic chính xác hơn)
+                    const isDefaultText = isDefaultTextStrict(currentText);
                     
                     if (isDefaultText || currentText !== chunkText) {
                         isSettingText = true;
                         rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
-                        addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] MutationObserver phát hiện text bị thay đổi, đã tự động set lại`, 'warning');
+                        
+                        if (isDefaultText) {
+                            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] MutationObserver phát hiện TEXT MẶC ĐỊNH xuất hiện, đã tự động set lại chunkText`, 'error');
+                        } else {
+                            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] MutationObserver phát hiện text bị thay đổi, đã tự động set lại`, 'warning');
+                        }
                         
                         // Trigger event
                         try {
@@ -3830,6 +3850,9 @@ async function uSTZrHUt_IC() {
                 childList: false,
                 subtree: false
             });
+            
+            // Lưu textObserver vào window để có thể disconnect khi chunk thành công
+            window.textObservers[ttuo$y_KhCV] = textObserver;
             
             addLogEntry(`👁️ [Chunk ${ttuo$y_KhCV + 1}] Đã khởi tạo MutationObserver để theo dõi textarea`, 'info');
         } catch (observerError) {
@@ -3901,11 +3924,19 @@ async function uSTZrHUt_IC() {
             monitoringCount++;
             const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
             
-            if (currentText !== chunkText) {
-                // Text bị thay đổi, set lại ngay
+            // Kiểm tra xem có phải text mặc định không
+            const isDefaultText = isDefaultTextStrict(currentText);
+            
+            if (currentText !== chunkText || isDefaultText) {
+                // Text bị thay đổi hoặc là text mặc định, set lại ngay
                 isSettingText = true;
                 rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
-                addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Phát hiện text bị thay đổi (lần ${monitoringCount}), đã set lại`, 'warning');
+                
+                if (isDefaultText) {
+                    addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Phát hiện TEXT MẶC ĐỊNH (lần ${monitoringCount}), đã set lại chunkText`, 'error');
+                } else {
+                    addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Phát hiện text bị thay đổi (lần ${monitoringCount}), đã set lại`, 'warning');
+                }
                 
                 try {
                     const inputEvent = new Event('input', { bubbles: true, cancelable: true });
@@ -3939,10 +3970,70 @@ async function uSTZrHUt_IC() {
             monitoringTimeoutId = null;
         }
         
-        // Lớp 4: Kiểm tra lần cuối và force set nếu cần
+        // Lớp 4: Kiểm tra lần cuối và force set nếu cần (TRƯỚC KHI CLICK)
+        // CẢI THIỆN: Kiểm tra kỹ hơn, đảm bảo text phải chính xác là chunkText
         const finalCheckText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
-        if (finalCheckText !== chunkText) {
-            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text bị thay đổi, force set lại và click ngay...`, 'warning');
+        
+        // Kiểm tra xem text có phải là text mặc định không (dùng hàm isDefaultTextStrict đã định nghĩa ở trên)
+        const isDefaultText = isDefaultTextStrict(finalCheckText);
+        
+        if (finalCheckText !== chunkText || isDefaultText) {
+            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text bị thay đổi hoặc là text mặc định, force set lại...`, 'warning');
+            if (isDefaultText) {
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN TEXT MẶC ĐỊNH! Đang force set lại chunkText (${chunkText.length} ký tự)`, 'error');
+            }
+            
+            // Force set lại nhiều lần để đảm bảo
+            for (let retry = 0; retry < 3; retry++) {
+                isSettingText = true;
+                rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
+                
+                try {
+                    const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                    rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
+                } catch (e) {
+                    // Bỏ qua
+                }
+                
+                await smartDelay(50);
+                isSettingText = false;
+                
+                // Kiểm tra lại sau mỗi lần set
+                const verifyText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+                if (verifyText === chunkText && !isDefaultTextStrict(verifyText)) {
+                    addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set lại thành công sau ${retry + 1} lần thử`, 'success');
+                    break;
+                }
+            }
+            
+            // Kiểm tra lần cuối trước khi click
+            const preClickCheck = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+            if (preClickCheck !== chunkText || isDefaultTextStrict(preClickCheck)) {
+                addLogEntry(`❌ [Chunk ${ttuo$y_KhCV + 1}] CẢNH BÁO: Text vẫn không đúng sau khi force set! Text hiện tại: "${preClickCheck.substring(0, 50)}..." (${preClickCheck.length} ký tự)`, 'error');
+                addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] ChunkText mong đợi: "${chunkText.substring(0, 50)}..." (${chunkText.length} ký tự)`, 'info');
+            } else {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Xác nhận: Text đúng trước khi click (${preClickCheck.length} ký tự)`, 'success');
+            }
+        } else {
+            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text đúng (${finalCheckText.length} ký tự)`, 'info');
+        }
+        
+        // Thực hiện click
+        KxTOuAJu(targetButton);
+        
+        // Lớp 5: Kiểm tra text SAU KHI CLICK (300-500ms sau click)
+        // QUAN TRỌNG: Website có thể reset text về mặc định sau khi click
+        await smartDelay(300);
+        const postClickText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+        const isPostClickDefault = isDefaultTextStrict(postClickText);
+        
+        if (postClickText !== chunkText || isPostClickDefault) {
+            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN: Text bị thay đổi SAU KHI CLICK! Đang force set lại...`, 'error');
+            if (isPostClickDefault) {
+                addLogEntry(`❌ [Chunk ${ttuo$y_KhCV + 1}] Text mặc định xuất hiện sau khi click! Đây là lỗi nghiêm trọng.`, 'error');
+            }
+            
+            // Force set lại ngay lập tức
             isSettingText = true;
             rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
             
@@ -3953,25 +4044,42 @@ async function uSTZrHUt_IC() {
                 // Bỏ qua
             }
             
-            // Dùng smartDelay thay vì setTimeout
-            await smartDelay(50);
+            await smartDelay(100);
             isSettingText = false;
+            
+            // Kiểm tra lại
+            const verifyPostClick = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+            if (verifyPostClick === chunkText && !isDefaultTextStrict(verifyPostClick)) {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã khôi phục text sau khi click`, 'success');
+            } else {
+                addLogEntry(`❌ [Chunk ${ttuo$y_KhCV + 1}] KHÔNG THỂ khôi phục text sau khi click! Có thể chunk này sẽ bị sai.`, 'error');
+            }
         } else {
-            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text đúng (${finalCheckText.length} ký tự)`, 'info');
+            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra sau click: Text vẫn đúng (${postClickText.length} ký tự)`, 'success');
         }
         
-        // Thực hiện click
-        KxTOuAJu(targetButton);
-        
-        // Cleanup: Dừng MutationObserver sau khi click (chờ 500ms để đảm bảo click đã được xử lý)
-        // TỐI ƯU: Giảm từ 1000ms xuống 500ms
-        setTimeout(() => {
-            if (textObserver) {
-                textObserver.disconnect();
-                textObserver = null;
-                addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã dừng MutationObserver`, 'info');
+        // CẢI THIỆN: Giữ MutationObserver chạy LÂU HƠN (ít nhất 10-15 giây sau khi click)
+        // Thay vì disconnect sau 500ms, giữ đến khi chunk thành công hoặc ít nhất 15 giây
+        // MutationObserver sẽ tự động disconnect khi chunk thành công (trong phần xử lý success)
+        // Nếu không thành công trong 15 giây, mới disconnect
+        const textObserverTimeoutId = setTimeout(() => {
+            // Dùng window.textObservers thay vì biến local để tránh race condition
+            if (window.textObservers && window.textObservers[ttuo$y_KhCV]) {
+                window.textObservers[ttuo$y_KhCV].disconnect();
+                delete window.textObservers[ttuo$y_KhCV];
+                // Cũng clear biến local nếu còn tồn tại
+                if (textObserver) {
+                    textObserver = null;
+                }
+                addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã dừng MutationObserver sau 15 giây`, 'info');
             }
-        }, 500);
+        }, 15000); // Giữ MutationObserver chạy 15 giây thay vì 500ms
+        
+        // Lưu timeout ID để có thể clear khi chunk thành công
+        if (typeof window.textObserverTimeoutIds === 'undefined') {
+            window.textObserverTimeoutIds = {};
+        }
+        window.textObserverTimeoutIds[ttuo$y_KhCV] = textObserverTimeoutId;
         
         // Khởi tạo biến lưu timeout ID và tracking thời gian nếu chưa có
         if (typeof window.chunkTimeoutIds === 'undefined') window.chunkTimeoutIds = {};
@@ -4717,6 +4825,19 @@ function igyo$uwVChUzI() {
                         // Reset timeout retry count cho chunk này khi thành công
                         if (typeof window.timeoutRetryCount !== 'undefined' && window.timeoutRetryCount[currentChunkIndex] !== undefined) {
                             window.timeoutRetryCount[currentChunkIndex] = 0;
+                        }
+                        
+                        // DISCONNECT TEXT OBSERVER KHI CHUNK THÀNH CÔNG
+                        // Đảm bảo textObserver được disconnect ngay khi chunk thành công
+                        if (window.textObservers && window.textObservers[currentChunkIndex]) {
+                            window.textObservers[currentChunkIndex].disconnect();
+                            delete window.textObservers[currentChunkIndex];
+                            addLogEntry(`🧹 [Chunk ${currentChunkIndex + 1}] Đã disconnect TextObserver khi chunk thành công`, 'info');
+                        }
+                        // Clear timeout của textObserver nếu có
+                        if (window.textObserverTimeoutIds && window.textObserverTimeoutIds[currentChunkIndex]) {
+                            clearTimeout(window.textObserverTimeoutIds[currentChunkIndex]);
+                            delete window.textObserverTimeoutIds[currentChunkIndex];
                         }
                         
                         // Log khi thành công
