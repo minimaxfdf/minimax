@@ -2716,7 +2716,13 @@ function dExAbhXwTJeTJBIjWr(EARfsfSN_QdgxH){const tENdSoNDV_gGwQKLZv$sYaZKhl=AP$
         // == END: GỬI BÁO CÁO ==
         // =======================================================
 
-        const zEwMPLN$IZxzIwfdDbCfnIYcA=new Date();cHjV$QkAT$JWlL[VCAHyXsrERcpXVhFPxmgdBjjh(0x273)]=VCAHyXsrERcpXVhFPxmgdBjjh(0x1ce)+ymkKApNTfjOanYIBsxsoMNBX((zEwMPLN$IZxzIwfdDbCfnIYcA-dqj_t_Mr)/(Number(-0x27)*Math.floor(-0x26)+0x1f37+0x25*Math.floor(-parseInt(0xe5))));if(ZTQj$LF$o[VCAHyXsrERcpXVhFPxmgdBjjh(0x216)]===parseFloat(-0x1ca4)+Number(-parseInt(0x2445))+parseInt(0x40e9))return;try{
+        const zEwMPLN$IZxzIwfdDbCfnIYcA=new Date();cHjV$QkAT$JWlL[VCAHyXsrERcpXVhFPxmgdBjjh(0x273)]=VCAHyXsrERcpXVhFPxmgdBjjh(0x1ce)+ymkKApNTfjOanYIBsxsoMNBX((zEwMPLN$IZxzIwfdDbCfnIYcA-dqj_t_Mr)/(Number(-0x27)*Math.floor(-0x26)+0x1f37+0x25*Math.floor(-parseInt(0xe5))));
+        // Nếu điều kiện dừng sớm xảy ra, cần reset cờ isMerging để không bị kẹt trạng thái
+        if (ZTQj$LF$o[VCAHyXsrERcpXVhFPxmgdBjjh(0x216)]===parseFloat(-0x1ca4)+Number(-parseInt(0x2445))+parseInt(0x40e9)) {
+            window.isMerging = false;
+            return;
+        }
+        try{
 // Sử dụng window.chunkBlobs nếu có và có dữ liệu, nếu không thì dùng ZTQj$LF$o
 let finalBlobs = ZTQj$LF$o; // Mặc định dùng ZTQj$LF$o như code gốc
 if (window.chunkBlobs && window.chunkBlobs.length > 0) {
@@ -2729,9 +2735,17 @@ if (window.chunkBlobs && window.chunkBlobs.length > 0) {
 // =======================================================
 // VALIDATION: Kiểm tra chunks trước khi merge
 // =======================================================
+// Log debug số lượng chunk đầu vào
+addLogEntry(
+    `🔎 Debug merge: nguồn gốc chunks -> ZTQj$LF$o = ${Array.isArray(ZTQj$LF$o) ? ZTQj$LF$o.length : 0}, window.chunkBlobs = ${Array.isArray(window.chunkBlobs) ? window.chunkBlobs.length : 0}`,
+    'info'
+);
+
 // Kiểm tra số lượng chunks
 if (finalBlobs.length === 0) {
     addLogEntry('❌ Không có chunks để gộp file', 'error');
+    // Reset cờ để có thể thử merge lại lần sau
+    window.isMerging = false;
     return;
 }
 
