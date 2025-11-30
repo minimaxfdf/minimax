@@ -1338,7 +1338,7 @@ button:disabled {
         </div>
         <small style="color: #94a3b8; font-size: 12px; margin-top: 5px; display: block;">
             💡 Khi bật: Ưu tiên tách tại dòng trống. Khi tắt: Bỏ qua dòng trống, tách theo dấu câu.<br>
-            🔧 Chunk mặc định: 600 ký tự
+            🔧 Chunk mặc định: 750 ký tự
         </small>
     </div>
     <div id="gemini-text-stats"><span>Characters: 0</span><span>Words: 0</span><span>Sentences: 0</span><span>Paragraphs: 0</span></div>
@@ -2458,9 +2458,9 @@ let labelText = W_gEcM_tWt + j$DXl$iN(0x1c3) + successfulChunks + '/' + supYmMed
 if (typeof window.isFinalCheck !== 'undefined' && window.isFinalCheck && typeof window.failedChunks !== 'undefined' && window.failedChunks && window.failedChunks.length > 0) {
     labelText += ' 🔄 Retrying ' + window.failedChunks.length + ' failed chunks...';
 }
-pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=labelText;}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 600, minLength = 500, maxLength = 600) {
-    // Mặc định chunk lớn 600 ký tự
-    const actualMaxLength = 600;
+pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=labelText;}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 750, minLength = 500, maxLength = 750) {
+    // Mặc định chunk lớn 750 ký tự
+    const actualMaxLength = 750;
     const chunks = [];
     if (!text || typeof text !== 'string') {
         return chunks;
@@ -2650,9 +2650,9 @@ function normalizeChunkText(text) {
 }
 
 // Hàm tách chunk thông minh - luôn dùng hàm tách chunk cũ
-function smartSplitter(text, maxLength = 600) {
-    // Mặc định chunk lớn 600 ký tự
-    const actualMaxLength = 600;
+function smartSplitter(text, maxLength = 750) {
+    // Mặc định chunk lớn 750 ký tự
+    const actualMaxLength = 750;
 
     if (!text || typeof text !== 'string') {
         return [];
@@ -2668,7 +2668,7 @@ function smartSplitter(text, maxLength = 600) {
 
     // Luôn gọi hàm tách chunk cũ với toàn bộ văn bản đã chuẩn hóa
     addLogEntry(`🧠 Áp dụng tách chunk thông minh (smartSplitter)`, 'info');
-    const chunks = NrfPVBbJv_Dph$tazCpJ(normalized, 600, 500, actualMaxLength);
+    const chunks = NrfPVBbJv_Dph$tazCpJ(normalized, 750, 500, actualMaxLength);
 
     return chunks.filter(c => c.length > 0);
 }
@@ -6425,9 +6425,9 @@ async function waitForVoiceModelReady() {
 
                 // 3. Chuẩn bị cho lần render mới
                 if (typeof window.SI$acY !== 'undefined') {
-                    // Mặc định chunk lớn 600 ký tự
-                    const actualMaxLength = 600;
-                    window.SI$acY = chiaVanBanThongMinh(newText, 600, 500, actualMaxLength);
+                    // Mặc định chunk lớn 750 ký tự
+                    const actualMaxLength = 750;
+                    window.SI$acY = chiaVanBanThongMinh(newText, 750, 500, actualMaxLength);
                     console.log(`Tổng văn bản: ${newText.length} ký tự`);
                     console.log(`Số chunk được tách: ${window.SI$acY.length}`);
                     console.log(`Chunk đầu tiên: ${window.SI$acY[0] ? window.SI$acY[0].length : 0} ký tự`);
