@@ -3426,6 +3426,87 @@ async function uSTZrHUt_IC() {
             } else {
                 // Nếu không tìm thấy chunk chưa xử lý (có thể đang được xử lý), tiếp tục chờ
                 const pendingButProcessing = totalChunks - processedChunks;
+                
+                // CẢI THIỆN: Phát hiện chunk bị kẹt (có timeout nhưng quá lâu chưa xong)
+                const stuckChunks = [];
+                const MAX_WAIT_TIME = 90000; // 90 giây (1.5 phút) - lâu hơn timeout 60s của chunk
+                
+                // Khởi tạo biến theo dõi thời gian chờ
+                if (typeof window.chunkWaitStartTime === 'undefined') {
+                    window.chunkWaitStartTime = {};
+                }
+                
+                // Kiểm tra các chunk đang chờ
+                for (let i = 0; i < totalChunks; i++) {
+                    const status = window.chunkStatus && window.chunkStatus[i];
+                    const blob = window.chunkBlobs && window.chunkBlobs[i];
+                    const hasTimeout = window.chunkTimeoutIds && window.chunkTimeoutIds[i];
+                    const isProcessed = !!blob && (status === 'success' || status === 'failed');
+                    
+                    if (!isProcessed) {
+                        // Nếu chunk có timeout hoặc đang processing
+                        if (hasTimeout || processingChunks.has(i)) {
+                            // Ghi nhận thời gian bắt đầu chờ
+                            if (!window.chunkWaitStartTime[i]) {
+                                window.chunkWaitStartTime[i] = Date.now();
+                            }
+                            
+                            // Kiểm tra xem đã chờ quá lâu chưa
+                            const waitTime = Date.now() - window.chunkWaitStartTime[i];
+                            if (waitTime > MAX_WAIT_TIME) {
+                                stuckChunks.push(i);
+                                addLogEntry(`⚠️ Phát hiện chunk ${i + 1} bị kẹt (đã chờ ${Math.round(waitTime/1000)}s > ${MAX_WAIT_TIME/1000}s). Sẽ force retry...`, 'warning');
+                            }
+                        }
+                    } else {
+                        // Chunk đã xử lý xong, xóa thời gian chờ
+                        if (window.chunkWaitStartTime[i]) {
+                            delete window.chunkWaitStartTime[i];
+                        }
+                    }
+                }
+                
+                // Nếu có chunk bị kẹt, force retry
+                if (stuckChunks.length > 0) {
+                    addLogEntry(`🔧 Phát hiện ${stuckChunks.length} chunk bị kẹt: ${stuckChunks.map(i => i + 1).join(', ')}. Force retry...`, 'warning');
+                    
+                    // Clear timeout và processing state cho các chunk bị kẹt
+                    stuckChunks.forEach(chunkIndex => {
+                        if (window.chunkTimeoutIds && window.chunkTimeoutIds[chunkIndex]) {
+                            clearTimeout(window.chunkTimeoutIds[chunkIndex]);
+                            delete window.chunkTimeoutIds[chunkIndex];
+                        }
+                        if (window.chunkTimeoutIds && window.chunkTimeoutIds[`${chunkIndex}_warning`]) {
+                            clearTimeout(window.chunkTimeoutIds[`${chunkIndex}_warning`]);
+                            delete window.chunkTimeoutIds[`${chunkIndex}_warning`];
+                        }
+                        if (processingChunks.has(chunkIndex)) {
+                            processingChunks.delete(chunkIndex);
+                        }
+                        // Reset thời gian chờ
+                        delete window.chunkWaitStartTime[chunkIndex];
+                        // Reset status về pending để retry
+                        if (window.chunkStatus && window.chunkStatus[chunkIndex] !== 'failed') {
+                            window.chunkStatus[chunkIndex] = 'pending';
+                        }
+                    });
+                    
+                    // Nhảy đến chunk bị kẹt đầu tiên và retry
+                    (async () => {
+                        try {
+                            await resetWebInterface();
+                            const firstStuckIndex = Math.min(...stuckChunks);
+                            ttuo$y_KhCV = firstStuckIndex;
+                            addLogEntry(`🔄 STUCK CHUNK MODE: Nhảy đến chunk ${firstStuckIndex + 1} để retry...`, 'info');
+                            setTimeout(uSTZrHUt_IC, 2000);
+                        } catch (error) {
+                            addLogEntry(`❌ Lỗi khi retry chunk bị kẹt: ${error.message}`, 'error');
+                            setTimeout(uSTZrHUt_IC, 3000);
+                        }
+                    })();
+                    return;
+                }
+                
                 addLogEntry(`⏳ Còn ${pendingButProcessing} chunk chưa hoàn thành (có thể đang được xử lý). Tiếp tục chờ...`, 'info');
                 setTimeout(uSTZrHUt_IC, 2000);
                 return;
