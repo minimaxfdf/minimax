@@ -4228,10 +4228,10 @@ async function uSTZrHUt_IC() {
             addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra sau click: Text vẫn đúng (${postClickText.length} ký tự)`, 'success');
         }
         
-        // CẢI THIỆN: Giữ MutationObserver chạy LÂU HƠN (ít nhất 10-15 giây sau khi click)
-        // Thay vì disconnect sau 500ms, giữ đến khi chunk thành công hoặc ít nhất 15 giây
+        // CẢI THIỆN: Giữ MutationObserver chạy LÂU HƠN (ít nhất 55 giây sau khi click)
+        // Thay vì disconnect sau 500ms, giữ đến khi chunk thành công hoặc ít nhất 55 giây
         // MutationObserver sẽ tự động disconnect khi chunk thành công (trong phần xử lý success)
-        // Nếu không thành công trong 15 giây, mới disconnect
+        // Nếu không thành công trong 55 giây, mới disconnect (dưới timeout 60 giây)
         const textObserverTimeoutId = setTimeout(() => {
             // Dùng window.textObservers thay vì biến local để tránh race condition
             if (window.textObservers && window.textObservers[ttuo$y_KhCV]) {
@@ -4241,9 +4241,9 @@ async function uSTZrHUt_IC() {
                 if (textObserver) {
                     textObserver = null;
                 }
-                addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã dừng MutationObserver sau 15 giây`, 'info');
+                addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã dừng MutationObserver sau 55 giây`, 'info');
             }
-        }, 15000); // Giữ MutationObserver chạy 15 giây thay vì 500ms
+        }, 55000); // Giữ MutationObserver chạy 55 giây (dưới timeout 60 giây) để phát hiện audio xuất hiện muộn
         
         // Lưu timeout ID để có thể clear khi chunk thành công
         if (typeof window.textObserverTimeoutIds === 'undefined') {
