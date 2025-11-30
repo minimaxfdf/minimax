@@ -3805,13 +3805,30 @@ async function uSTZrHUt_IC() {
         const isDefaultTextStrict = (text) => {
             if (!text || typeof text !== 'string') return false;
             const lowerText = text.toLowerCase().trim();
-            // Kiểm tra các từ khóa đặc trưng của text mặc định
-            const defaultTextKeywords = ['delighted', 'assist', 'voice services', 'choose a voice', 'creative audio journey', 'hello, i\'m'];
-            const hasDefaultKeywords = defaultTextKeywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
-            // Kiểm tra độ dài - text mặc định thường có độ dài cố định (~151 ký tự)
-            const isDefaultLength = text.length >= 140 && text.length <= 160;
-            // Nếu có keywords VÀ độ dài khớp -> rất có thể là text mặc định
-            return hasDefaultKeywords && isDefaultLength;
+            // Kiểm tra các từ khóa đặc trưng của text mặc định (cả tiếng Anh và tiếng Việt)
+            const defaultTextKeywordsEN = ['delighted', 'assist', 'voice services', 'choose a voice', 'creative audio journey', 'hello, i\'m'];
+            // Text mặc định tiếng Việt chính xác: "Xin chào, tôi rất vui được hỗ trợ bạn với dịch vụ giọng nói của chúng tôi..."
+            const defaultTextKeywordsVI = [
+                'xin chào', 'giọng đọc', 'chúng tôi', 'đến với', 
+                'giọng đọc của chúng tôi', 'xin chào bạn đến với',
+                // Keywords từ text mặc định chính xác
+                'hỗ trợ bạn', 'dịch vụ giọng nói', 'chọn một giọng nói', 
+                'hành trình sáng tạo âm thanh', 'hỗ trợ', 'dịch vụ giọng nói của chúng tôi'
+            ];
+            const allKeywords = [...defaultTextKeywordsEN, ...defaultTextKeywordsVI];
+            
+            // Kiểm tra có keywords không
+            const hasDefaultKeywords = allKeywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
+            
+            // Đặc biệt: Nếu có cả "xin chào" VÀ ("giọng nói" HOẶC "hỗ trợ") -> chắc chắn là text mặc định tiếng Việt
+            const hasVietnameseDefault = lowerText.includes('xin chào') && 
+                (lowerText.includes('giọng nói') || lowerText.includes('giọng đọc') || lowerText.includes('hỗ trợ'));
+            
+            // Kiểm tra độ dài - text mặc định thường có độ dài cố định (~151 ký tự cho tiếng Anh, ~30-200 ký tự cho tiếng Việt)
+            const isDefaultLength = (text.length >= 30 && text.length <= 200);
+            
+            // Nếu có keywords VÀ (độ dài khớp HOẶC là text mặc định tiếng Việt chắc chắn)
+            return (hasDefaultKeywords && isDefaultLength) || hasVietnameseDefault;
         };
         
         try {
