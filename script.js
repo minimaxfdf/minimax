@@ -3127,13 +3127,21 @@ async function resetWebInterface() {
         addLogEntry(`🔄 Đang nhấn nút "Tạo lại" để đảm bảo trạng thái web sạch sẽ...`, 'info');
         
         // Tìm và click nút "Regenerate" hoặc "Tạo lại"
+        // QUAN TRỌNG: Chỉ tìm "Regenerate" hoặc "Tạo lại", KHÔNG tìm "Generate" hoặc "Tạo" 
+        // để tránh click nhầm vào nút "Bắt đầu tạo âm thanh"
         const regenerateButtons = document.querySelectorAll('button, .ant-btn');
         let foundRegenerate = false;
 
         for (const btn of regenerateButtons) {
+            // Bỏ qua nút "Bắt đầu tạo âm thanh" bằng cách kiểm tra ID
+            if (btn.id === 'gemini-start-queue-btn') {
+                continue; // Bỏ qua nút "Bắt đầu tạo âm thanh"
+            }
+            
             const btnText = (btn.textContent || '').toLowerCase().trim();
-            if (btnText.includes('regenerate') || btnText.includes('tạo lại') ||
-                btnText.includes('generate') || btnText.includes('tạo')) {
+            // CHỈ tìm "regenerate" hoặc "tạo lại", KHÔNG tìm "generate" hoặc "tạo" đơn thuần
+            // để tránh click nhầm vào nút "Bắt đầu tạo âm thanh"
+            if (btnText.includes('regenerate') || btnText.includes('tạo lại')) {
                 if (btn.offsetParent !== null && !btn.disabled) {
                     addLogEntry(`🔄 Tìm thấy nút "${btn.textContent}" - đang reset...`, 'info');
                     btn.click();
