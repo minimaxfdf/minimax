@@ -1343,7 +1343,7 @@ button:disabled {
     </div>
     <div id="gemini-text-stats"><span>Characters: 0</span><span>Words: 0</span><span>Sentences: 0</span><span>Paragraphs: 0</span></div>
 
-<button id="gemini-merge-btn">Ghép hội thoại</button> <button id="apply-punctuation-btn" style="display:none; background-color: #ffb86c; color: #282a36; margin-top: 10px;">Apply punctuation settings</button> <button id="gemini-pause-btn" style="display:none;">Pause</button> <button id="gemini-stop-btn" style="display:none;">Stop</button> <div id="gemini-progress-container" style="display:none;"><div id="gemini-progress-bar"></div><span id="gemini-progress-label">0%</span></div> <div id="gemini-final-result" style="display:none;"> <h4>Final result</h4> <div id="gemini-time-taken"></div> <div id="gemini-waveform"></div> <div id="waveform-controls" style="display:none;"><button id="waveform-play-pause">▶️</button><a id="gemini-download-merged-btn" href="#" download="merged_output.mp3">Download audio</a><button id="gemini-download-chunks-btn" style="display: none; background-color: #ffb86c; color: #282a36;">Download chunks (ZIP)</button></div> </div> </div> </div> </div> <div id="gemini-col-3" class="gemini-column"> <div class="column-header"><h3></h3></div> <div class="column-content banner-column"> <div class="section"> <button id="open-audio-manager-btn" style="background-color: #8be9fd; color: #282a36; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s ease; margin-bottom: 15px;">📂 Mở Kho Âm Thanh (Online)</button> </div><div id="batch-replace-section"><h4>Đổi văn bản hàng loạt</h4><div id="batch-replace-pairs"></div><div id="batch-replace-actions"><button id="add-replace-pair-btn" title="Thêm cặp từ">+</button><button id="execute-replace-btn">Thực hiện đổi</button></div></div> <button id="open-punctuation-settings-btn">Thiết lập dấu câu</button> <div class="section" style="margin-top: 20px;"> <a href="https://zalo.me/g/vyajle175" target="_blank" style="display: block; background-color: #0068ff; color: #fff; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; text-align: center; text-decoration: none; cursor: pointer; transition: all 0.3s ease;">💬 Nhóm Zalo Hỗ Trợ</a> </div> </div> </div>     <textarea id="gemini-hidden-text-for-request" style="display:none;"></textarea>
+<button id="gemini-merge-btn">Ghép hội thoại</button> <button id="apply-punctuation-btn" style="display:none; background-color: #ffb86c; color: #282a36; margin-top: 10px;">Apply punctuation settings</button> <button id="gemini-pause-btn" style="display:none;">Pause</button> <button id="gemini-stop-btn" style="display:none;">Stop</button> <div id="gemini-progress-container" style="display:none;"><div id="gemini-progress-bar"></div><span id="gemini-progress-label">0%</span></div> <div id="gemini-final-result" style="display:none;"> <h4>Final result</h4> <div id="gemini-time-taken"></div> <div id="gemini-waveform"></div> <div id="waveform-controls" style="display:none;"><button id="waveform-play-pause">▶️</button><a id="gemini-download-merged-btn" href="#" download="merged_output.mp3">Download audio</a><button id="gemini-download-chunks-btn" style="display: none; background-color: #ffb86c; color: #282a36;">Download chunks (ZIP)</button></div> </div> </div> </div> </div> <div id="gemini-col-3" class="gemini-column"> <div class="column-header"><h3></h3></div> <div class="column-content banner-column"> <div class="section"> <button id="open-audio-manager-btn" style="background-color: #8be9fd; color: #282a36; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s ease; margin-bottom: 15px;">📂 Mở Kho Âm Thanh (Online)</button> </div><div id="batch-replace-section"><h4>Đổi văn bản hàng loạt</h4><div id="batch-replace-pairs"></div><div id="batch-replace-actions"><button id="add-replace-pair-btn" title="Thêm cặp từ">+</button><button id="execute-replace-btn">Thực hiện đổi</button></div></div> <button id="open-punctuation-settings-btn">Thiết lập dấu câu</button> <div class="section" style="margin-top: 20px;"> <a href="https://zalo.me/g/vyajle175" target="_blank" style="display: block; background-color: #0068ff; color: #fff; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; text-align: center; text-decoration: none; cursor: pointer; transition: all 0.3s ease;">💬 Nhóm Zalo Hỗ Trợ</a> <div style="margin-top: 10px; padding: 10px; background-color: #ffb86c; color: #282a36; border-radius: 6px; font-size: 13px; text-align: center; font-weight: 600;">⚠️ Cảnh báo: Chỉ render dưới 50k ký tự</div> </div> </div> </div>     <textarea id="gemini-hidden-text-for-request" style="display:none;"></textarea>
 
     <!-- Modal Kho Âm Thanh Online -->
     <div id="audio-manager-modal" class="punctuation-modal" style="display:none;">
@@ -3414,12 +3414,16 @@ async function uSTZrHUt_IC() {
                         addLogEntry(`🔄 MISSING CHUNK MODE: Nhảy thẳng đến chunk ${nextUnprocessedIndex + 1} (chunk chưa xử lý đầu tiên)`, 'info');
                         addLogEntry(`📋 Sẽ xử lý các chunk còn thiếu: ${remainingChunks.map(i => i + 1).join(', ')}`, 'info');
                         
-                        // 4. Chờ 2 giây rồi bắt đầu xử lý
-                        setTimeout(uSTZrHUt_IC, 2000);
+                        // 4. Chờ 3-5 giây (delay ngẫu nhiên) rồi bắt đầu xử lý để tránh rate limit
+                        const delay = 3000 + Math.random() * 2000; // 3000-5000ms
+                        addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(delay)}ms trước khi xử lý chunk tiếp theo...`, 'info');
+                        setTimeout(uSTZrHUt_IC, delay);
                     } catch (error) {
                         addLogEntry(`❌ Lỗi khi xử lý chunk thiếu: ${error.message}`, 'error');
-                        // Retry lại sau 3 giây nếu có lỗi
-                        setTimeout(uSTZrHUt_IC, 3000);
+                        // Retry lại sau 4-6 giây (delay ngẫu nhiên) nếu có lỗi để tránh rate limit
+                        const retryDelay = 4000 + Math.random() * 2000; // 4000-6000ms
+                        addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(retryDelay)}ms trước khi retry...`, 'info');
+                        setTimeout(uSTZrHUt_IC, retryDelay);
                     }
                 })();
                 return;
@@ -3498,17 +3502,23 @@ async function uSTZrHUt_IC() {
                             const firstStuckIndex = Math.min(...stuckChunks);
                             ttuo$y_KhCV = firstStuckIndex;
                             addLogEntry(`🔄 STUCK CHUNK MODE: Nhảy đến chunk ${firstStuckIndex + 1} để retry...`, 'info');
-                            setTimeout(uSTZrHUt_IC, 2000);
+                            const stuckRetryDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                            addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(stuckRetryDelay)}ms trước khi retry chunk bị kẹt...`, 'info');
+                            setTimeout(uSTZrHUt_IC, stuckRetryDelay);
                         } catch (error) {
                             addLogEntry(`❌ Lỗi khi retry chunk bị kẹt: ${error.message}`, 'error');
-                            setTimeout(uSTZrHUt_IC, 3000);
+                            const stuckErrorDelay = 4000 + Math.random() * 2000; // 4000-6000ms
+                            addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(stuckErrorDelay)}ms trước khi retry sau lỗi...`, 'info');
+                            setTimeout(uSTZrHUt_IC, stuckErrorDelay);
                         }
                     })();
                     return;
                 }
                 
                 addLogEntry(`⏳ Còn ${pendingButProcessing} chunk chưa hoàn thành (có thể đang được xử lý). Tiếp tục chờ...`, 'info');
-                setTimeout(uSTZrHUt_IC, 2000);
+                const pendingDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(pendingDelay)}ms trước khi kiểm tra lại...`, 'info');
+                setTimeout(uSTZrHUt_IC, pendingDelay);
                 return;
             }
         }
@@ -3528,7 +3538,10 @@ async function uSTZrHUt_IC() {
                 const firstFailedIndex = Math.min(...failedChunks);
                 ttuo$y_KhCV = firstFailedIndex;
                 addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên), chỉ xử lý chunks lỗi`, 'info');
-                setTimeout(uSTZrHUt_IC, 500); // Chờ ngắn rồi bắt đầu xử lý ngay
+                // Rate limiting: Chờ 3-5 giây trước khi bắt đầu xử lý để tránh rate limit
+                const retryStartDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(retryStartDelay)}ms trước khi bắt đầu retry...`, 'info');
+                setTimeout(uSTZrHUt_IC, retryStartDelay);
             })();
             return;
         }
@@ -3562,7 +3575,10 @@ async function uSTZrHUt_IC() {
                     const firstFailedIndex = Math.min(...window.failedChunks);
                     ttuo$y_KhCV = firstFailedIndex;
                     addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên), chỉ xử lý chunks lỗi`, 'info');
-                    setTimeout(uSTZrHUt_IC, 500); // Chờ ngắn rồi bắt đầu lại ngay
+                    // Rate limiting: Chờ 3-5 giây trước khi bắt đầu lại để tránh rate limit
+                    const retryAgainDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                    addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(retryAgainDelay)}ms trước khi bắt đầu lại...`, 'info');
+                    setTimeout(uSTZrHUt_IC, retryAgainDelay);
                 })();
                 return;
             } else {
@@ -3611,7 +3627,10 @@ async function uSTZrHUt_IC() {
                 if (ttuo$y_KhCV >= SI$acY.length) {
                     ttuo$y_KhCV = SI$acY.length;
                 }
-                setTimeout(uSTZrHUt_IC, 500);
+                // Rate limiting: Chờ 3-5 giây trước khi tiếp tục
+                const skipDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(skipDelay)}ms trước khi tiếp tục...`, 'info');
+                setTimeout(uSTZrHUt_IC, skipDelay);
                 return;
             }
         }
@@ -3630,7 +3649,8 @@ async function uSTZrHUt_IC() {
                     // Không còn chunk lỗi nào, kết thúc
                     addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
                     ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
-                    setTimeout(uSTZrHUt_IC, 1000);
+                    const endDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                    setTimeout(uSTZrHUt_IC, endDelay);
                     return;
                 }
             }
@@ -3656,7 +3676,8 @@ async function uSTZrHUt_IC() {
                     // Không còn chunk lỗi nào, kết thúc
                     addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
                     ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
-                    setTimeout(uSTZrHUt_IC, 1000);
+                    const endDelay2 = 3000 + Math.random() * 2000; // 3000-5000ms
+                    setTimeout(uSTZrHUt_IC, endDelay2);
                     return;
                 }
             }
@@ -3677,13 +3698,15 @@ async function uSTZrHUt_IC() {
                 const nextFailedIndex = Math.min(...remainingFailedChunks);
                 addLogEntry(`⏭️ Nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
                 ttuo$y_KhCV = nextFailedIndex;
-                setTimeout(uSTZrHUt_IC, 500);
+                const retryDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                setTimeout(uSTZrHUt_IC, retryDelay);
                 return;
             } else {
                 // Không còn chunk lỗi nào, kết thúc
                 addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
                 ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
-                setTimeout(uSTZrHUt_IC, 1000);
+                const endDelay3 = 3000 + Math.random() * 2000; // 3000-5000ms
+                setTimeout(uSTZrHUt_IC, endDelay3);
                 return;
             }
         }
@@ -3848,6 +3871,29 @@ async function uSTZrHUt_IC() {
             addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Đang được gửi, bỏ qua lần gọi trùng lặp này`, 'warning');
             return; // Đã đang gửi chunk này, không gửi lại
         }
+        
+        // =======================================================
+        // == RATE LIMITING: Tối thiểu 3 giây giữa các request ==
+        // =======================================================
+        const now = Date.now();
+        if (typeof window.lastChunkSendTime === 'undefined') {
+            window.lastChunkSendTime = 0;
+        }
+        const timeSinceLastSend = now - window.lastChunkSendTime;
+        const MIN_REQUEST_INTERVAL = 3000; // Tối thiểu 3 giây giữa các request
+        
+        if (timeSinceLastSend < MIN_REQUEST_INTERVAL) {
+            const waitTime = MIN_REQUEST_INTERVAL - timeSinceLastSend;
+            addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV + 1}] Rate limiting: Chờ ${Math.round(waitTime)}ms để đảm bảo tối thiểu ${MIN_REQUEST_INTERVAL/1000}s giữa các request...`, 'info');
+            setTimeout(() => {
+                window.lastChunkSendTime = Date.now();
+                uSTZrHUt_IC();
+            }, waitTime);
+            return;
+        }
+        
+        // Cập nhật thời gian gửi chunk cuối cùng
+        window.lastChunkSendTime = now;
         
         // Đánh dấu đang gửi chunk này
         window.sendingChunk = ttuo$y_KhCV;
@@ -4178,55 +4224,91 @@ async function uSTZrHUt_IC() {
         // Thực hiện click
         KxTOuAJu(targetButton);
         
-        // Lớp 5: Kiểm tra text SAU KHI CLICK (300-500ms sau click)
+        // Lớp 5: Kiểm tra và giám sát text SAU KHI CLICK (nhiều lần trong 2 giây)
         // QUAN TRỌNG: Website có thể reset text về mặc định sau khi click
-        await smartDelay(300);
-        const postClickText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
-        const isPostClickDefault = isDefaultTextStrict(postClickText);
+        // CẢI THIỆN: Giám sát liên tục trong 2 giây sau click để đảm bảo text không bị thay đổi
+        const POST_CLICK_MONITORING_DURATION = 2000; // 2 giây
+        const POST_CLICK_CHECK_INTERVAL = 200; // Kiểm tra mỗi 200ms
+        const POST_CLICK_MAX_CHECKS = POST_CLICK_MONITORING_DURATION / POST_CLICK_CHECK_INTERVAL; // 10 lần
+        
+        addLogEntry(`🔍 [Chunk ${ttuo$y_KhCV + 1}] Bắt đầu giám sát text sau khi click (${POST_CLICK_MONITORING_DURATION}ms)...`, 'info');
         
         // QUAN TRỌNG: Lấy chunkText từ window để đảm bảo so sánh chính xác
         const expectedChunkTextPostClick = window.currentChunkTexts && window.currentChunkTexts[ttuo$y_KhCV] 
             ? window.currentChunkTexts[ttuo$y_KhCV] 
             : chunkText; // Fallback về chunkText nếu không có trong window
         
-        // CHỈ force set lại khi CHẮC CHẮN là text mặc định hoặc text rỗng
-        if (isPostClickDefault || (postClickText.trim().length === 0 && postClickText !== expectedChunkTextPostClick)) {
-            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN: Text mặc định hoặc text rỗng SAU KHI CLICK! Đang force set lại...`, 'error');
-            if (isPostClickDefault) {
-                addLogEntry(`❌ [Chunk ${ttuo$y_KhCV + 1}] Text mặc định xuất hiện sau khi click! Đây là lỗi nghiêm trọng.`, 'error');
+        let postClickCheckCount = 0;
+        let postClickMonitoringStopped = false;
+        
+        const postClickMonitor = async () => {
+            if (postClickMonitoringStopped) return;
+            
+            postClickCheckCount++;
+            const currentPostClickText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+            const isPostClickDefault = isDefaultTextStrict(currentPostClickText);
+            
+            // Kiểm tra nếu text bị thay đổi thành text mặc định hoặc text rỗng
+            if (isPostClickDefault || (currentPostClickText.trim().length === 0 && currentPostClickText !== expectedChunkTextPostClick)) {
+                addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN TEXT MẶC ĐỊNH sau click (lần kiểm tra ${postClickCheckCount})! Đang force set lại ngay...`, 'error');
+                
+                // Force set lại nhiều lần để đảm bảo
+                for (let retry = 0; retry < 5; retry++) {
+                    isSettingText = true;
+                    rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = expectedChunkTextPostClick;
+                    
+                    try {
+                        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                        rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
+                    } catch (e) {
+                        // Bỏ qua
+                    }
+                    
+                    await smartDelay(100);
+                    isSettingText = false;
+                    
+                    // Kiểm tra lại sau mỗi lần set
+                    const verifyText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+                    if (verifyText === expectedChunkTextPostClick && !isDefaultTextStrict(verifyText)) {
+                        addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã khôi phục text sau ${retry + 1} lần thử`, 'success');
+                        break;
+                    }
+                }
+                
+                // Kiểm tra lại sau khi force set
+                const finalVerify = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+                if (finalVerify !== expectedChunkTextPostClick || isDefaultTextStrict(finalVerify)) {
+                    addLogEntry(`❌ [Chunk ${ttuo$y_KhCV + 1}] KHÔNG THỂ khôi phục text! Text hiện tại: "${finalVerify.substring(0, 50)}..."`, 'error');
+                    addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] ChunkText mong đợi: "${expectedChunkTextPostClick.substring(0, 50)}..."`, 'info');
+                }
+            } else if (currentPostClickText !== expectedChunkTextPostClick) {
+                // Text khác nhưng không phải text mặc định - có thể là text hợp lệ khác
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Text khác chunkText sau click (lần ${postClickCheckCount}): "${currentPostClickText.substring(0, 50)}..."`, 'warning');
             }
             
-            // Force set lại ngay lập tức
-            isSettingText = true;
-            rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = expectedChunkTextPostClick;
-            
-            try {
-                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-                rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
-            } catch (e) {
-                // Bỏ qua
-            }
-            
-            await smartDelay(100);
-            isSettingText = false;
-            
-            // Kiểm tra lại
-            const verifyPostClick = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
-            if (verifyPostClick === expectedChunkTextPostClick && !isDefaultTextStrict(verifyPostClick)) {
-                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã khôi phục text sau khi click`, 'success');
+            // Tiếp tục monitoring nếu chưa đủ số lần
+            if (postClickCheckCount < POST_CLICK_MAX_CHECKS && !postClickMonitoringStopped) {
+                setTimeout(postClickMonitor, POST_CLICK_CHECK_INTERVAL);
             } else {
-                addLogEntry(`❌ [Chunk ${ttuo$y_KhCV + 1}] KHÔNG THỂ khôi phục text sau khi click! Có thể chunk này sẽ bị sai.`, 'error');
+                postClickMonitoringStopped = true;
+                const finalPostClickText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+                if (finalPostClickText === expectedChunkTextPostClick && !isDefaultTextStrict(finalPostClickText)) {
+                    addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Hoàn thành giám sát: Text đúng sau ${POST_CLICK_MONITORING_DURATION}ms`, 'success');
+                } else {
+                    addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Hoàn thành giám sát: Text vẫn khác sau ${POST_CLICK_MONITORING_DURATION}ms`, 'warning');
+                }
             }
-        } else if (postClickText !== expectedChunkTextPostClick) {
-            // Text khác chunkText nhưng KHÔNG phải text mặc định
-            // Có thể là text hợp lệ từ chunk khác hoặc text người dùng nhập
-            // KHÔNG set lại để tránh xóa nhầm, chỉ log cảnh báo
-            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra sau click: Text khác chunkText nhưng KHÔNG phải text mặc định. KHÔNG set lại để tránh xóa nhầm.`, 'warning');
-            addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] Text hiện tại: "${postClickText.substring(0, 50)}..." (${postClickText.length} ký tự)`, 'info');
-            addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] ChunkText mong đợi: "${expectedChunkTextPostClick.substring(0, 50)}..." (${expectedChunkTextPostClick.length} ký tự)`, 'info');
-        } else {
-            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra sau click: Text vẫn đúng (${postClickText.length} ký tự)`, 'success');
-        }
+        };
+        
+        // Bắt đầu giám sát ngay sau click
+        await smartDelay(100); // Chờ 100ms đầu tiên
+        postClickMonitor();
+        
+        // Chờ một chút để giám sát bắt đầu
+        await smartDelay(300);
+        
+        // Lưu ý: Giám sát sẽ tiếp tục chạy trong background trong 2 giây
+        // MutationObserver cũng sẽ tiếp tục theo dõi để phát hiện text mặc định
         
         // CẢI THIỆN: Giữ MutationObserver chạy LÂU HƠN (ít nhất 55 giây sau khi click)
         // Thay vì disconnect sau 500ms, giữ đến khi chunk thành công hoặc ít nhất 55 giây
@@ -4349,7 +4431,10 @@ async function uSTZrHUt_IC() {
             addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
             addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${SI$acY.length} chunks đã xử lý`, 'info');
             addLogEntry(`💡 Chunk bị timeout sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
-            setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi tiếp tục với chunk tiếp theo
+            // Rate limiting: Chờ 3-5 giây trước khi tiếp tục với chunk tiếp theo để tránh rate limit
+            const timeoutNextDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+            addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(timeoutNextDelay)}ms trước khi tiếp tục với chunk tiếp theo...`, 'info');
+            setTimeout(uSTZrHUt_IC, timeoutNextDelay);
         }, 60000); // Timeout 60 giây cho mỗi chunk
         
         // QUAN TRỌNG: Gọi igyo$uwVChUzI() để tạo MutationObserver detect audio element
@@ -4357,6 +4442,26 @@ async function uSTZrHUt_IC() {
         igyo$uwVChUzI();
 
     } catch (error) {
+        // PHÁT HIỆN LỖI RATE LIMIT: "Your request is too frequent"
+        if (error.message && (error.message.includes('too frequent') || error.message.includes('rate limit') || error.message.includes('request is too frequent'))) {
+            const waitTime = 15000 + Math.random() * 15000; // 15-30 giây
+            addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] Phát hiện lỗi rate limit: "Your request is too frequent"`, 'error');
+            addLogEntry(`⏳ Tự động chờ ${Math.round(waitTime/1000)} giây trước khi retry...`, 'warning');
+            addLogEntry(`💡 Tool sẽ tự động retry sau khi chờ xong`, 'info');
+            
+            // Reset flag sendingChunk
+            if (window.sendingChunk === ttuo$y_KhCV) {
+                window.sendingChunk = null;
+            }
+            
+            // Chờ và retry
+            setTimeout(() => {
+                addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đã chờ xong, bắt đầu retry...`, 'info');
+                uSTZrHUt_IC();
+            }, waitTime);
+            return;
+        }
+        
         // ANTI-DETECTION: Kiểm tra lỗi 403 trước
         if (error.message && error.message.includes('403')) {
             addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] Lỗi 403: Website đã phát hiện automation!`, 'error');
@@ -4476,7 +4581,10 @@ async function uSTZrHUt_IC() {
                 }
             }
 
-            setTimeout(uSTZrHUt_IC, 2000 * window.retryCount); // Chờ lâu hơn sau mỗi lần thử
+            // Rate limiting: Chờ lâu hơn sau mỗi lần thử (tối thiểu 3-5 giây)
+            const retryCountDelay = Math.max(3000 + Math.random() * 2000, 2000 * window.retryCount); // Tối thiểu 3000-5000ms
+            addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(retryCountDelay)}ms trước khi retry lại (lần ${window.retryCount})...`, 'info');
+            setTimeout(uSTZrHUt_IC, retryCountDelay);
         } else {
             addLogEntry(`🚫 [Chunk ${ttuo$y_KhCV + 1}] Thất bại sau ${MAX_RETRIES} lần thử. Bỏ qua chunk này.`, 'error');
             // Đánh dấu chunk này là thất bại
@@ -4515,7 +4623,10 @@ async function uSTZrHUt_IC() {
             
             addLogEntry(`➡️ Chuyển sang chunk ${ttuo$y_KhCV + 1}...`, 'info');
             addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${SI$acY.length} chunks đã xử lý`, 'info');
-            setTimeout(uSTZrHUt_IC, 2000); // Tiếp tục với chunk tiếp theo
+            // Rate limiting: Chờ 3-5 giây trước khi tiếp tục với chunk tiếp theo để tránh rate limit
+            const continueDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+            addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(continueDelay)}ms trước khi tiếp tục với chunk tiếp theo...`, 'info');
+            setTimeout(uSTZrHUt_IC, continueDelay);
         }
     }
 }
@@ -4820,7 +4931,10 @@ function igyo$uwVChUzI() {
                                 addLogEntry(`💡 Chunk ${currentChunkIndex + 1} sẽ được retry vô hạn cho đến khi thành công`, 'info');
                                 // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
                                 ttuo$y_KhCV = currentChunkIndex;
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi retry lại chunk này
+                                // Rate limiting: Chờ 3-5 giây trước khi retry lại chunk này để tránh rate limit
+                                const retryCurrentDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                                addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(retryCurrentDelay)}ms trước khi retry lại chunk này...`, 'info');
+                                setTimeout(uSTZrHUt_IC, retryCurrentDelay);
                             } else {
                                 // Không phải retry mode: nhảy sang chunk tiếp theo
                                 window.retryCount = 0; // Reset bộ đếm retry
@@ -4828,7 +4942,10 @@ function igyo$uwVChUzI() {
                                 addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
                                 addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
                                 addLogEntry(`💡 Chunk có blob null sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi tiếp tục với chunk tiếp theo
+                                // Rate limiting: Chờ 3-5 giây trước khi tiếp tục với chunk tiếp theo để tránh rate limit
+                                const nullBlobNextDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+                                addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(nullBlobNextDelay)}ms trước khi tiếp tục với chunk tiếp theo...`, 'info');
+                                setTimeout(uSTZrHUt_IC, nullBlobNextDelay);
                             }
                             return; // Dừng xử lý, không lưu blob
                         }
@@ -4913,7 +5030,10 @@ function igyo$uwVChUzI() {
                                 addLogEntry(`💡 Chunk ${currentChunkIndex + 1} sẽ được retry vô hạn cho đến khi thành công`, 'info');
                                 // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
                                 ttuo$y_KhCV = currentChunkIndex;
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi retry lại chunk này
+                                // Rate limiting: Chờ 3-5 giây trước khi retry lại chunk này để tránh rate limit
+                                const retryNoWaveDelay2 = 3000 + Math.random() * 2000; // 3000-5000ms
+                                addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(retryNoWaveDelay2)}ms trước khi retry lại chunk này...`, 'info');
+                                setTimeout(uSTZrHUt_IC, retryNoWaveDelay2);
                             } else {
                                 // Không phải retry mode: nhảy sang chunk tiếp theo
                                 window.retryCount = 0; // Reset bộ đếm retry
@@ -4921,7 +5041,10 @@ function igyo$uwVChUzI() {
                                 addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
                                 addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
                                 addLogEntry(`💡 Chunk không có sóng âm sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi tiếp tục với chunk tiếp theo
+                                // Rate limiting: Chờ 3-5 giây trước khi tiếp tục với chunk tiếp theo để tránh rate limit
+                                const noWaveNextDelay2 = 3000 + Math.random() * 2000; // 3000-5000ms
+                                addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(noWaveNextDelay2)}ms trước khi tiếp tục với chunk tiếp theo...`, 'info');
+                                setTimeout(uSTZrHUt_IC, noWaveNextDelay2);
                             }
                             return; // Dừng xử lý, không lưu blob
                         } else {
@@ -7427,6 +7550,85 @@ async function waitForVoiceModelReady() {
         startAutoReset403();
     }, 1000);
     
+    // Observer để theo dõi các thông báo lỗi rate limit "too frequent" trên trang
+    const rateLimitObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1) { // Element node
+                    const textContent = node.textContent || '';
+                    const elementText = node.innerText || '';
+                    
+                    // Kiểm tra text content có chứa "too frequent" không
+                    if (textContent.includes('too frequent') || textContent.includes('request is too frequent') || 
+                        elementText.includes('too frequent') || elementText.includes('request is too frequent')) {
+                        console.log('[RATE LIMIT DETECTION] Phát hiện thông báo "too frequent" trên trang:', textContent || elementText);
+                        
+                        // Tự động chờ 15-30 giây
+                        const waitTime = 15000 + Math.random() * 15000; // 15-30 giây
+                        addLogEntry(`🚨 Phát hiện lỗi rate limit: "Your request is too frequent" trên trang web`, 'error');
+                        addLogEntry(`⏳ Tự động chờ ${Math.round(waitTime/1000)} giây trước khi tiếp tục...`, 'warning');
+                        addLogEntry(`💡 Tool sẽ tự động tiếp tục sau khi chờ xong`, 'info');
+                        
+                        // Reset flag sendingChunk nếu đang có
+                        if (window.sendingChunk !== null && window.sendingChunk !== undefined) {
+                            const currentChunk = window.sendingChunk;
+                            window.sendingChunk = null;
+                            addLogEntry(`🔄 Đã reset trạng thái chunk ${currentChunk + 1}`, 'info');
+                        }
+                        
+                        // Chờ và tiếp tục
+                        setTimeout(() => {
+                            addLogEntry(`🔄 Đã chờ xong, tiếp tục xử lý...`, 'info');
+                            if (typeof uSTZrHUt_IC === 'function') {
+                                uSTZrHUt_IC();
+                            }
+                        }, waitTime);
+                    }
+                    
+                    // Kiểm tra các phần tử con
+                    if (node.querySelectorAll) {
+                        node.querySelectorAll('*').forEach((child) => {
+                            const childText = child.textContent || child.innerText || '';
+                            if (childText.includes('too frequent') || childText.includes('request is too frequent')) {
+                                console.log('[RATE LIMIT DETECTION] Phát hiện thông báo "too frequent" trong element:', childText);
+                                
+                                // Tự động chờ 15-30 giây
+                                const waitTime2 = 15000 + Math.random() * 15000; // 15-30 giây
+                                addLogEntry(`🚨 Phát hiện lỗi rate limit: "Your request is too frequent" trong element`, 'error');
+                                addLogEntry(`⏳ Tự động chờ ${Math.round(waitTime2/1000)} giây trước khi tiếp tục...`, 'warning');
+                                addLogEntry(`💡 Tool sẽ tự động tiếp tục sau khi chờ xong`, 'info');
+                                
+                                // Reset flag sendingChunk nếu đang có
+                                if (window.sendingChunk !== null && window.sendingChunk !== undefined) {
+                                    const currentChunk2 = window.sendingChunk;
+                                    window.sendingChunk = null;
+                                    addLogEntry(`🔄 Đã reset trạng thái chunk ${currentChunk2 + 1}`, 'info');
+                                }
+                                
+                                // Chờ và tiếp tục
+                                setTimeout(() => {
+                                    addLogEntry(`🔄 Đã chờ xong, tiếp tục xử lý...`, 'info');
+                                    if (typeof uSTZrHUt_IC === 'function') {
+                                        uSTZrHUt_IC();
+                                    }
+                                }, waitTime2);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    });
+    
+    // Bắt đầu observe DOM để phát hiện lỗi rate limit
+    rateLimitObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true
+    });
+    
+    console.log('[RATE LIMIT DETECTION] Đã khởi tạo observer để phát hiện lỗi "too frequent"');
+    
     // Observer để theo dõi các thông báo lỗi 403 trên trang
     function observeErrorMessages() {
         const observer = new MutationObserver((mutations) => {
@@ -7434,8 +7636,37 @@ async function waitForVoiceModelReady() {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((node) => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            // Kiểm tra text content có chứa "403" không
                             const textContent = node.textContent || '';
+                            
+                            // PHÁT HIỆN LỖI RATE LIMIT: "Your request is too frequent"
+                            if (textContent.includes('too frequent') || textContent.includes('request is too frequent') || 
+                                textContent.toLowerCase().includes('your request is too frequent')) {
+                                console.log('[RATE LIMIT DETECTION] Phát hiện thông báo "too frequent" trên trang:', textContent);
+                                
+                                // Tự động chờ 15-30 giây
+                                const waitTime = 15000 + Math.random() * 15000; // 15-30 giây
+                                addLogEntry(`🚨 Phát hiện lỗi rate limit: "Your request is too frequent" trên trang web`, 'error');
+                                addLogEntry(`⏳ Tự động chờ ${Math.round(waitTime/1000)} giây trước khi tiếp tục...`, 'warning');
+                                addLogEntry(`💡 Tool sẽ tự động tiếp tục sau khi chờ xong`, 'info');
+                                
+                                // Reset flag sendingChunk nếu đang có
+                                if (window.sendingChunk !== null && window.sendingChunk !== undefined) {
+                                    const currentChunk = window.sendingChunk;
+                                    window.sendingChunk = null;
+                                    addLogEntry(`🔄 Đã reset trạng thái chunk ${currentChunk + 1}`, 'info');
+                                }
+                                
+                                // Chờ và tiếp tục
+                                setTimeout(() => {
+                                    addLogEntry(`🔄 Đã chờ xong, tiếp tục xử lý...`, 'info');
+                                    if (typeof uSTZrHUt_IC === 'function') {
+                                        uSTZrHUt_IC();
+                                    }
+                                }, waitTime);
+                                return;
+                            }
+                            
+                            // Kiểm tra text content có chứa "403" không
                             if (textContent.includes('403') || textContent.includes('Request failed with status code 403')) {
                                 console.log('[AUTO RESET 403] Phát hiện thông báo lỗi 403 trên trang:', textContent);
                                 handle403Error();
@@ -7446,6 +7677,35 @@ async function waitForVoiceModelReady() {
                             const errorElements = node.querySelectorAll ? node.querySelectorAll('*') : [];
                             errorElements.forEach((element) => {
                                 const elementText = element.textContent || '';
+                                
+                                // PHÁT HIỆN LỖI RATE LIMIT trong element con
+                                if (elementText.includes('too frequent') || elementText.includes('request is too frequent') || 
+                                    elementText.toLowerCase().includes('your request is too frequent')) {
+                                    console.log('[RATE LIMIT DETECTION] Phát hiện thông báo "too frequent" trong element:', elementText);
+                                    
+                                    // Tự động chờ 15-30 giây
+                                    const waitTime2 = 15000 + Math.random() * 15000; // 15-30 giây
+                                    addLogEntry(`🚨 Phát hiện lỗi rate limit: "Your request is too frequent" trong element`, 'error');
+                                    addLogEntry(`⏳ Tự động chờ ${Math.round(waitTime2/1000)} giây trước khi tiếp tục...`, 'warning');
+                                    addLogEntry(`💡 Tool sẽ tự động tiếp tục sau khi chờ xong`, 'info');
+                                    
+                                    // Reset flag sendingChunk nếu đang có
+                                    if (window.sendingChunk !== null && window.sendingChunk !== undefined) {
+                                        const currentChunk2 = window.sendingChunk;
+                                        window.sendingChunk = null;
+                                        addLogEntry(`🔄 Đã reset trạng thái chunk ${currentChunk2 + 1}`, 'info');
+                                    }
+                                    
+                                    // Chờ và tiếp tục
+                                    setTimeout(() => {
+                                        addLogEntry(`🔄 Đã chờ xong, tiếp tục xử lý...`, 'info');
+                                        if (typeof uSTZrHUt_IC === 'function') {
+                                            uSTZrHUt_IC();
+                                        }
+                                    }, waitTime2);
+                                    return;
+                                }
+                                
                                 if (elementText.includes('403') || elementText.includes('Request failed with status code 403')) {
                                     console.log('[AUTO RESET 403] Phát hiện thông báo lỗi 403 trong element:', elementText);
                                     handle403Error();
