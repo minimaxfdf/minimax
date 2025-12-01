@@ -3556,10 +3556,33 @@ async function uSTZrHUt_IC() {
         nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
 
         // QUAN TRỌNG: Kiểm tra số lượng chunks thành công TRƯỚC KHI ghép file
-        const successfulChunksCount = window.chunkStatus ? window.chunkStatus.filter(status => status === 'success').length : 0;
+        // CHỈ đếm chunk thành công khi VỪA có status 'success' VỪA có blob hợp lệ
+        let successfulChunksCount = 0;
+        let actualSuccessfulChunks = [];
+        let missingBlobChunks = [];
+        
+        for (let i = 0; i < totalChunks; i++) {
+            const status = window.chunkStatus && window.chunkStatus[i];
+            const blob = window.chunkBlobs && window.chunkBlobs[i];
+            
+            // Chunk thành công phải VỪA có status 'success' VỪA có blob hợp lệ
+            if (status === 'success' && blob !== null && blob !== undefined) {
+                successfulChunksCount++;
+                actualSuccessfulChunks.push(i);
+            } else if (status === 'success' && (blob === null || blob === undefined)) {
+                // Chunk được đánh dấu success nhưng không có blob → lỗi logic
+                missingBlobChunks.push(i);
+                addLogEntry(`⚠️ PHÁT HIỆN LỖI: Chunk ${i + 1} có status 'success' nhưng KHÔNG có blob!`, 'error');
+            }
+        }
+        
         const failedChunksCount = failedChunks.length;
         
-        addLogEntry(`📊 Thống kê chi tiết: ${successfulChunksCount}/${totalChunks} chunks thành công, ${failedChunksCount} chunks thất bại`, 'info');
+        addLogEntry(`📊 Thống kê chi tiết: ${successfulChunksCount}/${totalChunks} chunks thành công (có cả blob), ${failedChunksCount} chunks thất bại`, 'info');
+        if (missingBlobChunks.length > 0) {
+            addLogEntry(`⚠️ PHÁT HIỆN: ${missingBlobChunks.length} chunk có status 'success' nhưng thiếu blob: ${missingBlobChunks.map(i => i + 1).join(', ')}`, 'error');
+            addLogEntry(`🔄 Sẽ không ghép file vì thiếu blob!`, 'warning');
+        }
         
         if (window.isFinalCheck) {
             const remainingFailedChunks = window.failedChunks.length;
@@ -3589,41 +3612,81 @@ async function uSTZrHUt_IC() {
                 return;
             } else {
                 // QUAN TRỌNG: Kiểm tra lại một lần nữa trước khi ghép file
-                if (successfulChunksCount === totalChunks && failedChunksCount === 0) {
+                // Phải VỪA có đủ số lượng chunks thành công VỪA không có chunk thiếu blob
+                if (successfulChunksCount === totalChunks && failedChunksCount === 0 && missingBlobChunks.length === 0) {
                     addLogEntry(`🎉 Hoàn thành xử lý tất cả chunks (đã thử lại các chunk thất bại)!`, 'success');
-                    addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
-                    // CHỈ ghép file khi TẤT CẢ chunk đã thành công
+                    addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công (có cả blob)! Bắt đầu ghép file...`, 'success');
+                    // CHỈ ghép file khi TẤT CẢ chunk đã thành công VÀ có blob hợp lệ
                     tt__SfNwBHDebpWJOqrSTR();
                 } else {
-                    addLogEntry(`⚠️ PHÁT HIỆN LỖI LOGIC: successfulChunksCount (${successfulChunksCount}) !== totalChunks (${totalChunks}) hoặc failedChunksCount (${failedChunksCount}) > 0`, 'error');
-                    addLogEntry(`🔄 Tiếp tục retry các chunk thất bại...`, 'warning');
-                    // Tiếp tục retry
-                    const firstFailedIndex = failedChunks.length > 0 ? Math.min(...failedChunks) : 0;
-                    ttuo$y_KhCV = firstFailedIndex;
-                    setTimeout(uSTZrHUt_IC, 3000);
+                    if (missingBlobChunks.length > 0) {
+                        addLogEntry(`⚠️ PHÁT HIỆN LỖI: ${missingBlobChunks.length} chunk có status 'success' nhưng thiếu blob: ${missingBlobChunks.map(i => i + 1).join(', ')}`, 'error');
+                        addLogEntry(`🔄 KHÔNG ghép file! Sẽ retry các chunk thiếu blob...`, 'warning');
+                        // Thêm các chunk thiếu blob vào failedChunks để retry
+                        missingBlobChunks.forEach(chunkIndex => {
+                            if (!window.failedChunks.includes(chunkIndex)) {
+                                window.failedChunks.push(chunkIndex);
+                                if (window.chunkStatus) {
+                                    window.chunkStatus[chunkIndex] = 'failed';
+                                }
+                            }
+                        });
+                        const firstMissingIndex = Math.min(...missingBlobChunks);
+                        ttuo$y_KhCV = firstMissingIndex;
+                        setTimeout(uSTZrHUt_IC, 3000);
+                    } else {
+                        addLogEntry(`⚠️ PHÁT HIỆN LỖI LOGIC: successfulChunksCount (${successfulChunksCount}) !== totalChunks (${totalChunks}) hoặc failedChunksCount (${failedChunksCount}) > 0`, 'error');
+                        addLogEntry(`🔄 Tiếp tục retry các chunk thất bại...`, 'warning');
+                        // Tiếp tục retry
+                        const firstFailedIndex = failedChunks.length > 0 ? Math.min(...failedChunks) : 0;
+                        ttuo$y_KhCV = firstFailedIndex;
+                        setTimeout(uSTZrHUt_IC, 3000);
+                    }
                 }
             }
         } else {
             // QUAN TRỌNG: Kiểm tra TẤT CẢ chunks đã thành công TRƯỚC KHI ghép file
-            if (successfulChunksCount === totalChunks && failedChunksCount === 0) {
+            // Phải VỪA có đủ số lượng chunks thành công VỪA không có chunk thiếu blob
+            if (successfulChunksCount === totalChunks && failedChunksCount === 0 && missingBlobChunks.length === 0) {
                 addLogEntry(`🎉 Tất cả ${SI$acY.length} chunks đã được xử lý xong!`, 'success');
-                addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
-                // CHỈ ghép file khi TẤT CẢ chunk đã thành công
+                addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công (có cả blob)! Bắt đầu ghép file...`, 'success');
+                // CHỈ ghép file khi TẤT CẢ chunk đã thành công VÀ có blob hợp lệ
                 tt__SfNwBHDebpWJOqrSTR();
             } else {
-                // Nếu còn chunk thất bại, chuyển sang retry mode
-                addLogEntry(`⚠️ PHÁT HIỆN: Chỉ có ${successfulChunksCount}/${totalChunks} chunks thành công, ${failedChunksCount} chunks thất bại`, 'warning');
-                addLogEntry(`🔄 Chuyển sang chế độ retry để xử lý các chunk thất bại...`, 'info');
-                
-                if (failedChunks.length > 0 && !window.isFinalCheck) {
-                    window.isFinalCheck = true;
-                    const firstFailedIndex = Math.min(...failedChunks);
-                    ttuo$y_KhCV = firstFailedIndex;
-                    addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên)`, 'info');
+                // Nếu còn chunk thất bại hoặc thiếu blob, chuyển sang retry mode
+                if (missingBlobChunks.length > 0) {
+                    addLogEntry(`⚠️ PHÁT HIỆN: ${missingBlobChunks.length} chunk có status 'success' nhưng thiếu blob: ${missingBlobChunks.map(i => i + 1).join(', ')}`, 'error');
+                    addLogEntry(`🔄 KHÔNG ghép file! Sẽ retry các chunk thiếu blob...`, 'warning');
+                    // Thêm các chunk thiếu blob vào failedChunks để retry
+                    missingBlobChunks.forEach(chunkIndex => {
+                        if (!window.failedChunks.includes(chunkIndex)) {
+                            window.failedChunks.push(chunkIndex);
+                            if (window.chunkStatus) {
+                                window.chunkStatus[chunkIndex] = 'failed';
+                            }
+                        }
+                    });
+                    if (!window.isFinalCheck) {
+                        window.isFinalCheck = true;
+                    }
+                    const firstMissingIndex = Math.min(...missingBlobChunks);
+                    ttuo$y_KhCV = firstMissingIndex;
+                    addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstMissingIndex + 1} (chunk thiếu blob đầu tiên)`, 'info');
                     setTimeout(uSTZrHUt_IC, 3000);
                 } else {
-                    addLogEntry(`⚠️ Không thể xác định chunk lỗi, tiếp tục chờ...`, 'warning');
-                    setTimeout(uSTZrHUt_IC, 3000);
+                    addLogEntry(`⚠️ PHÁT HIỆN: Chỉ có ${successfulChunksCount}/${totalChunks} chunks thành công (có blob), ${failedChunksCount} chunks thất bại`, 'warning');
+                    addLogEntry(`🔄 Chuyển sang chế độ retry để xử lý các chunk thất bại...`, 'info');
+                    
+                    if (failedChunks.length > 0 && !window.isFinalCheck) {
+                        window.isFinalCheck = true;
+                        const firstFailedIndex = Math.min(...failedChunks);
+                        ttuo$y_KhCV = firstFailedIndex;
+                        addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên)`, 'info');
+                        setTimeout(uSTZrHUt_IC, 3000);
+                    } else {
+                        addLogEntry(`⚠️ Không thể xác định chunk lỗi, tiếp tục chờ...`, 'warning');
+                        setTimeout(uSTZrHUt_IC, 3000);
+                    }
                 }
             }
         }
@@ -4849,6 +4912,13 @@ function igyo$uwVChUzI() {
                     // QUAN TRỌNG: Lưu currentChunkIndex ngay đầu để tránh race condition
                     const currentChunkIndex = ttuo$y_KhCV;
                     
+                    // QUAN TRỌNG: Kiểm tra index không vượt quá số lượng chunks ban đầu
+                    if (currentChunkIndex >= SI$acY.length) {
+                        addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Index vượt quá số lượng chunks (${SI$acY.length}), bỏ qua audio này`, 'warning');
+                        addLogEntry(`💡 Có thể là audio từ chunk cũ hoặc chunk không tồn tại`, 'info');
+                        return; // Bỏ qua audio này
+                    }
+                    
                     // QUAN TRỌNG: Ngăn chặn xử lý trùng lặp cho cùng một chunk
                     if (typeof window.processingChunks === 'undefined') {
                         window.processingChunks = new Set();
@@ -5361,8 +5431,15 @@ function igyo$uwVChUzI() {
                         // Chỉ chuyển sang chunk tiếp theo nếu chunk hiện tại đã hoàn toàn xong
                         if (isCurrentChunk) {
                             // Chunk hiện tại đã thành công, chuyển sang chunk tiếp theo
-                            ttuo$y_KhCV++;
-                            addLogEntry(`✅ [Chunk ${currentChunkIndex + 1}] Đã hoàn thành, chuyển sang chunk ${ttuo$y_KhCV + 1}`, 'success');
+                            // QUAN TRỌNG: Kiểm tra không vượt quá số lượng chunks ban đầu
+                            if (ttuo$y_KhCV + 1 < SI$acY.length) {
+                                ttuo$y_KhCV++;
+                                addLogEntry(`✅ [Chunk ${currentChunkIndex + 1}] Đã hoàn thành, chuyển sang chunk ${ttuo$y_KhCV + 1}`, 'success');
+                            } else {
+                                // Đã xử lý hết tất cả chunks
+                                ttuo$y_KhCV = SI$acY.length;
+                                addLogEntry(`✅ [Chunk ${currentChunkIndex + 1}] Đã hoàn thành, đã xử lý hết tất cả ${SI$acY.length} chunks`, 'success');
+                            }
                         } else {
                             // Chunk này không phải chunk đang được xử lý, không thay đổi ttuo$y_KhCV
                             // Đây có thể là chunk cũ xuất hiện muộn do mạng lag
