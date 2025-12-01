@@ -3861,14 +3861,15 @@ async function uSTZrHUt_IC() {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
         
         // =======================================================
-        // == CLEAR TEXTAREA VÀ AUDIO CONTEXT TRƯỚC KHI GỬI CHUNK ==
+        // == CLEAR AUDIO CONTEXT TRƯỚC KHI GỬI CHUNK ==
         // =======================================================
-        // Clear textarea để tránh lỗi âm thanh lạ khi render
-        const textarea = document.getElementById('gemini-hidden-text-for-request');
-        if (textarea) {
-            textarea.value = '';
-            addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã clear textarea trước khi gửi`, 'info');
-        }
+        // QUAN TRỌNG: KHÔNG xóa textarea ở đây vì sẽ tạo khoảng trống để web tự động chèn text mặc định
+        // Thay vào đó, sẽ thay thế trực tiếp text bằng cách bôi đen và dán đè ở bước sau
+        // const textarea = document.getElementById('gemini-hidden-text-for-request');
+        // if (textarea) {
+        //     textarea.value = ''; // ĐÃ XÓA - không xóa textarea để tránh web tự động chèn text mặc định
+        //     addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã clear textarea trước khi gửi`, 'info');
+        // }
         
         // Clear audio context và các audio elements để tránh lỗi âm thanh lạ
         try {
@@ -4200,15 +4201,59 @@ async function uSTZrHUt_IC() {
         let setTextCompleted = false;
         
         // Hàm helper để điền text bằng cách bôi đen và dán đè
+        // QUAN TRỌNG: Không bao giờ để textarea rỗng - luôn thay thế trực tiếp
         const setTextBySelectAndPaste = async (textElement, newText) => {
             try {
+                // QUAN TRỌNG: Kiểm tra và ngăn chặn text mặc định ngay lập tức
+                const currentText = textElement.value || '';
+                const expectedChunkText = window.currentChunkTexts && window.currentChunkTexts[ttuo$y_KhCV] 
+                    ? window.currentChunkTexts[ttuo$y_KhCV] 
+                    : newText;
+                const isDefaultText = isDefaultTextStrict(currentText, expectedChunkText);
+                
+                if (isDefaultText) {
+                    addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN TEXT MẶC ĐỊNH trước khi điền! Đang thay thế ngay...`, 'error');
+                }
+                
                 // Focus vào textarea
                 textElement.focus();
-                await smartDelay(50);
+                await smartDelay(20); // Giảm delay để nhanh hơn
                 
-                // Bôi đen toàn bộ text cũ
+                // QUAN TRỌNG: Nếu textarea đang rỗng hoặc có text mặc định, điền ngay lập tức
+                if (currentText.trim().length === 0 || isDefaultText) {
+                    isSettingText = true;
+                    textElement.value = newText;
+                    // Trigger input event ngay lập tức
+                    try {
+                        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                        textElement.dispatchEvent(inputEvent);
+                    } catch (e) {
+                        // Bỏ qua
+                    }
+                    await smartDelay(20);
+                    isSettingText = false;
+                    // Kiểm tra lại ngay sau khi điền
+                    await smartDelay(30);
+                    const checkText = textElement.value || '';
+                    if (checkText !== newText && (isDefaultTextStrict(checkText, expectedChunkText) || checkText.trim().length === 0)) {
+                        addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] Web tự động chèn text mặc định SAU KHI điền! Đang thay thế lại...`, 'error');
+                        isSettingText = true;
+                        textElement.value = newText;
+                        try {
+                            const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                            textElement.dispatchEvent(inputEvent);
+                        } catch (e) {
+                            // Bỏ qua
+                        }
+                        await smartDelay(20);
+                        isSettingText = false;
+                    }
+                    return; // Đã điền xong, không cần bôi đen nữa
+                }
+                
+                // Bôi đen toàn bộ text cũ (chỉ khi có text hợp lệ)
                 textElement.setSelectionRange(0, textElement.value.length);
-                await smartDelay(50);
+                await smartDelay(20);
                 
                 // Dán đè text mới (giả lập hành động người dùng)
                 isSettingText = true;
@@ -4231,10 +4276,30 @@ async function uSTZrHUt_IC() {
                 const textLength = newText.length;
                 textElement.setSelectionRange(textLength, textLength);
                 
-                await smartDelay(50);
+                await smartDelay(20);
                 isSettingText = false;
+                
+                // KIỂM TRA NGAY SAU KHI ĐIỀN: Nếu web tự động chèn text mặc định, thay thế lại ngay
+                await smartDelay(30);
+                const checkText = textElement.value || '';
+                if (checkText !== newText) {
+                    const isDefaultAfterSet = isDefaultTextStrict(checkText, expectedChunkText);
+                    if (isDefaultAfterSet || checkText.trim().length === 0) {
+                        addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] Web tự động chèn text mặc định SAU KHI điền! Đang thay thế lại...`, 'error');
+                        isSettingText = true;
+                        textElement.value = newText;
+                        try {
+                            const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                            textElement.dispatchEvent(inputEvent);
+                        } catch (e) {
+                            // Bỏ qua
+                        }
+                        await smartDelay(20);
+                        isSettingText = false;
+                    }
+                }
             } catch (e) {
-                // Fallback: Nếu lỗi, dùng cách cũ
+                // Fallback: Nếu lỗi, dùng cách cũ nhưng vẫn đảm bảo không để rỗng
                 isSettingText = true;
                 textElement.value = newText;
                 try {
@@ -4243,7 +4308,7 @@ async function uSTZrHUt_IC() {
                 } catch (e2) {
                     // Bỏ qua
                 }
-                await smartDelay(50);
+                await smartDelay(20);
                 isSettingText = false;
             }
         };
