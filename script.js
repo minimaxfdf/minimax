@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DUC LOI - Clone Voice (Không cần API) - Modded
 // @namespace    mmx-secure
-// @version      35.0
+// @version      38.0
 // @description  Tạo audio giọng nói clone theo ý của bạn. Không giới hạn. Thêm chức năng Ghép hội thoại, Đổi văn bản hàng loạt & Thiết lập dấu câu (bao gồm dấu xuống dòng).
 // @author       HUỲNH ĐỨC LỢI ( Zalo: 0835795597) - Đã chỉnh sửa
 // @match        https://www.minimax.io/audio*
@@ -1246,7 +1246,7 @@ button:disabled {
         
         <div id="gemini-quota-display" style="color: #8be9fd; font-weight: bold; margin-left: 15px; margin-top: 10px; font-size: 14px;">Loading quota...</div>
         </div> 
-    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <h2>Activity Log</h2> <div id="log-container" class="log-container"> <div class="log-entry">Ready to monitor chunks...</div> </div> <button id="clear-log-btn" class="clear-log-btn">Clear Log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 35.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div><button id="settings-toggle-btn">Nếu ren bị lỗi hãy liên hệ admin để cấp mail mới sẽ ren được</button></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
+    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <h2>Activity Log</h2> <div id="log-container" class="log-container"> <div class="log-entry">Ready to monitor chunks...</div> </div> <button id="clear-log-btn" class="clear-log-btn">Clear Log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 38.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div><button id="settings-toggle-btn">Nếu ren bị lỗi hãy liên hệ admin để cấp mail mới sẽ ren được</button></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
     <div class="text-input-options">
         <div class="input-tabs">
             <button id="text-tab" class="tab-btn active">Nhập trực tiếp</button>
@@ -3555,6 +3555,12 @@ async function uSTZrHUt_IC() {
         LrkOcBYz_$AGjPqXLWnyiATpCI[tQqGbytKzpHwhGmeQJucsrq(0x273)] = tQqGbytKzpHwhGmeQJucsrq(0x275);
         nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
 
+        // QUAN TRỌNG: Kiểm tra số lượng chunks thành công TRƯỚC KHI ghép file
+        const successfulChunksCount = window.chunkStatus ? window.chunkStatus.filter(status => status === 'success').length : 0;
+        const failedChunksCount = failedChunks.length;
+        
+        addLogEntry(`📊 Thống kê chi tiết: ${successfulChunksCount}/${totalChunks} chunks thành công, ${failedChunksCount} chunks thất bại`, 'info');
+        
         if (window.isFinalCheck) {
             const remainingFailedChunks = window.failedChunks.length;
 
@@ -3582,16 +3588,44 @@ async function uSTZrHUt_IC() {
                 })();
                 return;
             } else {
-                addLogEntry(`🎉 Hoàn thành xử lý tất cả chunks (đã thử lại các chunk thất bại)!`, 'success');
+                // QUAN TRỌNG: Kiểm tra lại một lần nữa trước khi ghép file
+                if (successfulChunksCount === totalChunks && failedChunksCount === 0) {
+                    addLogEntry(`🎉 Hoàn thành xử lý tất cả chunks (đã thử lại các chunk thất bại)!`, 'success');
+                    addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
+                    // CHỈ ghép file khi TẤT CẢ chunk đã thành công
+                    tt__SfNwBHDebpWJOqrSTR();
+                } else {
+                    addLogEntry(`⚠️ PHÁT HIỆN LỖI LOGIC: successfulChunksCount (${successfulChunksCount}) !== totalChunks (${totalChunks}) hoặc failedChunksCount (${failedChunksCount}) > 0`, 'error');
+                    addLogEntry(`🔄 Tiếp tục retry các chunk thất bại...`, 'warning');
+                    // Tiếp tục retry
+                    const firstFailedIndex = failedChunks.length > 0 ? Math.min(...failedChunks) : 0;
+                    ttuo$y_KhCV = firstFailedIndex;
+                    setTimeout(uSTZrHUt_IC, 3000);
+                }
+            }
+        } else {
+            // QUAN TRỌNG: Kiểm tra TẤT CẢ chunks đã thành công TRƯỚC KHI ghép file
+            if (successfulChunksCount === totalChunks && failedChunksCount === 0) {
+                addLogEntry(`🎉 Tất cả ${SI$acY.length} chunks đã được xử lý xong!`, 'success');
                 addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
                 // CHỈ ghép file khi TẤT CẢ chunk đã thành công
                 tt__SfNwBHDebpWJOqrSTR();
+            } else {
+                // Nếu còn chunk thất bại, chuyển sang retry mode
+                addLogEntry(`⚠️ PHÁT HIỆN: Chỉ có ${successfulChunksCount}/${totalChunks} chunks thành công, ${failedChunksCount} chunks thất bại`, 'warning');
+                addLogEntry(`🔄 Chuyển sang chế độ retry để xử lý các chunk thất bại...`, 'info');
+                
+                if (failedChunks.length > 0 && !window.isFinalCheck) {
+                    window.isFinalCheck = true;
+                    const firstFailedIndex = Math.min(...failedChunks);
+                    ttuo$y_KhCV = firstFailedIndex;
+                    addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên)`, 'info');
+                    setTimeout(uSTZrHUt_IC, 3000);
+                } else {
+                    addLogEntry(`⚠️ Không thể xác định chunk lỗi, tiếp tục chờ...`, 'warning');
+                    setTimeout(uSTZrHUt_IC, 3000);
+                }
             }
-        } else {
-            addLogEntry(`🎉 Tất cả ${SI$acY.length} chunks đã được xử lý xong!`, 'success');
-            addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
-            // CHỈ ghép file khi TẤT CẢ chunk đã thành công
-            tt__SfNwBHDebpWJOqrSTR();
         }
         return;
     }
@@ -3845,6 +3879,49 @@ async function uSTZrHUt_IC() {
             addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Lỗi khi clear audio: ${audioError.message}`, 'warning');
         }
         
+        // CẢI THIỆN: Đợi đến khi số lượng audio = 0 rồi mới bắt đầu chunk mới
+        // Đảm bảo trên giao diện web không còn tồn tại bất kỳ thẻ <audio> nào của lần trước
+        addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đang đợi tất cả audio elements biến mất...`, 'info');
+        const MAX_AUDIO_WAIT_TIME = 5000; // Tối đa 5 giây để đợi audio biến mất
+        const AUDIO_CHECK_INTERVAL = 100; // Kiểm tra mỗi 100ms
+        const startAudioWaitTime = Date.now();
+        
+        while (Date.now() - startAudioWaitTime < MAX_AUDIO_WAIT_TIME) {
+            const remainingAudioElements = document.querySelectorAll('audio');
+            const audioCount = remainingAudioElements.length;
+            
+            if (audioCount === 0) {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã xác nhận không còn audio elements nào`, 'success');
+                break;
+            }
+            
+            // Nếu vẫn còn audio, tiếp tục dừng và xóa chúng
+            remainingAudioElements.forEach(audio => {
+                try {
+                    if (!audio.paused) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
+                    if (audio.src) {
+                        audio.src = '';
+                    }
+                    // Thử xóa element nếu có thể
+                    if (audio.parentNode) {
+                        audio.parentNode.removeChild(audio);
+                    }
+                } catch (e) {
+                    // Bỏ qua lỗi
+                }
+            });
+            
+            await smartDelay(AUDIO_CHECK_INTERVAL);
+        }
+        
+        const finalAudioCheck = document.querySelectorAll('audio').length;
+        if (finalAudioCheck > 0) {
+            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Vẫn còn ${finalAudioCheck} audio element(s) sau ${MAX_AUDIO_WAIT_TIME}ms, tiếp tục với chunk mới`, 'warning');
+        }
+        
         // Chờ một chút để đảm bảo clear hoàn tất
         await new Promise(resolve => setTimeout(resolve, 200));
         
@@ -4037,22 +4114,66 @@ async function uSTZrHUt_IC() {
             addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Không thể tạo MutationObserver: ${observerError.message}`, 'warning');
         }
         
-        // Lớp 2: Set text nhiều lần liên tiếp (3 lần) để đảm bảo
-        // LƯU Ý: Mỗi lần set là GÁN GIÁ TRỊ MỚI (value = chunkText), KHÔNG PHẢI APPEND
-        // => KHÔNG BỊ LẶP LẠI TEXT
-        // TỐI ƯU: Giảm từ 5 xuống 3 lần và delay từ 100ms xuống 50ms để tăng tốc độ
-        // Minimax render chỉ mất 8-15s, nên cần tối ưu để mỗi chunk < 1 phút
-        const SET_TEXT_COUNT = 3; // Giảm từ 5 xuống 3
-        const MAX_SET_TEXT_TIME = 5000; // 5 giây tối đa cho việc set text (giảm từ 10s)
-        const DELAY_BETWEEN_SETS = 50; // Giảm từ 100ms xuống 50ms
+        // Lớp 2: Set text bằng cách BÔI ĐEN và DÁN ĐÈ (không xóa trắng)
+        // CẢI THIỆN: Thay vì xóa trắng (value = '') rồi mới điền, bôi đen toàn bộ text cũ và dán đè chunk mới
+        // Việc này giúp ô text không bao giờ ở trạng thái "rỗng" để web không có cơ hội điền text mặc định
+        const SET_TEXT_COUNT = 3;
+        const MAX_SET_TEXT_TIME = 5000;
+        const DELAY_BETWEEN_SETS = 50;
         
-        // Kiểm tra tab có đang active không (chỉ log debug, không cảnh báo vì đã có visibility listener)
-        // Loại bỏ cảnh báo ở đây để tránh trùng lặp với visibility listener
-        
-        addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang set text ${SET_TEXT_COUNT} lần liên tiếp để đảm bảo...`, 'info');
+        addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang set text ${SET_TEXT_COUNT} lần liên tiếp bằng cách bôi đen và dán đè...`, 'info');
         
         const setTextStartTime = Date.now();
         let setTextCompleted = false;
+        
+        // Hàm helper để điền text bằng cách bôi đen và dán đè
+        const setTextBySelectAndPaste = async (textElement, newText) => {
+            try {
+                // Focus vào textarea
+                textElement.focus();
+                await smartDelay(50);
+                
+                // Bôi đen toàn bộ text cũ
+                textElement.setSelectionRange(0, textElement.value.length);
+                await smartDelay(50);
+                
+                // Dán đè text mới (giả lập hành động người dùng)
+                isSettingText = true;
+                
+                // Set value trực tiếp
+                textElement.value = newText;
+                
+                // Trigger đầy đủ các event để website nhận biết như người dùng thật
+                const events = ['focus', 'input', 'change', 'blur'];
+                for (const eventType of events) {
+                    try {
+                        const event = new Event(eventType, { bubbles: true, cancelable: true });
+                        textElement.dispatchEvent(event);
+                    } catch (e) {
+                        // Bỏ qua nếu không thể trigger event
+                    }
+                }
+                
+                // Đảm bảo selection vẫn ở cuối text
+                const textLength = newText.length;
+                textElement.setSelectionRange(textLength, textLength);
+                
+                await smartDelay(50);
+                isSettingText = false;
+            } catch (e) {
+                // Fallback: Nếu lỗi, dùng cách cũ
+                isSettingText = true;
+                textElement.value = newText;
+                try {
+                    const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                    textElement.dispatchEvent(inputEvent);
+                } catch (e2) {
+                    // Bỏ qua
+                }
+                await smartDelay(50);
+                isSettingText = false;
+            }
+        };
         
         for (let i = 0; i < SET_TEXT_COUNT; i++) {
             // Kiểm tra timeout - phát hiện delay bất thường
@@ -4064,20 +4185,11 @@ async function uSTZrHUt_IC() {
                 break; // Thoát vòng lặp sớm nếu timeout
             }
             
-            isSettingText = true;
-            rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText; // Gán giá trị mới, không append
-            
-            // Trigger event để website nhận biết
-            try {
-                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-                rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
-            } catch (e) {
-                // Bỏ qua
-            }
+            // Sử dụng hàm helper để điền text bằng cách bôi đen và dán đè
+            await setTextBySelectAndPaste(rUxbIRagbBVychZ$GfsogD, chunkText);
             
             // Dùng smartDelay thay vì setTimeout đơn thuần để chống throttle
             await smartDelay(DELAY_BETWEEN_SETS);
-            isSettingText = false;
         }
         
         setTextCompleted = true;
@@ -4085,7 +4197,7 @@ async function uSTZrHUt_IC() {
         if (totalTime > 2000) {
             addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Set text mất ${Math.round(totalTime / 1000)}s (bình thường < 1s). Có thể tab đang bị ẩn.`, 'warning');
         }
-        addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set text ${SET_TEXT_COUNT} lần liên tiếp`, 'info');
+        addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set text ${SET_TEXT_COUNT} lần liên tiếp bằng cách bôi đen và dán đè`, 'info');
         
         // Lớp 3: Giám sát text liên tục trong 300ms trước khi click
         // CẢI THIỆN: Thay setInterval bằng recursive setTimeout để tránh browser throttle
@@ -4219,6 +4331,35 @@ async function uSTZrHUt_IC() {
             addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] ChunkText mong đợi: "${expectedChunkText.substring(0, 50)}..." (${expectedChunkText.length} ký tự)`, 'info');
         } else {
             addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text đúng (${finalCheckText.length} ký tự)`, 'info');
+        }
+        
+        // CẢI THIỆN: Tăng delay trước khi click từ 0.5s lên 1-1.5s để đảm bảo text đã ổn định
+        // Sau khi điền text chunk vào, đợi lâu hơn một chút để đảm bảo text đã ổn định, 
+        // web không tự đổi lại, rồi mới cho click nút Tạo
+        const PRE_CLICK_DELAY = 1000 + Math.random() * 500; // 1000-1500ms (1-1.5 giây)
+        addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV + 1}] Chờ ${Math.round(PRE_CLICK_DELAY)}ms trước khi click để đảm bảo text đã ổn định...`, 'info');
+        await smartDelay(PRE_CLICK_DELAY);
+        
+        // Kiểm tra lại text một lần nữa trước khi click
+        const finalPreClickText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+        const finalExpectedText = window.currentChunkTexts && window.currentChunkTexts[ttuo$y_KhCV] 
+            ? window.currentChunkTexts[ttuo$y_KhCV] 
+            : chunkText;
+        const isFinalDefaultText = isDefaultTextStrict(finalPreClickText);
+        
+        if (isFinalDefaultText || (finalPreClickText.trim().length === 0 && finalPreClickText !== finalExpectedText)) {
+            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN TEXT BỊ THAY ĐỔI ngay trước khi click! Đang set lại...`, 'error');
+            isSettingText = true;
+            rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = finalExpectedText;
+            try {
+                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
+            } catch (e) {
+                // Bỏ qua
+            }
+            await smartDelay(200);
+            isSettingText = false;
+            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set lại text trước khi click`, 'success');
         }
         
         // Thực hiện click
@@ -5170,8 +5311,15 @@ function igyo$uwVChUzI() {
                         window.isSettingUpObserver = false;
                     }
                     
-                    // QUAN TRỌNG: Khi retry, sau khi chunk thành công, chỉ nhảy đến chunk lỗi tiếp theo
-                    // Không tăng ttuo$y_KhCV++ để tránh render lại các chunk đã thành công
+                    // CẢI THIỆN: XỬ LÝ TUẦN TỰ TUYỆT ĐỐI
+                    // Chunk 1 phải xong hoàn toàn (có file audio và tải xong) mới được phép gửi chunk 2
+                    // Nếu Chunk 1 lỗi -> Retry Chunk 1 ngay lập tức cho đến khi được, tuyệt đối không nhảy cóc sang Chunk 2
+                    // Việc nhảy cóc chính là nguyên nhân gây loạn vị trí khi mạng lag
+                    
+                    // QUAN TRỌNG: Kiểm tra xem chunk hiện tại có phải là chunk đang được xử lý không
+                    // Chỉ chuyển sang chunk tiếp theo nếu chunk hiện tại đã hoàn toàn xong
+                    const isCurrentChunk = (currentChunkIndex === ttuo$y_KhCV);
+                    
                     if (window.isFinalCheck) {
                         // Đang trong retry mode, chỉ xử lý các chunk lỗi
                         // Loại bỏ chunk này khỏi danh sách failedChunks nếu có
@@ -5179,20 +5327,35 @@ function igyo$uwVChUzI() {
                             window.failedChunks = window.failedChunks.filter(idx => idx !== currentChunkIndex);
                         }
                         
-                        // Tìm chunk lỗi tiếp theo
-                        const remainingFailedChunks = window.failedChunks.filter(idx => idx > currentChunkIndex);
-                        if (remainingFailedChunks.length > 0) {
-                            const nextFailedIndex = Math.min(...remainingFailedChunks);
-                            addLogEntry(`⏭️ [Chunk ${currentChunkIndex + 1}] Đã thành công, nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
-                            ttuo$y_KhCV = nextFailedIndex;
+                        // QUAN TRỌNG: Chỉ chuyển sang chunk tiếp theo nếu đây là chunk đang được xử lý
+                        if (isCurrentChunk) {
+                            // Tìm chunk lỗi tiếp theo
+                            const remainingFailedChunks = window.failedChunks.filter(idx => idx > currentChunkIndex);
+                            if (remainingFailedChunks.length > 0) {
+                                const nextFailedIndex = Math.min(...remainingFailedChunks);
+                                addLogEntry(`⏭️ [Chunk ${currentChunkIndex + 1}] Đã thành công, nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
+                                ttuo$y_KhCV = nextFailedIndex;
+                            } else {
+                                // Không còn chunk lỗi nào, kết thúc retry
+                                addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
+                                ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
+                            }
                         } else {
-                            // Không còn chunk lỗi nào, kết thúc retry
-                            addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
-                            ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
+                            // Chunk này không phải chunk đang được xử lý, không thay đổi ttuo$y_KhCV
+                            addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Thành công nhưng không phải chunk đang xử lý (đang xử lý chunk ${ttuo$y_KhCV + 1}), không thay đổi index`, 'warning');
                         }
                     } else {
-                        // Không phải retry mode, tiếp tục với chunk tiếp theo như bình thường
-                        ttuo$y_KhCV++;
+                        // Không phải retry mode: XỬ LÝ TUẦN TỰ TUYỆT ĐỐI
+                        // Chỉ chuyển sang chunk tiếp theo nếu chunk hiện tại đã hoàn toàn xong
+                        if (isCurrentChunk) {
+                            // Chunk hiện tại đã thành công, chuyển sang chunk tiếp theo
+                            ttuo$y_KhCV++;
+                            addLogEntry(`✅ [Chunk ${currentChunkIndex + 1}] Đã hoàn thành, chuyển sang chunk ${ttuo$y_KhCV + 1}`, 'success');
+                        } else {
+                            // Chunk này không phải chunk đang được xử lý, không thay đổi ttuo$y_KhCV
+                            // Đây có thể là chunk cũ xuất hiện muộn do mạng lag
+                            addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Thành công nhưng không phải chunk đang xử lý (đang xử lý chunk ${ttuo$y_KhCV + 1}), không thay đổi index để tránh loạn vị trí`, 'warning');
+                        }
                     }
                     
                     // GUARD: Kiểm tra độ sâu recursive calls
