@@ -4261,6 +4261,18 @@ async function uSTZrHUt_IC() {
                 // Set value trực tiếp
                 textElement.value = newText;
                 
+                // KIỂM TRA 1: Ngay sau khi set value (trước khi trigger events)
+                await smartDelay(10); // Delay ngắn để web xử lý
+                let checkText1 = textElement.value || '';
+                if (checkText1 !== newText) {
+                    const isDefaultAfterSet1 = isDefaultTextStrict(checkText1, expectedChunkText);
+                    if (isDefaultAfterSet1 || checkText1.trim().length === 0) {
+                        addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN: Text bị thay đổi NGAY SAU KHI set value! Đang thay thế lại...`, 'error');
+                        textElement.value = newText;
+                        checkText1 = newText; // Cập nhật để tiếp tục kiểm tra
+                    }
+                }
+                
                 // Trigger đầy đủ các event để website nhận biết như người dùng thật
                 const events = ['focus', 'input', 'change', 'blur'];
                 for (const eventType of events) {
@@ -4272,6 +4284,25 @@ async function uSTZrHUt_IC() {
                     }
                 }
                 
+                // KIỂM TRA 2: Ngay sau khi trigger events
+                await smartDelay(10);
+                let checkText2 = textElement.value || '';
+                if (checkText2 !== newText) {
+                    const isDefaultAfterSet2 = isDefaultTextStrict(checkText2, expectedChunkText);
+                    if (isDefaultAfterSet2 || checkText2.trim().length === 0) {
+                        addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN: Text bị thay đổi SAU KHI trigger events! Đang thay thế lại...`, 'error');
+                        textElement.value = newText;
+                        // Trigger lại input event
+                        try {
+                            const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                            textElement.dispatchEvent(inputEvent);
+                        } catch (e) {
+                            // Bỏ qua
+                        }
+                        checkText2 = newText; // Cập nhật để tiếp tục kiểm tra
+                    }
+                }
+                
                 // Đảm bảo selection vẫn ở cuối text
                 const textLength = newText.length;
                 textElement.setSelectionRange(textLength, textLength);
@@ -4279,13 +4310,13 @@ async function uSTZrHUt_IC() {
                 await smartDelay(20);
                 isSettingText = false;
                 
-                // KIỂM TRA NGAY SAU KHI ĐIỀN: Nếu web tự động chèn text mặc định, thay thế lại ngay
+                // KIỂM TRA 3: Sau khi hoàn tất (kiểm tra cuối cùng)
                 await smartDelay(30);
-                const checkText = textElement.value || '';
-                if (checkText !== newText) {
-                    const isDefaultAfterSet = isDefaultTextStrict(checkText, expectedChunkText);
-                    if (isDefaultAfterSet || checkText.trim().length === 0) {
-                        addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] Web tự động chèn text mặc định SAU KHI điền! Đang thay thế lại...`, 'error');
+                const checkText3 = textElement.value || '';
+                if (checkText3 !== newText) {
+                    const isDefaultAfterSet3 = isDefaultTextStrict(checkText3, expectedChunkText);
+                    if (isDefaultAfterSet3 || checkText3.trim().length === 0) {
+                        addLogEntry(`🚨 [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN: Text bị thay đổi SAU KHI hoàn tất bôi đen và thay thế! Đang thay thế lại...`, 'error');
                         isSettingText = true;
                         textElement.value = newText;
                         try {
@@ -4296,7 +4327,22 @@ async function uSTZrHUt_IC() {
                         }
                         await smartDelay(20);
                         isSettingText = false;
+                        
+                        // KIỂM TRA 4: Kiểm tra lại sau khi thay thế lần cuối
+                        await smartDelay(30);
+                        const checkText4 = textElement.value || '';
+                        if (checkText4 !== newText) {
+                            const isDefaultAfterSet4 = isDefaultTextStrict(checkText4, expectedChunkText);
+                            if (isDefaultAfterSet4 || checkText4.trim().length === 0) {
+                                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] CẢNH BÁO: Text vẫn bị thay đổi sau nhiều lần thay thế! Có thể web đang tự động chèn text mặc định liên tục.`, 'warning');
+                                addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] Text hiện tại: "${checkText4.substring(0, 50)}..." (${checkText4.length} ký tự)`, 'info');
+                                addLogEntry(`💡 [Chunk ${ttuo$y_KhCV + 1}] Text mong đợi: "${newText.substring(0, 50)}..." (${newText.length} ký tự)`, 'info');
+                            }
+                        }
                     }
+                } else {
+                    // Text đã đúng, log thành công
+                    addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã xác nhận: Text đã được thay thế đúng sau khi bôi đen và thay thế`, 'success');
                 }
             } catch (e) {
                 // Fallback: Nếu lỗi, dùng cách cũ nhưng vẫn đảm bảo không để rỗng
