@@ -1533,6 +1533,39 @@ function normalizePauseTags(text) {
     
     let normalized = text;
     
+    // BƯỚC 0: XÓA SẠCH TẤT CẢ THẺ PAUSE BỊ LỖI ĐỊNH DẠNG TRƯỚC KHI XỬ LÝ
+    // Xóa các thẻ pause không hợp lệ như: <#0, 5#>, <#0 <#0.7#> 5#>, <# không có số #>, v.v.
+    // Chỉ giữ lại các thẻ pause hợp lệ có định dạng: <#[0-9.]+#>
+    
+    // CÁCH TIẾP CẬN ĐƠN GIẢN: Xóa tất cả thẻ pause không hợp lệ, chỉ giữ lại thẻ hợp lệ
+    
+    // Bước 0.1: Xóa các thẻ pause bị lỗi định dạng
+    // Xóa thẻ pause bị lồng hoặc bị cắt đứt như: <#0 <#0.7#> 5#>
+    normalized = normalized.replace(/<#[0-9.]*\s*<#[0-9.]+#>\s*[0-9.]+#>/g, (match) => {
+        // Tìm thẻ pause hợp lệ trong chuỗi và chỉ giữ lại nó
+        const validTag = match.match(/<#[0-9.]+#>/);
+        return validTag ? ' ' + validTag[0] + ' ' : '';
+    });
+    
+    // Bước 0.2: Xóa các thẻ pause không đúng định dạng
+    // Xóa thẻ có ký tự không phải số giữa <# và #>
+    normalized = normalized.replace(/<#[^0-9#>]*#>/g, '');
+    // Xóa thẻ có ký tự lạ trong số (như <#0.5abc#>)
+    normalized = normalized.replace(/<#[0-9.]*[^0-9.#>]#>/g, '');
+    // Xóa thẻ không đóng (ở cuối chuỗi như <#0.5)
+    normalized = normalized.replace(/<#[^>]*$/g, '');
+    // Xóa phần đóng thẻ không có mở (như 5#>)
+    normalized = normalized.replace(/[^<]*#>/g, '');
+    
+    // Bước 0.3: Xóa các phần còn sót lại của thẻ pause bị lỗi
+    // Xóa <# không phải số (như <#abc)
+    normalized = normalized.replace(/<#[^0-9#>]*/g, '');
+    // Xóa số#> không có mở (như 0.5#>)
+    normalized = normalized.replace(/[0-9.]+#>/g, '');
+    
+    // Bước 0.4: Normalize khoảng trắng sau khi xóa thẻ lỗi
+    normalized = normalized.replace(/\s+/g, ' ').trim();
+    
     // QUY TẮC 1: Loại bỏ các thẻ pause trùng lặp liên tiếp - chỉ giữ lại 1 thẻ
     // Ví dụ: "ai <#0.5#> <#0.5#> ádd" → "ai <#0.5#> ádd"
     // Ví dụ: "dsdad <#0.7#> <#0.7#> fdsfsfs" → "dsdad <#0.7#> fdsfsfs"
@@ -3144,14 +3177,58 @@ async function waitForVoiceModelReady() {
                 // Normalize khoảng trắng (sau khi đã xử lý dấu xuống dòng)
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
 
-                // Thay thế dấu câu đã thiết lập
-                if (settings.periodEnabled && settings.period > 0) textToProcess = textToProcess.replace(/\./g, ` ${mapDurationToPauseString(settings.period)} `);
-                if (settings.commaEnabled && settings.comma > 0) textToProcess = textToProcess.replace(/,/g, ` ${mapDurationToPauseString(settings.comma)} `);
-                if (settings.semicolonEnabled && settings.semicolon > 0) textToProcess = textToProcess.replace(/;/g, ` ${mapDurationToPauseString(settings.semicolon)} `);
-                if (settings.questionEnabled && settings.question > 0) textToProcess = textToProcess.replace(/\?/g, ` ${mapDurationToPauseString(settings.question)} `);
-                if (settings.exclamationEnabled && settings.exclamation > 0) textToProcess = textToProcess.replace(/!/g, ` ${mapDurationToPauseString(settings.exclamation)} `);
-                if (settings.colonEnabled && settings.colon > 0) textToProcess = textToProcess.replace(/:/g, ` ${mapDurationToPauseString(settings.colon)} `);
-                if (settings.ellipsisEnabled && settings.ellipsis > 0) textToProcess = textToProcess.replace(/\.\.\./g, ` ${mapDurationToPauseString(settings.ellipsis)} `);
+                // QUAN TRỌNG: Xử lý các dấu câu liên tiếp - chỉ giữ lại dấu câu cuối cùng
+                // Nếu có nhiều dấu câu liên tiếp ở cùng một chỗ, chỉ giữ lại dấu câu cuối cùng và thay bằng 1 thẻ pause
+                // Thứ tự ưu tiên: ellipsis > exclamation > question > period > semicolon > colon > comma
+                
+                // Bước 1: Xử lý các dấu câu liên tiếp trước khi thay thế
+                // Tìm các nhóm dấu câu liên tiếp và chỉ giữ lại dấu câu cuối cùng
+                const punctuationPatterns = [];
+                if (settings.commaEnabled && settings.comma > 0) punctuationPatterns.push({ pattern: /,/g, pause: mapDurationToPauseString(settings.comma), priority: 1 });
+                if (settings.colonEnabled && settings.colon > 0) punctuationPatterns.push({ pattern: /:/g, pause: mapDurationToPauseString(settings.colon), priority: 2 });
+                if (settings.semicolonEnabled && settings.semicolon > 0) punctuationPatterns.push({ pattern: /;/g, pause: mapDurationToPauseString(settings.semicolon), priority: 3 });
+                if (settings.periodEnabled && settings.period > 0) punctuationPatterns.push({ pattern: /\./g, pause: mapDurationToPauseString(settings.period), priority: 4 });
+                if (settings.questionEnabled && settings.question > 0) punctuationPatterns.push({ pattern: /\?/g, pause: mapDurationToPauseString(settings.question), priority: 5 });
+                if (settings.exclamationEnabled && settings.exclamation > 0) punctuationPatterns.push({ pattern: /!/g, pause: mapDurationToPauseString(settings.exclamation), priority: 6 });
+                if (settings.ellipsisEnabled && settings.ellipsis > 0) punctuationPatterns.push({ pattern: /\.\.\./g, pause: mapDurationToPauseString(settings.ellipsis), priority: 7 });
+                
+                // Sắp xếp theo thứ tự ưu tiên (từ thấp đến cao)
+                punctuationPatterns.sort((a, b) => a.priority - b.priority);
+                
+                // Xử lý các dấu câu liên tiếp: chỉ giữ lại dấu câu có ưu tiên cao nhất
+                // Ví dụ: "câu 1.," → chỉ giữ lại dấu phẩy (nếu có ưu tiên cao hơn) hoặc dấu chấm
+                // Tìm các nhóm dấu câu liên tiếp và chỉ giữ lại dấu câu cuối cùng
+                const allPunctuationRegex = /[.,;:!?…]+/g;
+                textToProcess = textToProcess.replace(allPunctuationRegex, (match) => {
+                    // Tìm dấu câu có ưu tiên cao nhất trong nhóm
+                    let highestPriority = -1;
+                    let highestPause = '';
+                    
+                    for (const punc of punctuationPatterns) {
+                        if (punc.pattern.test(match)) {
+                            if (punc.priority > highestPriority) {
+                                highestPriority = punc.priority;
+                                highestPause = punc.pause;
+                            }
+                        }
+                        // Reset regex lastIndex
+                        punc.pattern.lastIndex = 0;
+                    }
+                    
+                    // Nếu tìm thấy dấu câu có ưu tiên, thay bằng thẻ pause của nó
+                    if (highestPriority > 0) {
+                        return ' ' + highestPause + ' ';
+                    }
+                    
+                    // Nếu không có dấu câu nào được bật, xóa nhóm dấu câu
+                    return '';
+                });
+                
+                // Bước 2: Thay thế các dấu câu đơn lẻ còn lại (không nằm trong nhóm liên tiếp)
+                // Điều này xử lý các dấu câu đơn lẻ không bị ảnh hưởng bởi logic trên
+                for (const punc of punctuationPatterns) {
+                    textToProcess = textToProcess.replace(punc.pattern, ` ${punc.pause} `);
+                }
                 
                 // QUY TẮC BẮT BUỘC: Xóa tất cả dấu câu xung quanh hàm pause (<#X.X#>)
                 // Không được có dấu câu khác khi đã có hàm pause, chỉ có hàm thôi
