@@ -2435,7 +2435,10 @@ async function uSTZrHUt_IC() {
                         addLogEntry(`🔍 Trạng thái window.chunkBlobs: [${chunkStatus}]`, 'info');
                     } catch (FBleqcOZcLNC$NKSlfC) {}
                     ttuo$y_KhCV++;
-                    setTimeout(uSTZrHUt_IC, -parseInt(0x1) * -parseInt(0x25de) + Math.max(-0x19, -parseInt(0x19)) * -0x18a + Math.trunc(-0x467c));
+                    // Thêm delay ngẫu nhiên từ 3-5 giây trước khi gửi chunk tiếp theo
+                    const randomDelay = Math.floor(Math.random() * 2000) + 3000; // 3000-5000ms
+                    addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV}] Đã thành công! Chờ ${(randomDelay/1000).toFixed(1)} giây trước khi gửi chunk tiếp theo...`, 'info');
+                    setTimeout(uSTZrHUt_IC, randomDelay);
                     return;
                 }
             }
