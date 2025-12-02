@@ -2726,9 +2726,23 @@ function dExAbhXwTJeTJBIjWr(EARfsfSN_QdgxH){const tENdSoNDV_gGwQKLZv$sYaZKhl=AP$
 // Sử dụng window.chunkBlobs nếu có và có dữ liệu, nếu không thì dùng ZTQj$LF$o
 let finalBlobs = ZTQj$LF$o; // Mặc định dùng ZTQj$LF$o như code gốc
 if (window.chunkBlobs && window.chunkBlobs.length > 0) {
-    const validBlobs = window.chunkBlobs.filter(blob => blob !== null);
-    if (validBlobs.length > 0) {
-        finalBlobs = validBlobs; // Chỉ dùng window.chunkBlobs nếu có dữ liệu
+    // ✅ SỬA LỖI: Giữ lại index gốc để sắp xếp đúng thứ tự
+    const chunksWithIndex = [];
+    for (let i = 0; i < window.chunkBlobs.length; i++) {
+        if (window.chunkBlobs[i] !== null && window.chunkBlobs[i] !== undefined) {
+            chunksWithIndex.push({
+                index: i,
+                blob: window.chunkBlobs[i]
+            });
+        }
+    }
+    
+    if (chunksWithIndex.length > 0) {
+        // ✅ Sắp xếp lại theo index gốc để đảm bảo thứ tự đúng
+        chunksWithIndex.sort((a, b) => a.index - b.index);
+        // Lấy ra mảng blob đã được sắp xếp đúng thứ tự
+        finalBlobs = chunksWithIndex.map(item => item.blob);
+        addLogEntry(`✅ Đã sắp xếp lại ${finalBlobs.length} chunks theo thứ tự index gốc (0-${chunksWithIndex[chunksWithIndex.length - 1].index})`, 'info');
     }
 }
 
@@ -2749,11 +2763,12 @@ if (finalBlobs.length === 0) {
     return;
 }
 
-// Kiểm tra chunks null/undefined
+// ✅ Đã xử lý null/undefined ở trên rồi, không cần filter lại
+// Kiểm tra lại một lần nữa để đảm bảo an toàn (nhưng không mất index vì đã sắp xếp)
 const validFinalBlobs = finalBlobs.filter(blob => blob !== null && blob !== undefined);
 if (validFinalBlobs.length !== finalBlobs.length) {
     const removedCount = finalBlobs.length - validFinalBlobs.length;
-    addLogEntry(`⚠️ Phát hiện ${removedCount} chunk null/undefined, đã loại bỏ`, 'warning');
+    addLogEntry(`⚠️ Phát hiện ${removedCount} chunk null/undefined sau khi sắp xếp, đã loại bỏ`, 'warning');
     finalBlobs = validFinalBlobs;
 }
 
