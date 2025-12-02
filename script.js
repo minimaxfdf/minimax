@@ -1535,24 +1535,56 @@ function normalizePauseTags(text) {
     
     // QUY TẮC 1: Loại bỏ các thẻ pause trùng lặp liên tiếp - chỉ giữ lại 1 thẻ
     // Ví dụ: "ai <#0.5#> <#0.5#> ádd" → "ai <#0.5#> ádd"
-    // Pattern: tìm các thẻ pause liên tiếp (có thể có khoảng trắng giữa) và thay thế bằng 1 thẻ đầu tiên
-    // Lặp lại cho đến khi không còn thẻ trùng lặp
+    // Ví dụ: "dsdad <#0.7#> <#0.7#> fdsfsfs" → "dsdad <#0.7#> fdsfsfs"
+    // CÁCH TIẾP CẬN: Sử dụng regex mạnh mẽ để thay thế TẤT CẢ các nhóm thẻ pause liên tiếp
+    
+    // Bước 1: Loại bỏ tất cả các thẻ pause trùng lặp liên tiếp
+    // Pattern này sẽ match bất kỳ số lượng thẻ pause liên tiếp nào và thay bằng 1 thẻ đầu tiên
+    // Lặp lại cho đến khi không còn thay đổi
     let prevText = '';
-    while (prevText !== normalized) {
+    let iterations = 0;
+    const MAX_ITERATIONS = 10;
+    
+    while (prevText !== normalized && iterations < MAX_ITERATIONS) {
         prevText = normalized;
+        iterations++;
+        
+        // Loại bỏ nhiều thẻ pause liên tiếp (có thể có khoảng trắng giữa)
+        // Pattern này match: <#X.X#> <#Y.Y#> <#Z.Z#> ... (bất kỳ số lượng nào) và thay bằng <#X.X#>
         normalized = normalized.replace(/(<#[0-9.]+#>)\s*(<#[0-9.]+#>\s*)+/g, '$1 ');
+        
+        // Xử lý trường hợp có nhiều khoảng trắng giữa các thẻ (2 hoặc nhiều hơn)
+        normalized = normalized.replace(/(<#[0-9.]+#>)\s{2,}(<#[0-9.]+#>)/g, '$1 ');
+        
+        // Xử lý trường hợp thẻ pause ngay sát nhau (không có khoảng trắng)
+        normalized = normalized.replace(/(<#[0-9.]+#>)(<#[0-9.]+#>)/g, '$1 ');
     }
     
-    // QUY TẮC 2: Xóa dấu câu xung quanh thẻ pause nếu có
+    // Bước 2: Đảm bảo chỉ có 1 thẻ pause giữa các câu thoại
+    // Sử dụng cách tiếp cận đơn giản: thay thế bất kỳ chuỗi nào có 2+ thẻ pause liên tiếp bằng 1 thẻ
+    // Regex này sẽ match: <#X.X#> <#Y.Y#> <#Z.Z#> ... (bất kỳ số lượng nào) và thay bằng <#X.X#>
+    normalized = normalized.replace(/(<#[0-9.]+#>)(\s*<#[0-9.]+#>)+/g, '$1 ');
+    
+    // QUY TẮC 2: Xóa dấu câu xung quanh thẻ pause nếu có (bao gồm cả dấu nháy đơn và nháy kép)
     // Xóa dấu câu TRƯỚC thẻ pause: "câu 1. <#0.5#>" → "câu 1 <#0.5#>"
-    normalized = normalized.replace(/([.,;:!?。！？，；：])\s*(<#[0-9.]+#>)/g, ' $2');
+    // Bao gồm: . , ; : ! ? 。 ！ ？ ， ； ： ' " ' " « » và các dấu nháy khác
+    normalized = normalized.replace(/([.,;:!?。！？，；：'"''""«»])\s*(<#[0-9.]+#>)/g, ' $2');
     
     // Xóa dấu câu SAU thẻ pause: "<#0.5#> . câu 2" → "<#0.5#> câu 2"
-    normalized = normalized.replace(/(<#[0-9.]+#>)\s*([.,;:!?。！？，；：])/g, '$1 ');
+    // Bao gồm: . , ; : ! ? 。 ！ ？ ， ； ： ' " ' " « » và các dấu nháy khác
+    normalized = normalized.replace(/(<#[0-9.]+#>)\s*([.,;:!?。！？，；：'"''""«»])/g, '$1 ');
     
+    // QUY TẮC 3: Đảm bảo chỉ có 1 khoảng trắng xung quanh thẻ pause
+    // Xóa khoảng trắng thừa TRƯỚC thẻ pause
+    normalized = normalized.replace(/\s{2,}(<#[0-9.]+#>)/g, ' $1');
+    // Xóa khoảng trắng thừa SAU thẻ pause
+    normalized = normalized.replace(/(<#[0-9.]+#>)\s{2,}/g, '$1 ');
     // Xóa khoảng trắng thừa xung quanh thẻ pause
     normalized = normalized.replace(/\s+(<#[0-9.]+#>)\s+/g, ' $1 ');
-    normalized = normalized.replace(/(<#[0-9.]+#>)\s{2,}/g, '$1 ');
+    
+    // QUY TẮC 4: Kiểm tra lại một lần nữa để đảm bảo không còn thẻ trùng lặp
+    // Điều này xử lý các trường hợp đặc biệt sau khi normalize khoảng trắng
+    normalized = normalized.replace(/(<#[0-9.]+#>)\s*(<#[0-9.]+#>)/g, '$1 ');
     
     return normalized;
 }
