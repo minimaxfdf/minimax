@@ -1523,6 +1523,40 @@ function normalizeChunkText(text) {
     }
 }
 
+// =======================================================
+// == HÀM XỬ LÝ THẺ PAUSE <#...#> ==
+// =======================================================
+function normalizePauseTags(text) {
+    if (!text || typeof text !== 'string') {
+        return text;
+    }
+    
+    let normalized = text;
+    
+    // QUY TẮC 1: Loại bỏ các thẻ pause trùng lặp liên tiếp - chỉ giữ lại 1 thẻ
+    // Ví dụ: "ai <#0.5#> <#0.5#> ádd" → "ai <#0.5#> ádd"
+    // Pattern: tìm các thẻ pause liên tiếp (có thể có khoảng trắng giữa) và thay thế bằng 1 thẻ đầu tiên
+    // Lặp lại cho đến khi không còn thẻ trùng lặp
+    let prevText = '';
+    while (prevText !== normalized) {
+        prevText = normalized;
+        normalized = normalized.replace(/(<#[0-9.]+#>)\s*(<#[0-9.]+#>\s*)+/g, '$1 ');
+    }
+    
+    // QUY TẮC 2: Xóa dấu câu xung quanh thẻ pause nếu có
+    // Xóa dấu câu TRƯỚC thẻ pause: "câu 1. <#0.5#>" → "câu 1 <#0.5#>"
+    normalized = normalized.replace(/([.,;:!?。！？，；：])\s*(<#[0-9.]+#>)/g, ' $2');
+    
+    // Xóa dấu câu SAU thẻ pause: "<#0.5#> . câu 2" → "<#0.5#> câu 2"
+    normalized = normalized.replace(/(<#[0-9.]+#>)\s*([.,;:!?。！？，；：])/g, '$1 ');
+    
+    // Xóa khoảng trắng thừa xung quanh thẻ pause
+    normalized = normalized.replace(/\s+(<#[0-9.]+#>)\s+/g, ' $1 ');
+    normalized = normalized.replace(/(<#[0-9.]+#>)\s{2,}/g, '$1 ');
+    
+    return normalized;
+}
+
 // Hàm tách chunk thông minh - luôn dùng hàm tách chunk cũ
 function smartSplitter(text, maxLength = 700) {
     // Mặc định chunk lớn 900 ký tự
@@ -1533,12 +1567,15 @@ function smartSplitter(text, maxLength = 700) {
     }
 
     // Chuẩn hóa xuống dòng (Windows \r\n -> \n) và thay <br> thành xuống dòng
-    const normalized = text
+    let normalized = text
         .replace(/\r\n/g, '\n')
         .replace(/\r/g, '\n')
         .replace(/<br\s*\/?>(?=\s*\n?)/gi, '\n')
         .replace(/\u00A0/g, ' ')
         .trim();
+
+    // Xử lý thẻ pause: loại bỏ trùng lặp và dấu câu xung quanh
+    normalized = normalizePauseTags(normalized);
 
     // Luôn gọi hàm tách chunk cũ với toàn bộ văn bản đã chuẩn hóa
     addLogEntry(`🧠 Áp dụng tách chunk thông minh (smartSplitter)`, 'info');
@@ -2435,9 +2472,8 @@ async function uSTZrHUt_IC() {
                         addLogEntry(`🔍 Trạng thái window.chunkBlobs: [${chunkStatus}]`, 'info');
                     } catch (FBleqcOZcLNC$NKSlfC) {}
                     ttuo$y_KhCV++;
-                    // Thêm delay ngẫu nhiên từ 3-5 giây trước khi gửi chunk tiếp theo
-                    const randomDelay = Math.floor(Math.random() * 2000) + 3000; // 3000-5000ms
-                    addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV}] Đã thành công! Chờ ${(randomDelay/1000).toFixed(1)} giây trước khi gửi chunk tiếp theo...`, 'info');
+                    // Thêm delay ngẫu nhiên từ 5-10 giây trước khi gửi chunk tiếp theo
+                    const randomDelay = Math.floor(Math.random() * 5000) + 5000; // 5000-10000ms
                     setTimeout(uSTZrHUt_IC, randomDelay);
                     return;
                 }
@@ -4276,7 +4312,11 @@ async function waitForVoiceModelReady() {
     const playPauseWaveformBtn = document.getElementById('waveform-play-pause');
 
     if (startBtn) {
-        startBtn.addEventListener('click', () => {
+        // Vô hiệu hóa event listener cũ bằng cách clone node để xóa tất cả listener cũ
+        const newStartBtn = startBtn.cloneNode(true);
+        startBtn.parentNode.replaceChild(newStartBtn, startBtn);
+        
+        newStartBtn.addEventListener('click', () => {
             // [BẮT ĐẦU CODE THAY THẾ]
 
             // 1. Lấy và làm sạch văn bản (Giữ nguyên từ code mới)
