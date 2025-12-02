@@ -3538,10 +3538,23 @@ async function uSTZrHUt_IC() {
             }
         }
 
-        // Nếu có chunk thất bại và chưa kiểm tra cuối
+        // ✅ SỬA LỖI: Chỉ chuyển sang retry mode khi ĐÃ RENDER HẾT TẤT CẢ CHUNKS
+        // Kiểm tra xem còn chunks đang được xử lý không (pending hoặc đang processing)
+        const processingChunks = window.processingChunks || new Set();
+        const pendingChunks = [];
+        for (let i = 0; i < totalChunks; i++) {
+            const status = window.chunkStatus && window.chunkStatus[i];
+            const hasTimeout = window.chunkTimeoutIds && window.chunkTimeoutIds[i];
+            // Chunk chưa được xử lý xong nếu: pending/undefined hoặc đang có timeout/processing
+            if ((!status || status === 'pending') && (hasTimeout || processingChunks.has(i))) {
+                pendingChunks.push(i);
+            }
+        }
+        
+        // Nếu có chunk thất bại và chưa kiểm tra cuối VÀ không còn chunks đang xử lý
         // CHỈ reset khi 1 chunk cụ thể render lỗi, không reset khi retry failed chunks
-        if (failedChunks.length > 0 && !window.isFinalCheck) {
-            addLogEntry(`🔍 Phát hiện ${failedChunks.length} chunk thất bại. Bắt đầu xử lý lại...`, 'warning');
+        if (failedChunks.length > 0 && !window.isFinalCheck && pendingChunks.length === 0) {
+            addLogEntry(`🔍 Phát hiện ${failedChunks.length} chunk thất bại. Tất cả chunks đã được render xong. Bắt đầu xử lý lại...`, 'warning');
             addLogEntry(`📋 Danh sách chunk thất bại: ${failedChunks.map(i => i + 1).join(', ')}`, 'info');
             window.isFinalCheck = true;
             window.retryCount = 0; // Reset bộ đếm retry
@@ -3558,6 +3571,12 @@ async function uSTZrHUt_IC() {
                 addLogEntry(`⏳ Rate limiting: Chờ ${Math.round(retryStartDelay)}ms trước khi bắt đầu retry...`, 'info');
                 setTimeout(uSTZrHUt_IC, retryStartDelay);
             })();
+            return;
+        } else if (failedChunks.length > 0 && !window.isFinalCheck && pendingChunks.length > 0) {
+            // ✅ Còn chunks đang xử lý, CHƯA retry - tiếp tục đợi render hết
+            addLogEntry(`⏳ Phát hiện ${failedChunks.length} chunk thất bại, nhưng còn ${pendingChunks.length} chunks đang được xử lý (${pendingChunks.map(i => i + 1).join(', ')}). Tiếp tục đợi render hết trước khi retry...`, 'info');
+            const waitDelay = 3000 + Math.random() * 2000; // 3000-5000ms
+            setTimeout(uSTZrHUt_IC, waitDelay);
             return;
         }
 
