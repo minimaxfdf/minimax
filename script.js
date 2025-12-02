@@ -3754,13 +3754,15 @@ async function uSTZrHUt_IC() {
             
             // QUAN TRỌNG: Kiểm tra lại sau khi nhảy đến chunk lỗi
             // Nếu chunk hiện tại đã thành công (có thể đã được xử lý trong lần retry trước), nhảy đến chunk lỗi tiếp theo
-            if (window.chunkStatus[ttuo$y_KhCV] === 'success') {
+            if (window.chunkStatus && window.chunkStatus[ttuo$y_KhCV] === 'success') {
                 // Chunk này đã thành công
-                if (window.failedChunks.includes(ttuo$y_KhCV)) {
+                if (window.failedChunks && window.failedChunks.includes(ttuo$y_KhCV)) {
                     // Chunk này đã thành công nhưng vẫn trong danh sách failedChunks (chưa được loại bỏ)
                     // Loại bỏ khỏi danh sách failedChunks
+                    const beforeCount = window.failedChunks.length;
                     window.failedChunks = window.failedChunks.filter(idx => idx !== ttuo$y_KhCV);
-                    addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, loại bỏ khỏi danh sách lỗi`, 'success');
+                    const afterCount = window.failedChunks.length;
+                    addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, loại bỏ khỏi danh sách lỗi (${beforeCount} → ${afterCount} failed chunks)`, 'success');
                 }
                 
                 // Nhảy đến chunk lỗi tiếp theo (bỏ qua chunk đã thành công)
@@ -3786,14 +3788,21 @@ async function uSTZrHUt_IC() {
         }
         
         // QUAN TRỌNG: Nếu đang trong RETRY MODE và chunk này không phải failed, không xử lý
-        if (window.isFinalCheck && window.chunkStatus[ttuo$y_KhCV] === 'success') {
+        if (window.isFinalCheck && window.chunkStatus && window.chunkStatus[ttuo$y_KhCV] === 'success') {
             // Chunk này đã thành công, không cần xử lý lại
+            // Đảm bảo loại bỏ khỏi failedChunks nếu vẫn còn trong đó
+            if (window.failedChunks && window.failedChunks.includes(ttuo$y_KhCV)) {
+                const beforeCount = window.failedChunks.length;
+                window.failedChunks = window.failedChunks.filter(idx => idx !== ttuo$y_KhCV);
+                const afterCount = window.failedChunks.length;
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, loại bỏ khỏi danh sách lỗi (${beforeCount} → ${afterCount} failed chunks)`, 'success');
+            }
             addLogEntry(`⏭️ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, bỏ qua trong retry mode`, 'info');
             // Nhảy đến chunk lỗi tiếp theo
-            const remainingFailedChunks = window.failedChunks.filter(idx => idx > ttuo$y_KhCV);
+            const remainingFailedChunks = window.failedChunks ? window.failedChunks.filter(idx => idx > ttuo$y_KhCV) : [];
             if (remainingFailedChunks.length > 0) {
                 const nextFailedIndex = Math.min(...remainingFailedChunks);
-                addLogEntry(`⏭️ Nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
+                addLogEntry(`⏭️ Nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo, còn ${remainingFailedChunks.length} chunks)`, 'info');
                 ttuo$y_KhCV = nextFailedIndex;
                 const retryDelay = 3000 + Math.random() * 2000; // 3000-5000ms
                 setTimeout(uSTZrHUt_IC, retryDelay);
@@ -5479,10 +5488,11 @@ function igyo$uwVChUzI() {
                             addLogEntry(`✅ [Chunk 1] Đã thành công - Reset flag kiểm tra cấu hình`, 'success');
                         }
 
-                        // Nếu đang trong giai đoạn kiểm tra cuối, loại bỏ chunk này khỏi danh sách thất bại
-                        if (window.isFinalCheck && window.failedChunks.includes(currentChunkIndex)) {
+                        // QUAN TRỌNG: Luôn loại bỏ chunk này khỏi danh sách thất bại khi thành công (không chỉ trong isFinalCheck)
+                        if (window.failedChunks && window.failedChunks.includes(currentChunkIndex)) {
                             window.failedChunks = window.failedChunks.filter(index => index !== currentChunkIndex);
-                            addLogEntry(`🎉 [Chunk ${currentChunkIndex + 1}] Đã khôi phục thành công từ trạng thái thất bại!`, 'success');
+                            addLogEntry(`🎉 [Chunk ${currentChunkIndex + 1}] Đã khôi phục thành công từ trạng thái thất bại! (Đã loại bỏ khỏi failedChunks)`, 'success');
+                            addLogEntry(`📊 [Chunk ${currentChunkIndex + 1}] Còn lại ${window.failedChunks.length} chunks thất bại`, 'info');
                         }
                         // =======================================================
                         // == END: ĐÁNH DẤU THÀNH CÔNG ==
