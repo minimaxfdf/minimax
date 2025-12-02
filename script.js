@@ -1523,105 +1523,6 @@ function normalizeChunkText(text) {
     }
 }
 
-// =======================================================
-// == HÀM XỬ LÝ THẺ PAUSE <#...#> ==
-// =======================================================
-function normalizePauseTags(text) {
-    if (!text || typeof text !== 'string') {
-        return text;
-    }
-    
-    let normalized = text;
-    
-    // BƯỚC 0: XÓA SẠCH TẤT CẢ THẺ PAUSE BỊ LỖI ĐỊNH DẠNG TRƯỚC KHI XỬ LÝ
-    // Xóa các thẻ pause không hợp lệ như: <#0, 5#>, <#0 <#0.7#> 5#>, <# không có số #>, v.v.
-    // Chỉ giữ lại các thẻ pause hợp lệ có định dạng: <#[0-9.]+#>
-    
-    // CÁCH TIẾP CẬN ĐƠN GIẢN: Xóa tất cả thẻ pause không hợp lệ, chỉ giữ lại thẻ hợp lệ
-    
-    // Bước 0.1: Xóa các thẻ pause bị lỗi định dạng
-    // Xóa thẻ pause bị lồng hoặc bị cắt đứt như: <#0 <#0.7#> 5#>
-    normalized = normalized.replace(/<#[0-9.]*\s*<#[0-9.]+#>\s*[0-9.]+#>/g, (match) => {
-        // Tìm thẻ pause hợp lệ trong chuỗi và chỉ giữ lại nó
-        const validTag = match.match(/<#[0-9.]+#>/);
-        return validTag ? ' ' + validTag[0] + ' ' : '';
-    });
-    
-    // Bước 0.2: Xóa các thẻ pause không đúng định dạng
-    // Xóa thẻ có ký tự không phải số giữa <# và #>
-    normalized = normalized.replace(/<#[^0-9#>]*#>/g, '');
-    // Xóa thẻ có ký tự lạ trong số (như <#0.5abc#>)
-    normalized = normalized.replace(/<#[0-9.]*[^0-9.#>]#>/g, '');
-    // Xóa thẻ không đóng (ở cuối chuỗi như <#0.5)
-    normalized = normalized.replace(/<#[^>]*$/g, '');
-    // Xóa phần đóng thẻ không có mở (như 5#>)
-    normalized = normalized.replace(/[^<]*#>/g, '');
-    
-    // Bước 0.3: Xóa các phần còn sót lại của thẻ pause bị lỗi
-    // Xóa <# không phải số (như <#abc)
-    normalized = normalized.replace(/<#[^0-9#>]*/g, '');
-    // Xóa số#> không có mở (như 0.5#>)
-    normalized = normalized.replace(/[0-9.]+#>/g, '');
-    
-    // Bước 0.4: Normalize khoảng trắng sau khi xóa thẻ lỗi
-    normalized = normalized.replace(/\s+/g, ' ').trim();
-    
-    // QUY TẮC 1: Loại bỏ các thẻ pause trùng lặp liên tiếp - chỉ giữ lại 1 thẻ
-    // Ví dụ: "ai <#0.5#> <#0.5#> ádd" → "ai <#0.5#> ádd"
-    // Ví dụ: "dsdad <#0.7#> <#0.7#> fdsfsfs" → "dsdad <#0.7#> fdsfsfs"
-    // CÁCH TIẾP CẬN: Sử dụng regex mạnh mẽ để thay thế TẤT CẢ các nhóm thẻ pause liên tiếp
-    
-    // Bước 1: Loại bỏ tất cả các thẻ pause trùng lặp liên tiếp
-    // Pattern này sẽ match bất kỳ số lượng thẻ pause liên tiếp nào và thay bằng 1 thẻ đầu tiên
-    // Lặp lại cho đến khi không còn thay đổi
-    let prevText = '';
-    let iterations = 0;
-    const MAX_ITERATIONS = 10;
-    
-    while (prevText !== normalized && iterations < MAX_ITERATIONS) {
-        prevText = normalized;
-        iterations++;
-        
-        // Loại bỏ nhiều thẻ pause liên tiếp (có thể có khoảng trắng giữa)
-        // Pattern này match: <#X.X#> <#Y.Y#> <#Z.Z#> ... (bất kỳ số lượng nào) và thay bằng <#X.X#>
-        normalized = normalized.replace(/(<#[0-9.]+#>)\s*(<#[0-9.]+#>\s*)+/g, '$1 ');
-        
-        // Xử lý trường hợp có nhiều khoảng trắng giữa các thẻ (2 hoặc nhiều hơn)
-        normalized = normalized.replace(/(<#[0-9.]+#>)\s{2,}(<#[0-9.]+#>)/g, '$1 ');
-        
-        // Xử lý trường hợp thẻ pause ngay sát nhau (không có khoảng trắng)
-        normalized = normalized.replace(/(<#[0-9.]+#>)(<#[0-9.]+#>)/g, '$1 ');
-    }
-    
-    // Bước 2: Đảm bảo chỉ có 1 thẻ pause giữa các câu thoại
-    // Sử dụng cách tiếp cận đơn giản: thay thế bất kỳ chuỗi nào có 2+ thẻ pause liên tiếp bằng 1 thẻ
-    // Regex này sẽ match: <#X.X#> <#Y.Y#> <#Z.Z#> ... (bất kỳ số lượng nào) và thay bằng <#X.X#>
-    normalized = normalized.replace(/(<#[0-9.]+#>)(\s*<#[0-9.]+#>)+/g, '$1 ');
-    
-    // QUY TẮC 2: Xóa dấu câu xung quanh thẻ pause nếu có (bao gồm cả dấu nháy đơn và nháy kép)
-    // Xóa dấu câu TRƯỚC thẻ pause: "câu 1. <#0.5#>" → "câu 1 <#0.5#>"
-    // Bao gồm: . , ; : ! ? 。 ！ ？ ， ； ： ' " ' " « » và các dấu nháy khác
-    normalized = normalized.replace(/([.,;:!?。！？，；：'"''""«»])\s*(<#[0-9.]+#>)/g, ' $2');
-    
-    // Xóa dấu câu SAU thẻ pause: "<#0.5#> . câu 2" → "<#0.5#> câu 2"
-    // Bao gồm: . , ; : ! ? 。 ！ ？ ， ； ： ' " ' " « » và các dấu nháy khác
-    normalized = normalized.replace(/(<#[0-9.]+#>)\s*([.,;:!?。！？，；：'"''""«»])/g, '$1 ');
-    
-    // QUY TẮC 3: Đảm bảo chỉ có 1 khoảng trắng xung quanh thẻ pause
-    // Xóa khoảng trắng thừa TRƯỚC thẻ pause
-    normalized = normalized.replace(/\s{2,}(<#[0-9.]+#>)/g, ' $1');
-    // Xóa khoảng trắng thừa SAU thẻ pause
-    normalized = normalized.replace(/(<#[0-9.]+#>)\s{2,}/g, '$1 ');
-    // Xóa khoảng trắng thừa xung quanh thẻ pause
-    normalized = normalized.replace(/\s+(<#[0-9.]+#>)\s+/g, ' $1 ');
-    
-    // QUY TẮC 4: Kiểm tra lại một lần nữa để đảm bảo không còn thẻ trùng lặp
-    // Điều này xử lý các trường hợp đặc biệt sau khi normalize khoảng trắng
-    normalized = normalized.replace(/(<#[0-9.]+#>)\s*(<#[0-9.]+#>)/g, '$1 ');
-    
-    return normalized;
-}
-
 // Hàm tách chunk thông minh - luôn dùng hàm tách chunk cũ
 function smartSplitter(text, maxLength = 700) {
     // Mặc định chunk lớn 900 ký tự
@@ -1632,15 +1533,12 @@ function smartSplitter(text, maxLength = 700) {
     }
 
     // Chuẩn hóa xuống dòng (Windows \r\n -> \n) và thay <br> thành xuống dòng
-    let normalized = text
+    const normalized = text
         .replace(/\r\n/g, '\n')
         .replace(/\r/g, '\n')
         .replace(/<br\s*\/?>(?=\s*\n?)/gi, '\n')
         .replace(/\u00A0/g, ' ')
         .trim();
-
-    // Xử lý thẻ pause: loại bỏ trùng lặp và dấu câu xung quanh
-    normalized = normalizePauseTags(normalized);
 
     // Luôn gọi hàm tách chunk cũ với toàn bộ văn bản đã chuẩn hóa
     addLogEntry(`🧠 Áp dụng tách chunk thông minh (smartSplitter)`, 'info');
@@ -2537,8 +2435,9 @@ async function uSTZrHUt_IC() {
                         addLogEntry(`🔍 Trạng thái window.chunkBlobs: [${chunkStatus}]`, 'info');
                     } catch (FBleqcOZcLNC$NKSlfC) {}
                     ttuo$y_KhCV++;
-                    // Thêm delay ngẫu nhiên từ 5-10 giây trước khi gửi chunk tiếp theo
-                    const randomDelay = Math.floor(Math.random() * 5000) + 5000; // 5000-10000ms
+                    // Thêm delay ngẫu nhiên từ 3-5 giây trước khi gửi chunk tiếp theo
+                    const randomDelay = Math.floor(Math.random() * 2000) + 3000; // 3000-5000ms
+                    addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV}] Đã thành công! Chờ ${(randomDelay/1000).toFixed(1)} giây trước khi gửi chunk tiếp theo...`, 'info');
                     setTimeout(uSTZrHUt_IC, randomDelay);
                     return;
                 }
@@ -3161,11 +3060,7 @@ async function waitForVoiceModelReady() {
                     // Xóa nhiều dấu câu liên tiếp trước dấu xuống dòng (ví dụ: "ai.,! đó")
                     textToProcess = textToProcess.replace(/[.,;:!?…]+(\r\n|\n|\r)/g, '$1');
                     
-                    // QUAN TRỌNG: Gộp nhiều dòng trống liên tiếp thành 1 dòng trống trước khi thay thế
-                    // Điều này đảm bảo chỉ tạo 1 thẻ pause cho nhiều dòng trống liên tiếp
-                    textToProcess = textToProcess.replace(/(\r\n|\n|\r)(\s*(\r\n|\n|\r))+/g, '$1');
-                    
-                    // Sau khi đã xóa dấu câu và gộp dòng trống, thay thế dấu xuống dòng bằng pause string
+                    // Sau khi đã xóa dấu câu, thay thế dấu xuống dòng bằng pause string
                     // Xử lý \r\n trước (Windows line ending)
                     textToProcess = textToProcess.replace(/\r\n/g, ` ${mapDurationToPauseString(settings.newline)} `);
                     // Sau đó xử lý \n (Unix/Mac line ending)
@@ -3177,58 +3072,14 @@ async function waitForVoiceModelReady() {
                 // Normalize khoảng trắng (sau khi đã xử lý dấu xuống dòng)
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
 
-                // QUAN TRỌNG: Xử lý các dấu câu liên tiếp - chỉ giữ lại dấu câu cuối cùng
-                // Nếu có nhiều dấu câu liên tiếp ở cùng một chỗ, chỉ giữ lại dấu câu cuối cùng và thay bằng 1 thẻ pause
-                // Thứ tự ưu tiên: ellipsis > exclamation > question > period > semicolon > colon > comma
-                
-                // Bước 1: Xử lý các dấu câu liên tiếp trước khi thay thế
-                // Tìm các nhóm dấu câu liên tiếp và chỉ giữ lại dấu câu cuối cùng
-                const punctuationPatterns = [];
-                if (settings.commaEnabled && settings.comma > 0) punctuationPatterns.push({ pattern: /,/g, pause: mapDurationToPauseString(settings.comma), priority: 1 });
-                if (settings.colonEnabled && settings.colon > 0) punctuationPatterns.push({ pattern: /:/g, pause: mapDurationToPauseString(settings.colon), priority: 2 });
-                if (settings.semicolonEnabled && settings.semicolon > 0) punctuationPatterns.push({ pattern: /;/g, pause: mapDurationToPauseString(settings.semicolon), priority: 3 });
-                if (settings.periodEnabled && settings.period > 0) punctuationPatterns.push({ pattern: /\./g, pause: mapDurationToPauseString(settings.period), priority: 4 });
-                if (settings.questionEnabled && settings.question > 0) punctuationPatterns.push({ pattern: /\?/g, pause: mapDurationToPauseString(settings.question), priority: 5 });
-                if (settings.exclamationEnabled && settings.exclamation > 0) punctuationPatterns.push({ pattern: /!/g, pause: mapDurationToPauseString(settings.exclamation), priority: 6 });
-                if (settings.ellipsisEnabled && settings.ellipsis > 0) punctuationPatterns.push({ pattern: /\.\.\./g, pause: mapDurationToPauseString(settings.ellipsis), priority: 7 });
-                
-                // Sắp xếp theo thứ tự ưu tiên (từ thấp đến cao)
-                punctuationPatterns.sort((a, b) => a.priority - b.priority);
-                
-                // Xử lý các dấu câu liên tiếp: chỉ giữ lại dấu câu có ưu tiên cao nhất
-                // Ví dụ: "câu 1.," → chỉ giữ lại dấu phẩy (nếu có ưu tiên cao hơn) hoặc dấu chấm
-                // Tìm các nhóm dấu câu liên tiếp và chỉ giữ lại dấu câu cuối cùng
-                const allPunctuationRegex = /[.,;:!?…]+/g;
-                textToProcess = textToProcess.replace(allPunctuationRegex, (match) => {
-                    // Tìm dấu câu có ưu tiên cao nhất trong nhóm
-                    let highestPriority = -1;
-                    let highestPause = '';
-                    
-                    for (const punc of punctuationPatterns) {
-                        if (punc.pattern.test(match)) {
-                            if (punc.priority > highestPriority) {
-                                highestPriority = punc.priority;
-                                highestPause = punc.pause;
-                            }
-                        }
-                        // Reset regex lastIndex
-                        punc.pattern.lastIndex = 0;
-                    }
-                    
-                    // Nếu tìm thấy dấu câu có ưu tiên, thay bằng thẻ pause của nó
-                    if (highestPriority > 0) {
-                        return ' ' + highestPause + ' ';
-                    }
-                    
-                    // Nếu không có dấu câu nào được bật, xóa nhóm dấu câu
-                    return '';
-                });
-                
-                // Bước 2: Thay thế các dấu câu đơn lẻ còn lại (không nằm trong nhóm liên tiếp)
-                // Điều này xử lý các dấu câu đơn lẻ không bị ảnh hưởng bởi logic trên
-                for (const punc of punctuationPatterns) {
-                    textToProcess = textToProcess.replace(punc.pattern, ` ${punc.pause} `);
-                }
+                // Thay thế dấu câu đã thiết lập
+                if (settings.periodEnabled && settings.period > 0) textToProcess = textToProcess.replace(/\./g, ` ${mapDurationToPauseString(settings.period)} `);
+                if (settings.commaEnabled && settings.comma > 0) textToProcess = textToProcess.replace(/,/g, ` ${mapDurationToPauseString(settings.comma)} `);
+                if (settings.semicolonEnabled && settings.semicolon > 0) textToProcess = textToProcess.replace(/;/g, ` ${mapDurationToPauseString(settings.semicolon)} `);
+                if (settings.questionEnabled && settings.question > 0) textToProcess = textToProcess.replace(/\?/g, ` ${mapDurationToPauseString(settings.question)} `);
+                if (settings.exclamationEnabled && settings.exclamation > 0) textToProcess = textToProcess.replace(/!/g, ` ${mapDurationToPauseString(settings.exclamation)} `);
+                if (settings.colonEnabled && settings.colon > 0) textToProcess = textToProcess.replace(/:/g, ` ${mapDurationToPauseString(settings.colon)} `);
+                if (settings.ellipsisEnabled && settings.ellipsis > 0) textToProcess = textToProcess.replace(/\.\.\./g, ` ${mapDurationToPauseString(settings.ellipsis)} `);
                 
                 // QUY TẮC BẮT BUỘC: Xóa tất cả dấu câu xung quanh hàm pause (<#X.X#>)
                 // Không được có dấu câu khác khi đã có hàm pause, chỉ có hàm thôi
@@ -3247,10 +3098,6 @@ async function waitForVoiceModelReady() {
                 
                 // Normalize lại khoảng trắng sau khi xử lý tất cả dấu câu
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
-                
-                // QUAN TRỌNG: Áp dụng hàm normalizePauseTags để loại bỏ thẻ pause trùng lặp và dấu câu xung quanh
-                textToProcess = normalizePauseTags(textToProcess);
-                
                 mainTextarea.value = textToProcess;
                 mainTextarea.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -4429,11 +4276,7 @@ async function waitForVoiceModelReady() {
     const playPauseWaveformBtn = document.getElementById('waveform-play-pause');
 
     if (startBtn) {
-        // Vô hiệu hóa event listener cũ bằng cách clone node để xóa tất cả listener cũ
-        const newStartBtn = startBtn.cloneNode(true);
-        startBtn.parentNode.replaceChild(newStartBtn, startBtn);
-        
-        newStartBtn.addEventListener('click', () => {
+        startBtn.addEventListener('click', () => {
             // [BẮT ĐẦU CODE THAY THẾ]
 
             // 1. Lấy và làm sạch văn bản (Giữ nguyên từ code mới)
@@ -4460,116 +4303,19 @@ async function waitForVoiceModelReady() {
             const lraDK$WDOgsXHRO = document.getElementById('gemini-pause-btn');
             const OdKzziXLxtOGjvaBMHm = document.getElementById('gemini-stop-btn');
 
-            // 3. LÀM SẠCH HOÀN TOÀN DỮ LIỆU CŨ TRƯỚC KHI BẮT ĐẦU JOB MỚI
-            addLogEntry('🧹 Bắt đầu làm sạch dữ liệu từ job cũ...', 'info');
-            
-            // 3.1. Dừng và disconnect observer cũ (nếu có)
-            if (xlgJHLP$MATDT$kTXWV) {
-                try {
-                    xlgJHLP$MATDT$kTXWV.disconnect();
-                    addLogEntry('✅ Đã dừng MutationObserver cũ', 'info');
-                } catch (e) {
-                    addLogEntry('⚠️ Lỗi khi dừng observer: ' + e.message, 'warning');
-                }
-                xlgJHLP$MATDT$kTXWV = null;
-            }
-            
-            // 3.2. Clear timeout cũ (nếu có)
-            if (Srnj$swt) {
-                clearTimeout(Srnj$swt);
-                Srnj$swt = null;
-                addLogEntry('✅ Đã xóa timeout cũ', 'info');
-            }
-            
-            // 3.3. Dừng và xóa tất cả audio elements
-            try {
-                const audioElements = document.querySelectorAll('audio');
-                let stoppedCount = 0;
-                audioElements.forEach(audio => {
-                    try {
-                        if (!audio.paused) {
-                            audio.pause();
-                            audio.currentTime = 0;
-                            stoppedCount++;
-                        }
-                        if (audio.src) {
-                            audio.src = '';
-                        }
-                    } catch (e) {
-                        // Bỏ qua lỗi từng audio element
-                    }
-                });
-                
-                // Clear source elements
-                const sourceElements = document.querySelectorAll('source');
-                sourceElements.forEach(source => {
-                    try {
-                        if (source.src) {
-                            source.src = '';
-                        }
-                    } catch (e) {
-                        // Bỏ qua
-                    }
-                });
-                
-                // Clear Web Audio API context
-                if (window.audioContext) {
-                    try {
-                        if (window.audioContext.state !== 'closed') {
-                            window.audioContext.close();
-                        }
-                        window.audioContext = null;
-                    } catch (e) {
-                        // Bỏ qua
-                    }
-                }
-                
-                if (stoppedCount > 0) {
-                    addLogEntry(`✅ Đã dừng ${stoppedCount} audio element(s) và clear audio context`, 'info');
-                }
-            } catch (audioError) {
-                addLogEntry(`⚠️ Lỗi khi clear audio: ${audioError.message}`, 'warning');
-            }
-            
-            // 3.4. Clear textarea ẩn
-            const hiddenTextarea = document.getElementById('gemini-hidden-text-for-request');
-            if (hiddenTextarea) {
-                hiddenTextarea.value = '';
-                addLogEntry('✅ Đã clear textarea ẩn', 'info');
-            }
-            
-            // 3.5. Hủy WaveSurfer cũ (nếu có)
-            if (n_WwsStaC$jzsWjOIjRqedTG) {
-                try {
-                    n_WwsStaC$jzsWjOIjRqedTG.destroy();
-                    n_WwsStaC$jzsWjOIjRqedTG = null;
-                    addLogEntry('✅ Đã hủy WaveSurfer cũ', 'info');
-                } catch (e) {
-                    addLogEntry('⚠️ Lỗi khi hủy WaveSurfer: ' + e.message, 'warning');
-                }
-            }
-            
-            // 3.6. Reset các biến hệ thống legacy
-            ZTQj$LF$o = []; // Mảng chứa blob (legacy)
-            window.chunkBlobs = []; // Đảm bảo mảng blob MỚI cũng được reset
-            addLogEntry('✅ Đã xóa tất cả chunk blobs cũ', 'info');
-            
-            // 3.7. Reset các biến trạng thái và retry
-            if (typeof window.timeoutRetryCount !== 'undefined') {
-                window.timeoutRetryCount = {};
-            }
-            if (typeof window.sendingChunk !== 'undefined') {
-                window.sendingChunk = null;
-            }
-            
-            addLogEntry('✅ Đã làm sạch hoàn toàn dữ liệu cũ. Sẵn sàng bắt đầu job mới!', 'success');
-
-            // 4. Thiết lập biến cho hệ thống legacy (Code copy từ hàm legacy)
+            // 3. Thiết lập biến cho hệ thống legacy (Code copy từ hàm legacy)
             dqj_t_Mr = new Date(); // Biến global lưu thời gian bắt đầu
             zQizakWdLEdLjtenmCbNC.style.display = 'none';
             document.getElementById('waveform-controls').style.display = 'none';
             pT$bOHGEGbXDSpcuLWAq_yMVf.style.display = 'block';
             cHjV$QkAT$JWlL.textContent = '';
+
+            // Hủy WaveSurfer cũ (nếu có)
+            if (n_WwsStaC$jzsWjOIjRqedTG) n_WwsStaC$jzsWjOIjRqedTG.destroy();
+
+            // Reset các biến hệ thống legacy
+            ZTQj$LF$o = []; // Mảng chứa blob (legacy)
+            window.chunkBlobs = []; // Đảm bảo mảng blob MỚI cũng được reset
 
             // QUAN TRỌNG: Sử dụng hàm smartSplitter MỚI để chia chunk
             SI$acY = smartSplitter(sanitizedText, 3000); // Mảng chứa text (legacy)
@@ -4595,7 +4341,7 @@ async function waitForVoiceModelReady() {
             clearLog();
             addLogEntry(`Bắt đầu xử lý ${SI$acY.length} chunk (Hệ thống Legacy VÔ HẠN)...`, 'info');
 
-            // 5. Gọi hàm xử lý VÔ HẠN (Hàm legacy)
+            // 4. Gọi hàm xử lý VÔ HẠN (Hàm legacy)
             uSTZrHUt_IC();
 
             // [KẾT THÚC CODE THAY THẾ]
