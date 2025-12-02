@@ -3096,7 +3096,11 @@ async function waitForVoiceModelReady() {
                     // Xóa nhiều dấu câu liên tiếp trước dấu xuống dòng (ví dụ: "ai.,! đó")
                     textToProcess = textToProcess.replace(/[.,;:!?…]+(\r\n|\n|\r)/g, '$1');
                     
-                    // Sau khi đã xóa dấu câu, thay thế dấu xuống dòng bằng pause string
+                    // QUAN TRỌNG: Gộp nhiều dòng trống liên tiếp thành 1 dòng trống trước khi thay thế
+                    // Điều này đảm bảo chỉ tạo 1 thẻ pause cho nhiều dòng trống liên tiếp
+                    textToProcess = textToProcess.replace(/(\r\n|\n|\r)(\s*(\r\n|\n|\r))+/g, '$1');
+                    
+                    // Sau khi đã xóa dấu câu và gộp dòng trống, thay thế dấu xuống dòng bằng pause string
                     // Xử lý \r\n trước (Windows line ending)
                     textToProcess = textToProcess.replace(/\r\n/g, ` ${mapDurationToPauseString(settings.newline)} `);
                     // Sau đó xử lý \n (Unix/Mac line ending)
@@ -3134,6 +3138,10 @@ async function waitForVoiceModelReady() {
                 
                 // Normalize lại khoảng trắng sau khi xử lý tất cả dấu câu
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
+                
+                // QUAN TRỌNG: Áp dụng hàm normalizePauseTags để loại bỏ thẻ pause trùng lặp và dấu câu xung quanh
+                textToProcess = normalizePauseTags(textToProcess);
+                
                 mainTextarea.value = textToProcess;
                 mainTextarea.dispatchEvent(new Event('input', { bubbles: true }));
 
