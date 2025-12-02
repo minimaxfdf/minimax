@@ -4303,19 +4303,116 @@ async function waitForVoiceModelReady() {
             const lraDK$WDOgsXHRO = document.getElementById('gemini-pause-btn');
             const OdKzziXLxtOGjvaBMHm = document.getElementById('gemini-stop-btn');
 
-            // 3. Thiết lập biến cho hệ thống legacy (Code copy từ hàm legacy)
+            // 3. LÀM SẠCH HOÀN TOÀN DỮ LIỆU CŨ TRƯỚC KHI BẮT ĐẦU JOB MỚI
+            addLogEntry('🧹 Bắt đầu làm sạch dữ liệu từ job cũ...', 'info');
+            
+            // 3.1. Dừng và disconnect observer cũ (nếu có)
+            if (xlgJHLP$MATDT$kTXWV) {
+                try {
+                    xlgJHLP$MATDT$kTXWV.disconnect();
+                    addLogEntry('✅ Đã dừng MutationObserver cũ', 'info');
+                } catch (e) {
+                    addLogEntry('⚠️ Lỗi khi dừng observer: ' + e.message, 'warning');
+                }
+                xlgJHLP$MATDT$kTXWV = null;
+            }
+            
+            // 3.2. Clear timeout cũ (nếu có)
+            if (Srnj$swt) {
+                clearTimeout(Srnj$swt);
+                Srnj$swt = null;
+                addLogEntry('✅ Đã xóa timeout cũ', 'info');
+            }
+            
+            // 3.3. Dừng và xóa tất cả audio elements
+            try {
+                const audioElements = document.querySelectorAll('audio');
+                let stoppedCount = 0;
+                audioElements.forEach(audio => {
+                    try {
+                        if (!audio.paused) {
+                            audio.pause();
+                            audio.currentTime = 0;
+                            stoppedCount++;
+                        }
+                        if (audio.src) {
+                            audio.src = '';
+                        }
+                    } catch (e) {
+                        // Bỏ qua lỗi từng audio element
+                    }
+                });
+                
+                // Clear source elements
+                const sourceElements = document.querySelectorAll('source');
+                sourceElements.forEach(source => {
+                    try {
+                        if (source.src) {
+                            source.src = '';
+                        }
+                    } catch (e) {
+                        // Bỏ qua
+                    }
+                });
+                
+                // Clear Web Audio API context
+                if (window.audioContext) {
+                    try {
+                        if (window.audioContext.state !== 'closed') {
+                            window.audioContext.close();
+                        }
+                        window.audioContext = null;
+                    } catch (e) {
+                        // Bỏ qua
+                    }
+                }
+                
+                if (stoppedCount > 0) {
+                    addLogEntry(`✅ Đã dừng ${stoppedCount} audio element(s) và clear audio context`, 'info');
+                }
+            } catch (audioError) {
+                addLogEntry(`⚠️ Lỗi khi clear audio: ${audioError.message}`, 'warning');
+            }
+            
+            // 3.4. Clear textarea ẩn
+            const hiddenTextarea = document.getElementById('gemini-hidden-text-for-request');
+            if (hiddenTextarea) {
+                hiddenTextarea.value = '';
+                addLogEntry('✅ Đã clear textarea ẩn', 'info');
+            }
+            
+            // 3.5. Hủy WaveSurfer cũ (nếu có)
+            if (n_WwsStaC$jzsWjOIjRqedTG) {
+                try {
+                    n_WwsStaC$jzsWjOIjRqedTG.destroy();
+                    n_WwsStaC$jzsWjOIjRqedTG = null;
+                    addLogEntry('✅ Đã hủy WaveSurfer cũ', 'info');
+                } catch (e) {
+                    addLogEntry('⚠️ Lỗi khi hủy WaveSurfer: ' + e.message, 'warning');
+                }
+            }
+            
+            // 3.6. Reset các biến hệ thống legacy
+            ZTQj$LF$o = []; // Mảng chứa blob (legacy)
+            window.chunkBlobs = []; // Đảm bảo mảng blob MỚI cũng được reset
+            addLogEntry('✅ Đã xóa tất cả chunk blobs cũ', 'info');
+            
+            // 3.7. Reset các biến trạng thái và retry
+            if (typeof window.timeoutRetryCount !== 'undefined') {
+                window.timeoutRetryCount = {};
+            }
+            if (typeof window.sendingChunk !== 'undefined') {
+                window.sendingChunk = null;
+            }
+            
+            addLogEntry('✅ Đã làm sạch hoàn toàn dữ liệu cũ. Sẵn sàng bắt đầu job mới!', 'success');
+
+            // 4. Thiết lập biến cho hệ thống legacy (Code copy từ hàm legacy)
             dqj_t_Mr = new Date(); // Biến global lưu thời gian bắt đầu
             zQizakWdLEdLjtenmCbNC.style.display = 'none';
             document.getElementById('waveform-controls').style.display = 'none';
             pT$bOHGEGbXDSpcuLWAq_yMVf.style.display = 'block';
             cHjV$QkAT$JWlL.textContent = '';
-
-            // Hủy WaveSurfer cũ (nếu có)
-            if (n_WwsStaC$jzsWjOIjRqedTG) n_WwsStaC$jzsWjOIjRqedTG.destroy();
-
-            // Reset các biến hệ thống legacy
-            ZTQj$LF$o = []; // Mảng chứa blob (legacy)
-            window.chunkBlobs = []; // Đảm bảo mảng blob MỚI cũng được reset
 
             // QUAN TRỌNG: Sử dụng hàm smartSplitter MỚI để chia chunk
             SI$acY = smartSplitter(sanitizedText, 3000); // Mảng chứa text (legacy)
@@ -4341,7 +4438,7 @@ async function waitForVoiceModelReady() {
             clearLog();
             addLogEntry(`Bắt đầu xử lý ${SI$acY.length} chunk (Hệ thống Legacy VÔ HẠN)...`, 'info');
 
-            // 4. Gọi hàm xử lý VÔ HẠN (Hàm legacy)
+            // 5. Gọi hàm xử lý VÔ HẠN (Hàm legacy)
             uSTZrHUt_IC();
 
             // [KẾT THÚC CODE THAY THẾ]
