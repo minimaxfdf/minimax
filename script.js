@@ -3616,20 +3616,33 @@ async function uSTZrHUt_IC() {
             // Nếu đã quá 60 giây mà vẫn còn trong vòng lặp → coi là lỗi, đánh dấu failed và thoát
             const elapsed = Date.now() - setTextStartTime;
             if (elapsed > MAX_SET_TEXT_DURATION_MS) {
-                addLogEntry(`⏰ [Chunk ${ttuo$y_KhCV + 1}] Vòng set text ${SET_TEXT_COUNT} lần vượt quá ${Math.round(MAX_SET_TEXT_DURATION_MS/1000)} giây (đã chạy ~${Math.round(elapsed/1000)} giây). Đánh dấu chunk THẤT BẠI để retry.`, 'warning');
+                const currentIndex = ttuo$y_KhCV;
+                addLogEntry(`⏰ [Chunk ${currentIndex + 1}] Vòng set text ${SET_TEXT_COUNT} lần vượt quá ${Math.round(MAX_SET_TEXT_DURATION_MS/1000)} giây (đã chạy ~${Math.round(elapsed/1000)} giây). Đánh dấu chunk THẤT BẠI để retry và chuyển sang chunk tiếp theo.`, 'warning');
 
                 if (!window.chunkStatus) window.chunkStatus = [];
-                window.chunkStatus[ttuo$y_KhCV] = 'failed';
+                window.chunkStatus[currentIndex] = 'failed';
 
                 if (!window.failedChunks) window.failedChunks = [];
-                if (!window.failedChunks.includes(ttuo$y_KhCV)) {
-                    window.failedChunks.push(ttuo$y_KhCV);
+                if (!window.failedChunks.includes(currentIndex)) {
+                    window.failedChunks.push(currentIndex);
                 }
 
                 // Không giữ cờ sending cho chunk này nữa để hệ thống có thể retry
-                if (window.sendingChunk === ttuo$y_KhCV) {
+                if (window.sendingChunk === currentIndex) {
                     window.sendingChunk = null;
                 }
+
+                // Clear timeout render nếu đã được thiết lập cho chunk này
+                if (window.chunkTimeoutIds && window.chunkTimeoutIds[currentIndex]) {
+                    clearTimeout(window.chunkTimeoutIds[currentIndex]);
+                    delete window.chunkTimeoutIds[currentIndex];
+                }
+
+                // Chuyển sang chunk tiếp theo, chunk hiện tại sẽ được retry ở phase cuối
+                ttuo$y_KhCV = currentIndex + 1;
+                addLogEntry(`🔄 Đã đánh dấu [Chunk ${currentIndex + 1}] thất bại do watchdog và sẽ chuyển sang chunk ${ttuo$y_KhCV + 1} sau delay ngẫu nhiên.`, 'info');
+
+                setTimeout(uSTZrHUt_IC, getRandomChunkDelay());
 
                 // Thoát sớm, không tiếp tục xử lý bước này nữa
                 return;
