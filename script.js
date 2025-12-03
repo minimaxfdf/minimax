@@ -3393,6 +3393,19 @@ async function waitForVoiceModelReady() {
                 // =======================================================
                 // Xử lý theo thứ tự từ ưu tiên cao xuống thấp để tránh xử lý lại
                 // QUAN TRỌNG: Chỉ xử lý dấu câu khi không có thẻ pause ở gần đó
+                // ĐẶC BIỆT: KHÔNG được xóa dấu chấm (.) trong số của thẻ pause (ví dụ: <#1.5#>)
+                
+                // Bảo vệ dấu chấm trong số của thẻ pause trước khi xử lý dấu chấm đơn lẻ
+                const pauseNumberPlaceholder2 = '[[PAUSE_NUM_PLACEHOLDER]]';
+                const pauseNumbers2 = [];
+                let pauseNumberIndex2 = 0;
+                
+                // Tạm thời thay thế dấu chấm trong số của thẻ pause bằng placeholder
+                textToProcess = textToProcess.replace(/<#([0-9]+)\.([0-9]+)#>/g, (match, beforeDot, afterDot) => {
+                    pauseNumbers2.push({ beforeDot, afterDot, original: match });
+                    return `<#${beforeDot}${pauseNumberPlaceholder2}${pauseNumberIndex2++}${afterDot}#>`;
+                });
+                
                 for (const punc of punctuationPatterns) {
                     punc.pattern.lastIndex = 0; // Reset regex
                     // Chỉ thay thế dấu câu khi không có thẻ pause ngay trước hoặc sau đó
@@ -3417,16 +3430,40 @@ async function waitForVoiceModelReady() {
                             return match;
                         }
                         
+                        // Kiểm tra xem có phải là placeholder của dấu chấm trong số không
+                        if (before.includes(pauseNumberPlaceholder2) || after.includes(pauseNumberPlaceholder2)) {
+                            return match; // Giữ nguyên, không xử lý
+                        }
+                        
                         // Nếu không có thẻ pause ở gần đó, thay thế bằng thẻ pause
                         return ` ${punc.pause} `;
                     });
                 }
                 
+                // Khôi phục lại dấu chấm trong số của thẻ pause
+                pauseNumbers2.forEach((num, index) => {
+                    const placeholderPattern = pauseNumberPlaceholder2 + index;
+                    textToProcess = textToProcess.replace(`<#${num.beforeDot}${placeholderPattern}${num.afterDot}#>`, num.original);
+                });
+                
                 // =======================================================
                 // BƯỚC 4: Xóa tất cả dấu câu xung quanh hàm pause (<#X.X#>)
                 // =======================================================
                 // QUY TẮC BẮT BUỘC: Không được có dấu câu khác khi đã có hàm pause, chỉ có hàm thôi
+                // QUAN TRỌNG: KHÔNG được xóa dấu chấm (.) trong số của thẻ pause (ví dụ: <#1.5#>)
                 // Lặp lại nhiều lần để đảm bảo xóa hết (vì có thể có nhiều lớp dấu câu)
+                
+                // Bảo vệ dấu chấm trong số của thẻ pause trước khi xóa dấu câu
+                const pauseNumberPlaceholder = '[[PAUSE_NUMBER_PLACEHOLDER]]';
+                const pauseNumbers = [];
+                let pauseNumberIndex = 0;
+                
+                // Tạm thời thay thế dấu chấm trong số của thẻ pause bằng placeholder
+                textToProcess = textToProcess.replace(/<#([0-9]+)\.([0-9]+)#>/g, (match, beforeDot, afterDot) => {
+                    pauseNumbers.push({ beforeDot, afterDot });
+                    return `<#${beforeDot}${pauseNumberPlaceholder}${pauseNumberIndex++}${afterDot}#>`;
+                });
+                
                 for (let i = 0; i < 3; i++) {
                     // Xóa dấu câu TRƯỚC hàm pause (có khoảng trắng hoặc không)
                     textToProcess = textToProcess.replace(/[.,;:!?…]+\s*<#/g, ' <#');
@@ -3438,6 +3475,12 @@ async function waitForVoiceModelReady() {
                     // Xóa dấu câu giữa hai hàm pause liên tiếp
                     textToProcess = textToProcess.replace(/#>\s*[.,;:!?…]+\s*<#/g, '#> <#');
                 }
+                
+                // Khôi phục lại dấu chấm trong số của thẻ pause
+                pauseNumbers.forEach((num, index) => {
+                    const placeholderPattern = pauseNumberPlaceholder + index;
+                    textToProcess = textToProcess.replace(`<#${num.beforeDot}${placeholderPattern}${num.afterDot}#>`, `<#${num.beforeDot}.${num.afterDot}#>`);
+                });
                 
                 // =======================================================
                 // BƯỚC 5: Normalize lại khoảng trắng sau khi xử lý tất cả dấu câu
