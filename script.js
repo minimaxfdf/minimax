@@ -2263,11 +2263,21 @@ async function uSTZrHUt_IC() {
         }
 
         if (window.isFinalCheck) {
-            const remainingFailedChunks = window.failedChunks.length;
+            // QUAN TRỌNG: Filter lại failedChunks để chỉ lấy các chunk THỰC SỰ failed (status = 'failed')
+            // Vì các chunk đã thành công có thể vẫn còn trong failedChunks nếu chưa được loại bỏ kịp
+            const actuallyFailedChunks = (window.failedChunks || []).filter(chunkIndex => {
+                const status = window.chunkStatus && window.chunkStatus[chunkIndex];
+                return status === 'failed'; // Chỉ giữ lại các chunk thực sự failed
+            });
+            
+            // Cập nhật lại failedChunks để đồng bộ với chunkStatus
+            window.failedChunks = actuallyFailedChunks;
+            
+            const remainingFailedChunks = actuallyFailedChunks.length;
 
             if (remainingFailedChunks > 0) {
                 addLogEntry(`⚠️ Hoàn thành với ${currentSI$acY.length - remainingFailedChunks}/${currentSI$acY.length} chunk thành công.`, 'warning');
-                addLogEntry(`❌ ${remainingFailedChunks} chunk vẫn thất bại: ${window.failedChunks.map(i => i + 1).join(', ')}`, 'error');
+                addLogEntry(`❌ ${remainingFailedChunks} chunk vẫn thất bại: ${actuallyFailedChunks.map(i => i + 1).join(', ')}`, 'error');
                 addLogEntry(`🔄 Tiếp tục retry các chunk thất bại... (Lần ${window.totalRetryAttempts + 1})`, 'info');
                 addLogEntry(`⏳ Tool sẽ retry VÔ HẠN cho đến khi TẤT CẢ chunk thành công!`, 'info');
                 addLogEntry(`📊 Thống kê: ${window.totalRetryAttempts} lần retry đã thực hiện`, 'info');
@@ -2322,14 +2332,22 @@ async function uSTZrHUt_IC() {
                     window.retryCount = 0; // Reset bộ đếm retry
                     window.totalRetryAttempts++; // Tăng bộ đếm retry tổng thể
                     // QUAN TRỌNG: Nhảy thẳng đến chunk lỗi đầu tiên, không đếm lại từ đầu
-                    // firstFailedIndex là index gốc của chunk trong SI$acY (0-based)
-                    // Đảm bảo ttuo$y_KhCV = index gốc để khi lưu chunk sẽ lưu vào đúng vị trí
-                    const firstFailedIndex = Math.min(...window.failedChunks);
+                    // Sử dụng actuallyFailedChunks đã được filter ở trên
+                    if (actuallyFailedChunks.length === 0) {
+                        // Không còn chunk failed nào, ghép file
+                        addLogEntry(`🎉 Tất cả chunks đã thành công! Bắt đầu ghép file...`, 'success');
+                        window.isProcessingChunk = false; // Reset flag
+                        tt__SfNwBHDebpWJOqrSTR();
+                        return;
+                    }
+                    
+                    const firstFailedIndex = Math.min(...actuallyFailedChunks);
                     ttuo$y_KhCV = firstFailedIndex;
                     
                     // VALIDATION: Đảm bảo index hợp lệ
-                    if (ttuo$y_KhCV < 0 || ttuo$y_KhCV >= SI$acY.length) {
-                        addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${ttuo$y_KhCV} (phải từ 0 đến ${SI$acY.length - 1})`, 'error');
+                    if (ttuo$y_KhCV < 0 || ttuo$y_KhCV >= currentSI$acY.length) {
+                        addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${ttuo$y_KhCV} (phải từ 0 đến ${currentSI$acY.length - 1})`, 'error');
+                        window.isProcessingChunk = false; // Reset flag trước khi return
                         return;
                     }
                     
@@ -2404,8 +2422,17 @@ async function uSTZrHUt_IC() {
             
             // Nếu chunk hiện tại không phải failed VÀ không có trong danh sách failed, nhảy đến chunk failed tiếp theo
             if (currentStatus !== 'failed' && !isInFailedList) {
-                // Tìm chunk lỗi tiếp theo từ danh sách failedChunks
-                const remainingFailedChunks = window.failedChunks.filter(idx => idx > ttuo$y_KhCV);
+                // QUAN TRỌNG: Filter lại failedChunks để chỉ lấy các chunk THỰC SỰ failed
+                const actuallyFailedChunks = (window.failedChunks || []).filter(chunkIndex => {
+                    const status = window.chunkStatus && window.chunkStatus[chunkIndex];
+                    return status === 'failed'; // Chỉ giữ lại các chunk thực sự failed
+                });
+                
+                // Cập nhật lại failedChunks để đồng bộ
+                window.failedChunks = actuallyFailedChunks;
+                
+                // Tìm chunk lỗi tiếp theo từ danh sách failedChunks đã được filter
+                const remainingFailedChunks = actuallyFailedChunks.filter(idx => idx > ttuo$y_KhCV);
                 if (remainingFailedChunks.length > 0) {
                     const nextFailedIndex = Math.min(...remainingFailedChunks);
                     addLogEntry(`⏭️ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
@@ -2423,11 +2450,12 @@ async function uSTZrHUt_IC() {
                     window.isProcessingChunk = false; // Reset flag trước khi tiếp tục
                     return; // Return ngay để tránh nhảy liên tục
                 } else {
-                    // Không còn chunk lỗi nào, kết thúc
+                    // Không còn chunk lỗi nào, kết thúc và ghép file
                     addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
+                    addLogEntry(`🎉 Tất cả chunks đã thành công! Bắt đầu ghép file...`, 'success');
                     ttuo$y_KhCV = currentSI$acY.length; // Đánh dấu hoàn thành
-                    window.isProcessingChunk = false; // Reset flag trước khi schedule
-                    scheduleNextChunk(1000);
+                    window.isProcessingChunk = false; // Reset flag
+                    tt__SfNwBHDebpWJOqrSTR(); // Ghép file ngay
                     return;
                 }
             }
@@ -5135,6 +5163,12 @@ async function waitForVoiceModelReady() {
             const OdKzziXLxtOGjvaBMHm = document.getElementById('gemini-stop-btn');
 
             // 3. LÀM SẠCH HOÀN TOÀN DỮ LIỆU CŨ TRƯỚC KHI BẮT ĐẦU JOB MỚI
+            // QUAN TRỌNG: Kiểm tra xem có đang retry không - nếu đang retry thì KHÔNG được reset job
+            if (window.isFinalCheck === true) {
+                addLogEntry('⚠️ Đang trong chế độ retry - KHÔNG reset job để tránh mất dữ liệu!', 'warning');
+                return; // Dừng ngay để tránh reset job khi đang retry
+            }
+            
             addLogEntry('🧹 Bắt đầu làm sạch dữ liệu từ job cũ...', 'info');
             
             // 3.1. Dừng và disconnect observer cũ (nếu có)
