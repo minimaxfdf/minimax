@@ -2439,10 +2439,21 @@ async function uSTZrHUt_IC() {
         }
 
 
-        // Tạo ra các khả năng có thể có cho tên nút
+        // QUAN TRỌNG: Logic thông minh để chọn nút đúng
+        // Sau khi reset web, web có thể về trạng thái ban đầu và hiển thị "Generate" thay vì "Regenerate"
+        // Vì vậy, nếu chunk > 0 nhưng không tìm thấy "Regenerate", sẽ fallback sang "Generate"
         const possibleGenerateTexts = ['Generate', 'Tạo'];
         const possibleRegenerateTexts = ['Regenerate', 'Tạo lại'];
-        const buttonTexts = (ttuo$y_KhCV === 0) ? possibleGenerateTexts : possibleRegenerateTexts;
+        
+        // Ưu tiên: Chunk 0 dùng Generate, chunk > 0 dùng Regenerate
+        // Nhưng nếu không tìm thấy Regenerate, sẽ fallback sang Generate
+        let buttonTexts;
+        if (ttuo$y_KhCV === 0) {
+            buttonTexts = possibleGenerateTexts;
+        } else {
+            // Thử tìm Regenerate trước, nếu không có thì fallback sang Generate
+            buttonTexts = [...possibleRegenerateTexts, ...possibleGenerateTexts];
+        }
 
         // Gọi hàm "bộ não" đã nâng cấp
         const targetButton = await waitForButton(buttonTexts);
