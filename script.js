@@ -2566,11 +2566,75 @@ async function uSTZrHUt_IC() {
         // Áp dụng chuẩn hóa cho chunk trước khi gửi
         // DEBUG: Đảm bảo hàm được gọi
         console.log(`[DEBUG] Đang chuẩn hóa chunk ${ttuo$y_KhCV + 1}, độ dài: ${currentSI$acY[ttuo$y_KhCV].length}`);
-        const chunkText = normalizeChunkText(currentSI$acY[ttuo$y_KhCV]);
+        let chunkText = normalizeChunkText(currentSI$acY[ttuo$y_KhCV]);
         console.log(`[DEBUG] Sau chuẩn hóa, độ dài: ${chunkText.length}`);
         
         // Đặt text đã chuẩn hóa vào ô input ẩn
         rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
+        
+        // QUAN TRỌNG: Đợi Minimax tự điền xong (nếu có) rồi kiểm tra và lọc lại
+        // Minimax có thể tự động điền text mặc định sau khi tool set value
+        await new Promise(resolve => setTimeout(resolve, 150)); // Đợi 150ms để Minimax tự điền xong
+        
+        // Đọc lại textarea để kiểm tra xem Minimax có tự điền không
+        const currentTextareaValue = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+        
+        // So sánh với text đã set: Nếu khác nhau, có thể Minimax đã tự điền
+        if (currentTextareaValue !== chunkText) {
+            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Phát hiện Minimax tự động điền text sau khi set value!`, 'warning');
+            addLogEntry(`🔍 Text đã set: ${chunkText.substring(0, 50)}... (${chunkText.length} ký tự)`, 'info');
+            addLogEntry(`🔍 Text trong textarea: ${currentTextareaValue.substring(0, 50)}... (${currentTextareaValue.length} ký tự)`, 'info');
+            
+            // Áp dụng lọc lại để loại bỏ text mặc định của Minimax
+            let cleanedText = currentTextareaValue;
+            const originalCleanedLength = cleanedText.length;
+            
+            // Text mặc định tiếng Việt và tiếng Anh (chính xác)
+            const minimaxDefaultTextVN = "Xin chào, tôi rất vui được hỗ trợ bạn với dịch vụ giọng nói của chúng tôi. Hãy chọn một giọng nói phù hợp với bạn và cùng nhau bắt đầu hành trình sáng tạo âm thanh nhé.";
+            const minimaxDefaultTextEN = "Hello, I'm delighted to assist you with our voice services. Choose a voice that resonates with you, and let's begin our creative audio journey together";
+            
+            // Escape regex
+            const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            
+            // Loại bỏ text mặc định (chỉ cho phép khoảng trắng/xuống dòng xung quanh, không quá rộng)
+            cleanedText = cleanedText.replace(new RegExp(`\\s*${escapeRegex(minimaxDefaultTextVN)}\\s*`, 'gi'), ' ');
+            cleanedText = cleanedText.replace(new RegExp(`\\s*${escapeRegex(minimaxDefaultTextEN)}\\s*`, 'gi'), ' ');
+            
+            // Loại bỏ các phần text mặc định có thể bị cắt ngắn
+            cleanedText = cleanedText.replace(/Xin chào, tôi rất vui[\s\S]{0,50}giọng nói[\s\S]{0,50}phù hợp[\s\S]{0,50}âm thanh nhé\.?/gi, ' ');
+            cleanedText = cleanedText.replace(/Hello, I'm delighted[\s\S]{0,50}voice services[\s\S]{0,50}resonates[\s\S]{0,50}journey together/gi, ' ');
+            
+            // Chuẩn hóa khoảng trắng
+            cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+            
+            // VALIDATION: Đảm bảo không xóa nhầm text hợp lệ
+            const removedChars = originalCleanedLength - cleanedText.length;
+            const removalRatio = removedChars / originalCleanedLength;
+            
+            // Chỉ chấp nhận nếu:
+            // 1. Text sau khi lọc không rỗng
+            // 2. Độ dài giảm hợp lý (< 50% độ dài gốc) - text mặc định Minimax khoảng 200-300 ký tự
+            // 3. Text sau khi lọc vẫn chứa nội dung từ chunkText gốc
+            if (cleanedText.length > 0 && removalRatio < 0.5 && cleanedText.includes(chunkText.substring(0, Math.min(50, chunkText.length)))) {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã loại bỏ ${removedChars} ký tự text mặc định của Minimax`, 'success');
+                chunkText = cleanedText;
+            } else {
+                // Nếu validation thất bại, giữ nguyên text gốc đã set
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Validation thất bại: Giữ nguyên text gốc để tránh xóa nhầm`, 'warning');
+                addLogEntry(`🔍 Debug: removedChars=${removedChars}, removalRatio=${removalRatio.toFixed(2)}, cleanedLength=${cleanedText.length}`, 'info');
+                chunkText = currentTextareaValue; // Giữ nguyên text trong textarea nếu validation thất bại
+            }
+            
+            // Set lại text đã lọc vào textarea
+            rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
+        }
+        
+        // QUAN TRỌNG: Gửi input và change event để Minimax nhận biết thay đổi và đè lên auto-fill
+        rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('input', { bubbles: true }));
+        rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        // Đợi thêm một chút để đảm bảo Minimax đã xử lý xong
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         // QUAN TRỌNG: Cập nhật progress bar dựa trên số chunk đã thành công khi retry
         // Khi retry, ttuo$y_KhCV có thể nhảy về chunk failed đầu tiên, nhưng progress phải giữ nguyên
