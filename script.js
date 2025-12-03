@@ -3302,24 +3302,36 @@ async function waitForVoiceModelReady() {
                     // Điều này đảm bảo chỉ tạo 1 thẻ pause cho nhiều dòng trống liên tiếp
                     textToProcess = textToProcess.replace(/(\r\n|\n|\r)(\s*(\r\n|\n|\r))+/g, '$1');
                     
+                    // QUAN TRỌNG: Tạo thẻ pause với dấu chấm được bảo vệ
+                    // Đảm bảo dấu chấm trong số không bị xóa khi normalize hoặc xử lý dấu câu
+                    const newlinePauseString = mapDurationToPauseString(settings.newline);
+                    
                     // Sau khi đã xóa dấu câu và gộp dòng trống, thay thế dấu xuống dòng bằng pause string
                     // Xử lý \r\n trước (Windows line ending)
-                    textToProcess = textToProcess.replace(/\r\n/g, ` ${mapDurationToPauseString(settings.newline)} `);
+                    textToProcess = textToProcess.replace(/\r\n/g, ` ${newlinePauseString} `);
                     // Sau đó xử lý \n (Unix/Mac line ending)
-                    textToProcess = textToProcess.replace(/\n/g, ` ${mapDurationToPauseString(settings.newline)} `);
+                    textToProcess = textToProcess.replace(/\n/g, ` ${newlinePauseString} `);
                     // Cuối cùng xử lý \r (Mac cũ)
-                    textToProcess = textToProcess.replace(/\r/g, ` ${mapDurationToPauseString(settings.newline)} `);
+                    textToProcess = textToProcess.replace(/\r/g, ` ${newlinePauseString} `);
                 }
 
                 // Normalize khoảng trắng (sau khi đã xử lý dấu xuống dòng)
                 // QUAN TRỌNG: Bảo vệ thẻ pause khi normalize khoảng trắng
+                // ĐẶC BIỆT: Bảo vệ dấu chấm trong số của thẻ pause (ví dụ: <#1.5#>)
                 // Tạm thời thay thế thẻ pause bằng placeholder để tránh bị ảnh hưởng
                 const pausePlaceholder = '[[PAUSE_TAG_PLACEHOLDER]]';
                 const pauseTags = [];
                 let pauseIndex = 0;
                 
                 // Tìm và thay thế tất cả thẻ pause bằng placeholder
-                textToProcess = textToProcess.replace(/<#[0-9.]+#>/g, (match) => {
+                // QUAN TRỌNG: Bảo vệ cả dấu chấm trong số của thẻ pause
+                textToProcess = textToProcess.replace(/<#([0-9]+)\.([0-9]+)#>/g, (match, beforeDot, afterDot) => {
+                    pauseTags.push(match);
+                    return pausePlaceholder + pauseIndex++ + pausePlaceholder;
+                });
+                
+                // Xử lý các thẻ pause không có dấu chấm (ví dụ: <#5#>)
+                textToProcess = textToProcess.replace(/<#([0-9]+)#>/g, (match) => {
                     pauseTags.push(match);
                     return pausePlaceholder + pauseIndex++ + pausePlaceholder;
                 });
@@ -3348,19 +3360,43 @@ async function waitForVoiceModelReady() {
                 // Thứ tự ưu tiên: ellipsis > exclamation > question > period > semicolon > colon > comma
                 
                 // Tạo danh sách các dấu câu được bật với thứ tự ưu tiên
+                // QUAN TRỌNG: Pattern cho dấu chấm phải tránh match với dấu chấm trong số của thẻ pause
                 const punctuationPatterns = [];
                 if (settings.ellipsisEnabled && settings.ellipsis > 0) punctuationPatterns.push({ pattern: /\.\.\./g, pause: mapDurationToPauseString(settings.ellipsis), priority: 7, char: '...' });
                 if (settings.exclamationEnabled && settings.exclamation > 0) punctuationPatterns.push({ pattern: /!/g, pause: mapDurationToPauseString(settings.exclamation), priority: 6, char: '!' });
                 if (settings.questionEnabled && settings.question > 0) punctuationPatterns.push({ pattern: /\?/g, pause: mapDurationToPauseString(settings.question), priority: 5, char: '?' });
-                if (settings.periodEnabled && settings.period > 0) punctuationPatterns.push({ pattern: /\./g, pause: mapDurationToPauseString(settings.period), priority: 4, char: '.' });
+                // QUAN TRỌNG: Pattern cho dấu chấm phải KHÔNG match với dấu chấm trong số của thẻ pause (<#1.5#>)
+                // Sử dụng negative lookahead và lookbehind để tránh match với dấu chấm trong số
+                if (settings.periodEnabled && settings.period > 0) {
+                    // Pattern: dấu chấm không nằm giữa hai số (ví dụ: không match với 1.5 trong <#1.5#>)
+                    punctuationPatterns.push({ 
+                        pattern: /\.(?!\d)/g, // Negative lookahead: không có số sau dấu chấm
+                        pause: mapDurationToPauseString(settings.period), 
+                        priority: 4, 
+                        char: '.' 
+                    });
+                }
                 if (settings.semicolonEnabled && settings.semicolon > 0) punctuationPatterns.push({ pattern: /;/g, pause: mapDurationToPauseString(settings.semicolon), priority: 3, char: ';' });
                 if (settings.colonEnabled && settings.colon > 0) punctuationPatterns.push({ pattern: /:/g, pause: mapDurationToPauseString(settings.colon), priority: 2, char: ':' });
                 if (settings.commaEnabled && settings.comma > 0) punctuationPatterns.push({ pattern: /,/g, pause: mapDurationToPauseString(settings.comma), priority: 1, char: ',' });
                 
                 // Xử lý các nhóm dấu câu liên tiếp: chỉ giữ lại dấu câu có ưu tiên cao nhất
                 // Ví dụ: "câu 1.," → chỉ giữ lại dấu chấm (ưu tiên cao hơn dấu phẩy)
-                const allPunctuationRegex = /[.,;:!?…]+/g;
-                textToProcess = textToProcess.replace(allPunctuationRegex, (match) => {
+                // QUAN TRỌNG: Không match với dấu chấm trong số của thẻ pause (<#1.5#>)
+                // Pattern: tìm các dấu câu nhưng không match với dấu chấm trong số (ví dụ: 1.5)
+                const allPunctuationRegex = /(?<!<#[0-9]+)\.(?![0-9]+#>)|[.,;:!?…]+/g;
+                
+                // Tạm thời bảo vệ dấu chấm trong số của thẻ pause trước khi xử lý
+                const pauseNumberPlaceholder3 = '[[PAUSE_NUM_PLACEHOLDER3]]';
+                const pauseNumbers3 = [];
+                let pauseNumberIndex3 = 0;
+                
+                textToProcess = textToProcess.replace(/<#([0-9]+)\.([0-9]+)#>/g, (match, beforeDot, afterDot) => {
+                    pauseNumbers3.push({ beforeDot, afterDot, original: match });
+                    return `<#${beforeDot}${pauseNumberPlaceholder3}${pauseNumberIndex3++}${afterDot}#>`;
+                });
+                
+                textToProcess = textToProcess.replace(/[.,;:!?…]+/g, (match) => {
                     // Tìm dấu câu có ưu tiên cao nhất trong nhóm
                     let highestPriority = -1;
                     let highestPause = '';
@@ -3386,6 +3422,12 @@ async function waitForVoiceModelReady() {
                     
                     // Nếu không có dấu câu nào được bật, xóa nhóm dấu câu
                     return '';
+                });
+                
+                // Khôi phục lại dấu chấm trong số của thẻ pause
+                pauseNumbers3.forEach((num, index) => {
+                    const placeholderPattern = pauseNumberPlaceholder3 + index;
+                    textToProcess = textToProcess.replace(`<#${num.beforeDot}${placeholderPattern}${num.afterDot}#>`, num.original);
                 });
                 
                 // =======================================================
