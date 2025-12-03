@@ -1717,25 +1717,28 @@ let finalBlobs = ZTQj$LF$o; // Mặc định dùng ZTQj$LF$o như code gốc
 if (window.chunkBlobs && window.chunkBlobs.length > 0) {
     // QUAN TRỌNG: Ghép chunk đúng theo thứ tự index (0, 1, 2, ...) để đảm bảo vị trí đúng khi retry
     // Chỉ ghép các chunk hợp lệ (không null), nhưng phải theo đúng thứ tự index của chúng
+    // QUAN TRỌNG: Chỉ ghép đúng số lượng chunk gốc (SI$acY.length) để tránh ghép sai thứ tự
     const validBlobs = [];
     const missingChunks = [];
     
-    // Đảm bảo kiểm tra đủ số lượng chunk theo SI$acY.length
-    const maxLength = Math.max(window.chunkBlobs.length, ZTQj$LF$o.length, SI$acY.length);
+    // QUAN TRỌNG: Chỉ ghép đúng số lượng chunk gốc, không ghép quá
+    // Đảm bảo ghép theo đúng thứ tự từ 0 đến SI$acY.length - 1
+    const totalChunks = SI$acY.length;
     
-    for (let i = 0; i < maxLength; i++) {
+    for (let i = 0; i < totalChunks; i++) {
         let blob = null;
         
-        // Ưu tiên 1: Kiểm tra window.chunkBlobs
-        if (window.chunkBlobs[i] !== null && window.chunkBlobs[i] !== undefined) {
+        // Ưu tiên 1: Kiểm tra window.chunkBlobs (đảm bảo lưu đúng vị trí index)
+        if (i < window.chunkBlobs.length && window.chunkBlobs[i] !== null && window.chunkBlobs[i] !== undefined) {
             blob = window.chunkBlobs[i];
         } 
-        // Ưu tiên 2: Fallback sang ZTQj$LF$o
-        else if (ZTQj$LF$o[i] !== null && ZTQj$LF$o[i] !== undefined) {
+        // Ưu tiên 2: Fallback sang ZTQj$LF$o (đồng bộ với window.chunkBlobs)
+        else if (i < ZTQj$LF$o.length && ZTQj$LF$o[i] !== null && ZTQj$LF$o[i] !== undefined) {
             blob = ZTQj$LF$o[i];
         }
         
         if (blob !== null) {
+            // QUAN TRỌNG: Thêm blob vào đúng thứ tự (theo index i)
             validBlobs.push(blob);
         } else {
             // Chunk này không có dữ liệu - ghi nhận để log
@@ -2017,8 +2020,16 @@ async function uSTZrHUt_IC() {
                 addLogEntry(`🔍 Phát hiện ${remainingChunks.length} chunk chưa được xử lý: ${remainingChunks.map(i => i + 1).join(', ')}`, 'warning');
                 addLogEntry(`🔄 Kích hoạt xử lý chunk ${nextUnprocessedIndex + 1}...`, 'info');
                 
-                // Nhảy đến chunk chưa xử lý để tiếp tục xử lý
+                // QUAN TRỌNG: Nhảy đến chunk chưa xử lý để tiếp tục xử lý
+                // nextUnprocessedIndex là index gốc của chunk trong SI$acY (0-based)
+                // Đảm bảo ttuo$y_KhCV = index gốc để khi lưu chunk sẽ lưu vào đúng vị trí
                 ttuo$y_KhCV = nextUnprocessedIndex;
+                
+                // VALIDATION: Đảm bảo index hợp lệ
+                if (ttuo$y_KhCV < 0 || ttuo$y_KhCV >= SI$acY.length) {
+                    addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${ttuo$y_KhCV} (phải từ 0 đến ${SI$acY.length - 1})`, 'error');
+                    return;
+                }
                 
                 // Kích hoạt xử lý ngay lập tức thay vì chờ
                 setTimeout(uSTZrHUt_IC, 500); // Chờ ngắn 500ms rồi xử lý ngay
@@ -2161,9 +2172,18 @@ async function uSTZrHUt_IC() {
                     // KHÔNG ghép file khi còn chunk thất bại - tiếp tục retry VÔ HẠN
                     window.retryCount = 0; // Reset bộ đếm retry
                     window.totalRetryAttempts++; // Tăng bộ đếm retry tổng thể
-                    // Nhảy thẳng đến chunk lỗi đầu tiên, không đếm lại từ đầu
+                    // QUAN TRỌNG: Nhảy thẳng đến chunk lỗi đầu tiên, không đếm lại từ đầu
+                    // firstFailedIndex là index gốc của chunk trong SI$acY (0-based)
+                    // Đảm bảo ttuo$y_KhCV = index gốc để khi lưu chunk sẽ lưu vào đúng vị trí
                     const firstFailedIndex = Math.min(...window.failedChunks);
                     ttuo$y_KhCV = firstFailedIndex;
+                    
+                    // VALIDATION: Đảm bảo index hợp lệ
+                    if (ttuo$y_KhCV < 0 || ttuo$y_KhCV >= SI$acY.length) {
+                        addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${ttuo$y_KhCV} (phải từ 0 đến ${SI$acY.length - 1})`, 'error');
+                        return;
+                    }
+                    
                     addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên), chỉ xử lý chunks lỗi`, 'info');
                     setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi bắt đầu lại
                 })();
@@ -2208,7 +2228,16 @@ async function uSTZrHUt_IC() {
                 if (remainingFailedChunks.length > 0) {
                     const nextFailedIndex = Math.min(...remainingFailedChunks);
                     addLogEntry(`⏭️ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
+                    
+                    // QUAN TRỌNG: nextFailedIndex là index gốc của chunk trong SI$acY (0-based)
+                    // Đảm bảo ttuo$y_KhCV = index gốc để khi lưu chunk sẽ lưu vào đúng vị trí
                     ttuo$y_KhCV = nextFailedIndex;
+                    
+                    // VALIDATION: Đảm bảo index hợp lệ
+                    if (ttuo$y_KhCV < 0 || ttuo$y_KhCV >= SI$acY.length) {
+                        addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${ttuo$y_KhCV} (phải từ 0 đến ${SI$acY.length - 1})`, 'error');
+                        return;
+                    }
                 } else {
                     // Không còn chunk lỗi nào, kết thúc
                     addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
@@ -2655,33 +2684,42 @@ async function uSTZrHUt_IC() {
                             throw new Error(ndkpgKnjg(0x241) + FGrxK_RK[ndkpgKnjg(0x237)]);
                         }
                         const qILAV = await FGrxK_RK[ndkpgKnjg(0x26f)]();
-                        // Lưu chunk vào đúng vị trí dựa trên ttuo$y_KhCV (chunk index hiện tại)
+                        // QUAN TRỌNG: Lưu chunk vào đúng vị trí index gốc để đảm bảo ghép đúng thứ tự
+                        // Khi retry hoặc xử lý chunk còn thiếu, ttuo$y_KhCV luôn đúng với index gốc của chunk đó
                         if (typeof window.chunkBlobs === 'undefined') {
                             window.chunkBlobs = new Array(SI$acY.length).fill(null);
                         }
 
-                        // QUAN TRỌNG: Đảm bảo lưu đúng vị trí chunk theo index gốc, không phụ thuộc vào ttuo$y_KhCV
-                        // Khi retry, ttuo$y_KhCV có thể thay đổi, nhưng index của chunk phải giữ nguyên
+                        // QUAN TRỌNG: Đảm bảo lưu đúng vị trí chunk theo index gốc
+                        // ttuo$y_KhCV luôn đúng với index gốc của chunk trong SI$acY (0, 1, 2, ...)
                         const currentChunkIndex = ttuo$y_KhCV;
+                        
+                        // VALIDATION: Đảm bảo index hợp lệ
+                        if (currentChunkIndex < 0 || currentChunkIndex >= SI$acY.length) {
+                            addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${currentChunkIndex} (phải từ 0 đến ${SI$acY.length - 1})`, 'error');
+                            throw new Error(`Invalid chunk index: ${currentChunkIndex}`);
+                        }
 
                         // Đảm bảo window.chunkBlobs có đủ độ dài và khởi tạo với null nếu cần
                         if (window.chunkBlobs.length < SI$acY.length) {
                             // Mở rộng mảng đến độ dài đúng của SI$acY để đảm bảo có đủ vị trí cho tất cả chunks
                             while (window.chunkBlobs.length < SI$acY.length) {
-                            window.chunkBlobs.push(null);
-                        }
+                                window.chunkBlobs.push(null);
+                            }
                         }
                         
-                        // Lưu chunk vào đúng vị trí index (không phải vị trí cuối cùng)
+                        // QUAN TRỌNG: Lưu chunk vào đúng vị trí index (ghi đè nếu đã có - khi retry)
+                        // Điều này đảm bảo chunk luôn ở đúng vị trí của nó trong mảng
                         window.chunkBlobs[currentChunkIndex] = qILAV;
 
                         // ĐỒNG BỘ HÓA ZTQj$LF$o: Đảm bảo ZTQj$LF$o cũng có chunk ở đúng vị trí
                         // Nếu ZTQj$LF$o chưa đủ độ dài, mở rộng mảng
                         if (ZTQj$LF$o.length < SI$acY.length) {
                             while (ZTQj$LF$o.length < SI$acY.length) {
-                            ZTQj$LF$o.push(null);
+                                ZTQj$LF$o.push(null);
                             }
                         }
+                        // QUAN TRỌNG: Lưu vào đúng vị trí index để đồng bộ với window.chunkBlobs
                         ZTQj$LF$o[currentChunkIndex] = qILAV;
 
                         // ĐỒNG BỘ HÓA: Đảm bảo cả hai mảng đều có chunk này ở đúng vị trí
