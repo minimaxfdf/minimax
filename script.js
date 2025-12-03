@@ -2158,9 +2158,20 @@ async function uSTZrHUt_IC() {
         }
 
         // Nếu có chunk thất bại và chưa kiểm tra cuối
-        if (failedChunks.length > 0 && !window.isFinalCheck) {
-            addLogEntry(`🔍 Phát hiện ${failedChunks.length} chunk thất bại. Bắt đầu xử lý lại...`, 'warning');
-            addLogEntry(`📋 Danh sách chunk thất bại: ${failedChunks.map(i => i + 1).join(', ')}`, 'info');
+        // QUAN TRỌNG: Filter lại failedChunks để chỉ lấy các chunk THỰC SỰ failed (status = 'failed')
+        const actuallyFailedChunksAtStart = (failedChunks || []).filter(chunkIndex => {
+            const status = window.chunkStatus && window.chunkStatus[chunkIndex];
+            return status === 'failed'; // Chỉ giữ lại các chunk thực sự failed
+        });
+        
+        // CHỈ kích hoạt retry khi CÓ chunk lỗi thực sự
+        if (actuallyFailedChunksAtStart.length > 0 && !window.isFinalCheck) {
+            addLogEntry(`🔍 Phát hiện ${actuallyFailedChunksAtStart.length} chunk thất bại. Bắt đầu xử lý lại...`, 'warning');
+            addLogEntry(`📋 Danh sách chunk thất bại: ${actuallyFailedChunksAtStart.map(i => i + 1).join(', ')}`, 'info');
+            
+            // Cập nhật lại failedChunks để đồng bộ với chunkStatus
+            window.failedChunks = actuallyFailedChunksAtStart;
+            
             window.isFinalCheck = true;
             window.retryCount = 0; // Reset bộ đếm retry
             
@@ -2414,11 +2425,36 @@ async function uSTZrHUt_IC() {
     // Logic thông minh: Tìm nút và click với retry
     try {
         // Nếu đang trong giai đoạn kiểm tra cuối (RETRY MODE)
+        // QUAN TRỌNG: CHỈ tiếp tục retry khi CÓ chunk lỗi thực sự
         if (window.isFinalCheck) {
+            // Filter lại failedChunks để chỉ lấy các chunk THỰC SỰ failed
+            const actuallyFailedChunks = (window.failedChunks || []).filter(chunkIndex => {
+                const status = window.chunkStatus && window.chunkStatus[chunkIndex];
+                return status === 'failed'; // Chỉ giữ lại các chunk thực sự failed
+            });
+            
+            // Nếu KHÔNG CÓ chunk lỗi thực sự, tắt retry mode và ghép file
+            if (actuallyFailedChunks.length === 0) {
+                addLogEntry(`✅ Không còn chunk lỗi nào - tắt chế độ retry và ghép file`, 'success');
+                window.isFinalCheck = false;
+                window.retryCount = 0;
+                // Clear timeout để tránh tiếp tục retry
+                if (window.nextChunkTimeoutId) {
+                    clearTimeout(window.nextChunkTimeoutId);
+                    window.nextChunkTimeoutId = null;
+                }
+                window.isProcessingChunk = false;
+                tt__SfNwBHDebpWJOqrSTR(); // Ghép file ngay
+                return;
+            }
+            
+            // Cập nhật lại failedChunks để đồng bộ
+            window.failedChunks = actuallyFailedChunks;
+            
             // QUAN TRỌNG: Chỉ nhảy nếu chunk hiện tại không phải failed VÀ không có trong failedChunks
             // Điều này tránh nhảy đến chunk đã thành công nhưng vẫn còn trong failedChunks
             const currentStatus = window.chunkStatus && window.chunkStatus[ttuo$y_KhCV];
-            const isInFailedList = window.failedChunks && window.failedChunks.includes(ttuo$y_KhCV);
+            const isInFailedList = actuallyFailedChunks.includes(ttuo$y_KhCV);
             
             // Nếu chunk hiện tại không phải failed VÀ không có trong danh sách failed, nhảy đến chunk failed tiếp theo
             if (currentStatus !== 'failed' && !isInFailedList) {
@@ -2455,6 +2491,14 @@ async function uSTZrHUt_IC() {
                     addLogEntry(`🎉 Tất cả chunks đã thành công! Bắt đầu ghép file...`, 'success');
                     ttuo$y_KhCV = currentSI$acY.length; // Đánh dấu hoàn thành
                     window.isProcessingChunk = false; // Reset flag
+                    window.isFinalCheck = false; // Tắt chế độ retry để tránh tiếp tục retry
+                    window.retryCount = 0; // Reset retry count
+                    // Reset retry count để tránh tiếp tục retry
+                    // Clear timeout để tránh tiếp tục retry
+                    if (window.nextChunkTimeoutId) {
+                        clearTimeout(window.nextChunkTimeoutId);
+                        window.nextChunkTimeoutId = null;
+                    }
                     tt__SfNwBHDebpWJOqrSTR(); // Ghép file ngay
                     return;
                 }
@@ -2773,6 +2817,21 @@ async function uSTZrHUt_IC() {
         }
         
         const MAX_RETRIES = 5;
+        
+        // QUAN TRỌNG: Kiểm tra xem đã hoàn thành và đang ghép file chưa
+        // Nếu đã hoàn thành, không được tiếp tục retry
+        const actuallyFailedChunks = (window.failedChunks || []).filter(chunkIndex => {
+            const status = window.chunkStatus && window.chunkStatus[chunkIndex];
+            return status === 'failed';
+        });
+        
+        if (actuallyFailedChunks.length === 0 && window.isFinalCheck) {
+            // Đã hoàn thành, không tiếp tục retry
+            addLogEntry(`✅ Đã hoàn thành tất cả chunks - không tiếp tục retry`, 'success');
+            window.isProcessingChunk = false;
+            return;
+        }
+        
         window.retryCount++;
 
         if (window.retryCount <= MAX_RETRIES) {
@@ -5163,11 +5222,24 @@ async function waitForVoiceModelReady() {
             const OdKzziXLxtOGjvaBMHm = document.getElementById('gemini-stop-btn');
 
             // 3. LÀM SẠCH HOÀN TOÀN DỮ LIỆU CŨ TRƯỚC KHI BẮT ĐẦU JOB MỚI
-            // QUAN TRỌNG: Kiểm tra xem có đang retry không - nếu đang retry thì KHÔNG được reset job
-            if (window.isFinalCheck === true) {
-                addLogEntry('⚠️ Đang trong chế độ retry - KHÔNG reset job để tránh mất dữ liệu!', 'warning');
-                return; // Dừng ngay để tránh reset job khi đang retry
-            }
+    // QUAN TRỌNG: Kiểm tra xem có đang retry không - nếu đang retry thì KHÔNG được reset job
+    // VÀ kiểm tra xem đã hoàn thành chưa - nếu đã hoàn thành thì KHÔNG được reset job
+    if (window.isFinalCheck === true) {
+        // Kiểm tra xem có còn chunk failed không
+        const actuallyFailedChunks = (window.failedChunks || []).filter(chunkIndex => {
+            const status = window.chunkStatus && window.chunkStatus[chunkIndex];
+            return status === 'failed';
+        });
+        
+        // Nếu không còn chunk failed, có nghĩa là đã hoàn thành và đang ghép file
+        if (actuallyFailedChunks.length === 0) {
+            addLogEntry('⚠️ Đã hoàn thành và đang ghép file - KHÔNG reset job!', 'warning');
+            return; // Dừng ngay để tránh reset job khi đang ghép file
+        }
+        
+        addLogEntry('⚠️ Đang trong chế độ retry - KHÔNG reset job để tránh mất dữ liệu!', 'warning');
+        return; // Dừng ngay để tránh reset job khi đang retry
+    }
             
             addLogEntry('🧹 Bắt đầu làm sạch dữ liệu từ job cũ...', 'info');
             
