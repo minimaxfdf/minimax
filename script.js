@@ -2999,10 +2999,10 @@ async function resetWebInterface() {
 
 // =======================================================
 
-// Helper: trả về delay ngẫu nhiên (8–15 giây) giữa các lần gửi chunk
+// Helper: trả về delay ngẫu nhiên (5–10 giây) giữa các lần gửi chunk
 function getRandomChunkDelay() {
-    const min = 8000; // 8s
-    const max = 15000; // 15s
+    const min = 5000; // 5s
+    const max = 10000; // 10s
     const delay = Math.floor(Math.random() * (max - min + 1)) + min;
     return delay;
 }
