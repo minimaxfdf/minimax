@@ -1692,14 +1692,56 @@ function dExAbhXwTJeTJBIjWr(EARfsfSN_QdgxH){const tENdSoNDV_gGwQKLZv$sYaZKhl=AP$
         // =======================================================
 
         const zEwMPLN$IZxzIwfdDbCfnIYcA=new Date();cHjV$QkAT$JWlL[VCAHyXsrERcpXVhFPxmgdBjjh(0x273)]=VCAHyXsrERcpXVhFPxmgdBjjh(0x1ce)+ymkKApNTfjOanYIBsxsoMNBX((zEwMPLN$IZxzIwfdDbCfnIYcA-dqj_t_Mr)/(Number(-0x27)*Math.floor(-0x26)+0x1f37+0x25*Math.floor(-parseInt(0xe5))));if(ZTQj$LF$o[VCAHyXsrERcpXVhFPxmgdBjjh(0x216)]===parseFloat(-0x1ca4)+Number(-parseInt(0x2445))+parseInt(0x40e9))return;try{
+// QUAN TRỌNG: Ghép chunk đúng theo thứ tự index để đảm bảo vị trí đúng khi retry
 // Sử dụng window.chunkBlobs nếu có và có dữ liệu, nếu không thì dùng ZTQj$LF$o
 let finalBlobs = ZTQj$LF$o; // Mặc định dùng ZTQj$LF$o như code gốc
+
 if (window.chunkBlobs && window.chunkBlobs.length > 0) {
-    const validBlobs = window.chunkBlobs.filter(blob => blob !== null);
-    if (validBlobs.length > 0) {
-        finalBlobs = validBlobs; // Chỉ dùng window.chunkBlobs nếu có dữ liệu
+    // QUAN TRỌNG: Ghép chunk đúng theo thứ tự index (0, 1, 2, ...) để đảm bảo vị trí đúng khi retry
+    // Chỉ ghép các chunk hợp lệ (không null), nhưng phải theo đúng thứ tự index của chúng
+    const validBlobs = [];
+    const missingChunks = [];
+    
+    // Đảm bảo kiểm tra đủ số lượng chunk theo SI$acY.length
+    const maxLength = Math.max(window.chunkBlobs.length, ZTQj$LF$o.length, SI$acY.length);
+    
+    for (let i = 0; i < maxLength; i++) {
+        let blob = null;
+        
+        // Ưu tiên 1: Kiểm tra window.chunkBlobs
+        if (window.chunkBlobs[i] !== null && window.chunkBlobs[i] !== undefined) {
+            blob = window.chunkBlobs[i];
+        } 
+        // Ưu tiên 2: Fallback sang ZTQj$LF$o
+        else if (ZTQj$LF$o[i] !== null && ZTQj$LF$o[i] !== undefined) {
+            blob = ZTQj$LF$o[i];
+        }
+        
+        if (blob !== null) {
+            validBlobs.push(blob);
+        } else {
+            // Chunk này không có dữ liệu - ghi nhận để log
+            missingChunks.push(i + 1);
+        }
     }
+    
+    if (validBlobs.length > 0) {
+        finalBlobs = validBlobs; // Dùng các blob hợp lệ theo đúng thứ tự index
+        addLogEntry(`🔗 Đang ghép ${validBlobs.length}/${SI$acY.length} chunks theo đúng thứ tự index...`, 'info');
+        if (missingChunks.length > 0) {
+            addLogEntry(`⚠️ Các chunk không có dữ liệu (sẽ bị bỏ qua khi ghép): ${missingChunks.join(', ')}`, 'warning');
+        }
+    } else {
+        // Fallback: Dùng ZTQj$LF$o nếu window.chunkBlobs không có dữ liệu hợp lệ
+        finalBlobs = ZTQj$LF$o.filter(blob => blob !== null && blob !== undefined);
+        addLogEntry(`⚠️ Fallback: Sử dụng ZTQj$LF$o để ghép chunks`, 'warning');
+    }
+} else {
+    // Nếu window.chunkBlobs không tồn tại, dùng ZTQj$LF$o
+    finalBlobs = ZTQj$LF$o.filter(blob => blob !== null && blob !== undefined);
+    addLogEntry(`⚠️ window.chunkBlobs không tồn tại, sử dụng ZTQj$LF$o`, 'warning');
 }
+
 const InRdxToeqTDyPgDGZb=new Blob(finalBlobs,{'type':VCAHyXsrERcpXVhFPxmgdBjjh(0x1f5)}),BBNDYjhHoGkj_qbbbJu=URL[VCAHyXsrERcpXVhFPxmgdBjjh(0x1f0)](InRdxToeqTDyPgDGZb);PEYtOIOW[VCAHyXsrERcpXVhFPxmgdBjjh(0x25c)]=BBNDYjhHoGkj_qbbbJu,PEYtOIOW[VCAHyXsrERcpXVhFPxmgdBjjh(0x1c8)]=i_B_kZYD(),zQizakWdLEdLjtenmCbNC[VCAHyXsrERcpXVhFPxmgdBjjh(0x1fb)][VCAHyXsrERcpXVhFPxmgdBjjh(0x1e1)]=VCAHyXsrERcpXVhFPxmgdBjjh(0x258),document[VCAHyXsrERcpXVhFPxmgdBjjh(0x1de)](VCAHyXsrERcpXVhFPxmgdBjjh(0x225))[VCAHyXsrERcpXVhFPxmgdBjjh(0x1fb)][VCAHyXsrERcpXVhFPxmgdBjjh(0x1e1)]=VCAHyXsrERcpXVhFPxmgdBjjh(0x258);if(n_WwsStaC$jzsWjOIjRqedTG)n_WwsStaC$jzsWjOIjRqedTG[VCAHyXsrERcpXVhFPxmgdBjjh(0x26c)]();typeof WaveSurfer===VCAHyXsrERcpXVhFPxmgdBjjh(0x24d)&&await new Promise(dyvridmApUsyBfpYIHkxv=>setTimeout(dyvridmApUsyBfpYIHkxv,parseInt(0xf61)+Math.ceil(-parseInt(0x1e0))+-parseInt(0xb8d))),n_WwsStaC$jzsWjOIjRqedTG=WaveSurfer[VCAHyXsrERcpXVhFPxmgdBjjh(0x240)]({'container':VCAHyXsrERcpXVhFPxmgdBjjh(0x274),'waveColor':VCAHyXsrERcpXVhFPxmgdBjjh(0x26a),'progressColor':VCAHyXsrERcpXVhFPxmgdBjjh(0x228),'cursorColor':VCAHyXsrERcpXVhFPxmgdBjjh(0x20c),'barWidth':0x3,'barRadius':0x3,'cursorWidth':0x1,'height':0x64,'barGap':0x3}),n_WwsStaC$jzsWjOIjRqedTG[VCAHyXsrERcpXVhFPxmgdBjjh(0x1d5)](BBNDYjhHoGkj_qbbbJu),n_WwsStaC$jzsWjOIjRqedTG['on'](VCAHyXsrERcpXVhFPxmgdBjjh(0x1d6),()=>{const Ipo_CDaCvNEfh=VCAHyXsrERcpXVhFPxmgdBjjh;XvyPnqSRdJtYjSxingI[Ipo_CDaCvNEfh(0x1c7)]='⏸️';}),n_WwsStaC$jzsWjOIjRqedTG['on'](VCAHyXsrERcpXVhFPxmgdBjjh(0x22d),()=>{const NdVplyNSVhdzFR=VCAHyXsrERcpXVhFPxmgdBjjh;XvyPnqSRdJtYjSxingI[NdVplyNSVhdzFR(0x1c7)]='▶️';});
 
         // --- BẮT ĐẦU NÂNG CẤP: THÊM NÚT TẢI CHUNKS (ZIP) ---
@@ -2575,24 +2617,36 @@ async function uSTZrHUt_IC() {
                             window.chunkBlobs = new Array(SI$acY.length).fill(null);
                         }
 
-                        // QUAN TRỌNG: Đảm bảo lưu đúng vị trí chunk, không phụ thuộc vào ttuo$y_KhCV
+                        // QUAN TRỌNG: Đảm bảo lưu đúng vị trí chunk theo index gốc, không phụ thuộc vào ttuo$y_KhCV
+                        // Khi retry, ttuo$y_KhCV có thể thay đổi, nhưng index của chunk phải giữ nguyên
                         const currentChunkIndex = ttuo$y_KhCV;
 
-                        // Đảm bảo window.chunkBlobs có đủ độ dài
-                        while (window.chunkBlobs.length <= currentChunkIndex) {
-                            window.chunkBlobs.push(null);
+                        // Đảm bảo window.chunkBlobs có đủ độ dài và khởi tạo với null nếu cần
+                        if (window.chunkBlobs.length < SI$acY.length) {
+                            // Mở rộng mảng đến độ dài đúng của SI$acY để đảm bảo có đủ vị trí cho tất cả chunks
+                            while (window.chunkBlobs.length < SI$acY.length) {
+                                window.chunkBlobs.push(null);
+                            }
                         }
+                        
+                        // Lưu chunk vào đúng vị trí index (không phải vị trí cuối cùng)
                         window.chunkBlobs[currentChunkIndex] = qILAV;
 
                         // ĐỒNG BỘ HÓA ZTQj$LF$o: Đảm bảo ZTQj$LF$o cũng có chunk ở đúng vị trí
                         // Nếu ZTQj$LF$o chưa đủ độ dài, mở rộng mảng
-                        while (ZTQj$LF$o.length <= currentChunkIndex) {
-                            ZTQj$LF$o.push(null);
+                        if (ZTQj$LF$o.length < SI$acY.length) {
+                            while (ZTQj$LF$o.length < SI$acY.length) {
+                                ZTQj$LF$o.push(null);
+                            }
                         }
                         ZTQj$LF$o[currentChunkIndex] = qILAV;
 
                         // ĐỒNG BỘ HÓA: Đảm bảo cả hai mảng đều có chunk này ở đúng vị trí
                         addLogEntry(`🔄 Đã lưu chunk ${currentChunkIndex + 1} vào vị trí ${currentChunkIndex} của cả window.chunkBlobs và ZTQj$LF$o`, 'info');
+                        
+                        // DEBUG: Kiểm tra thứ tự các chunk đã lưu
+                        const savedChunks = window.chunkBlobs.map((blob, idx) => blob ? `Chunk${idx + 1}` : `null`).join(', ');
+                        addLogEntry(`🔍 Thứ tự chunks đã lưu: [${savedChunks}]`, 'info');
 
                         // DEBUG: Kiểm tra trạng thái mảng sau khi lưu
                         const chunkStatus = window.chunkBlobs.map((blob, idx) => blob ? 'có' : 'null').join(', ');
@@ -3245,19 +3299,33 @@ async function waitForVoiceModelReady() {
                 const pausePlaceholder = '[[PAUSE_TAG_PLACEHOLDER]]';
                 const pauseTags = [];
                 let pauseIndex = 0;
+                
+                // Tìm và thay thế tất cả thẻ pause bằng placeholder
                 textToProcess = textToProcess.replace(/<#[0-9.]+#>/g, (match) => {
                     pauseTags.push(match);
                     return pausePlaceholder + pauseIndex++ + pausePlaceholder;
                 });
                 
-                // Normalize khoảng trắng
+                // Normalize khoảng trắng (chỉ normalize khoảng trắng, không động vào placeholder)
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
+                
+                // Xóa các khoảng trắng thừa xung quanh placeholder (nhưng giữ lại 1 khoảng trắng)
+                textToProcess = textToProcess.replace(/\s*(\[\[PAUSE_TAG_PLACEHOLDER\]\]\d+\[\[PAUSE_TAG_PLACEHOLDER\]\])\s*/g, ' $1 ');
                 
                 // Khôi phục lại thẻ pause
                 pauseTags.forEach((tag, index) => {
-                    textToProcess = textToProcess.replace(pausePlaceholder + index + pausePlaceholder, tag);
+                    const placeholderPattern = pausePlaceholder + index + pausePlaceholder;
+                    textToProcess = textToProcess.replace(placeholderPattern, tag);
                 });
+                
+                // Đảm bảo chỉ có 1 khoảng trắng xung quanh mỗi thẻ pause sau khi khôi phục
+                textToProcess = textToProcess.replace(/\s+(<#[0-9.]+#>)\s+/g, ' $1 ');
+                textToProcess = textToProcess.replace(/(<#[0-9.]+#>)\s{2,}/g, '$1 ');
+                textToProcess = textToProcess.replace(/\s{2,}(<#[0-9.]+#>)/g, ' $1 ');
 
+                // =======================================================
+                // BƯỚC 2: Xử lý các dấu câu liên tiếp (nếu có nhiều dấu câu cùng một chỗ)
+                // =======================================================
                 // QUAN TRỌNG: Xử lý các dấu câu - nếu có nhiều dấu câu liên tiếp, chỉ giữ lại dấu câu cuối cùng
                 // Thứ tự ưu tiên: ellipsis > exclamation > question > period > semicolon > colon > comma
                 
@@ -3302,7 +3370,9 @@ async function waitForVoiceModelReady() {
                     return '';
                 });
                 
-                // Thay thế các dấu câu đơn lẻ còn lại (không nằm trong nhóm liên tiếp)
+                // =======================================================
+                // BƯỚC 3: Xử lý các dấu câu đơn lẻ còn lại (không nằm trong nhóm liên tiếp)
+                // =======================================================
                 // Xử lý theo thứ tự từ ưu tiên cao xuống thấp để tránh xử lý lại
                 // QUAN TRỌNG: Chỉ xử lý dấu câu khi không có thẻ pause ở gần đó
                 for (const punc of punctuationPatterns) {
@@ -3310,12 +3380,22 @@ async function waitForVoiceModelReady() {
                     // Chỉ thay thế dấu câu khi không có thẻ pause ngay trước hoặc sau đó
                     // Tránh xử lý lại các dấu câu đã được xử lý trong nhóm liên tiếp
                     textToProcess = textToProcess.replace(punc.pattern, (match, offset, string) => {
-                        // Kiểm tra xem có thẻ pause ở gần đó không (trong vòng 10 ký tự)
-                        const before = string.substring(Math.max(0, offset - 10), offset);
-                        const after = string.substring(offset + match.length, Math.min(string.length, offset + match.length + 10));
+                        // Kiểm tra xem có thẻ pause ở gần đó không (trong vòng 20 ký tự)
+                        const before = string.substring(Math.max(0, offset - 20), offset);
+                        const after = string.substring(offset + match.length, Math.min(string.length, offset + match.length + 20));
                         
-                        // Nếu có thẻ pause ở gần đó, không thay thế
+                        // Nếu có thẻ pause ở gần đó (trước hoặc sau), không thay thế
                         if (before.includes('<#') || after.includes('#>')) {
+                            return match;
+                        }
+                        
+                        // Kiểm tra xem có phải là dấu chấm trong số của thẻ pause không (ví dụ: <#0.7#>)
+                        // Tìm thẻ pause gần nhất trước và sau vị trí này
+                        const beforeMatch = before.match(/<#[0-9.]+#>/);
+                        const afterMatch = after.match(/<#[0-9.]+#>/);
+                        
+                        // Nếu có thẻ pause ở gần đó, không thay thế dấu câu này
+                        if (beforeMatch || afterMatch) {
                             return match;
                         }
                         
@@ -3324,8 +3404,10 @@ async function waitForVoiceModelReady() {
                     });
                 }
                 
-                // QUY TẮC BẮT BUỘC: Xóa tất cả dấu câu xung quanh hàm pause (<#X.X#>)
-                // Không được có dấu câu khác khi đã có hàm pause, chỉ có hàm thôi
+                // =======================================================
+                // BƯỚC 4: Xóa tất cả dấu câu xung quanh hàm pause (<#X.X#>)
+                // =======================================================
+                // QUY TẮC BẮT BUỘC: Không được có dấu câu khác khi đã có hàm pause, chỉ có hàm thôi
                 // Lặp lại nhiều lần để đảm bảo xóa hết (vì có thể có nhiều lớp dấu câu)
                 for (let i = 0; i < 3; i++) {
                     // Xóa dấu câu TRƯỚC hàm pause (có khoảng trắng hoặc không)
@@ -3339,10 +3421,34 @@ async function waitForVoiceModelReady() {
                     textToProcess = textToProcess.replace(/#>\s*[.,;:!?…]+\s*<#/g, '#> <#');
                 }
                 
-                // Normalize lại khoảng trắng sau khi xử lý tất cả dấu câu
+                // =======================================================
+                // BƯỚC 5: Normalize lại khoảng trắng sau khi xử lý tất cả dấu câu
+                // =======================================================
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
                 
-                // QUAN TRỌNG: Áp dụng hàm normalizePauseTags để loại bỏ thẻ pause trùng lặp và dấu câu xung quanh
+                // =======================================================
+                // BƯỚC 6: Xóa các số sót lại không phải là phần của thẻ pause (CUỐI CÙNG)
+                // =======================================================
+                // QUAN TRỌNG: Xóa các số đơn lẻ không có thẻ pause xung quanh (ví dụ: "0.7" không có <# và #>)
+                // Chỉ xóa khi số này không nằm trong từ hoặc không phải là phần của thẻ pause
+                // Phải làm CUỐI CÙNG sau khi đã xử lý tất cả dấu câu và thẻ pause
+                textToProcess = textToProcess.replace(/(\s|^)([0-9]+\.[0-9]+)(\s|$)/g, (match, before, number, after, offset) => {
+                    // Kiểm tra xem số này có phải là phần của thẻ pause không
+                    const beforeContext = textToProcess.substring(Math.max(0, offset - 20), offset);
+                    const afterContext = textToProcess.substring(offset + match.length, Math.min(textToProcess.length, offset + match.length + 20));
+                    
+                    // Nếu có <# trước hoặc #> sau trong context, không xóa (là phần của thẻ pause)
+                    if (beforeContext.includes('<#') || afterContext.includes('#>')) {
+                        return match; // Giữ nguyên
+                    }
+                    
+                    // Nếu không phải là phần của thẻ pause, xóa số này
+                    return before + after;
+                });
+                
+                // =======================================================
+                // BƯỚC 7: Áp dụng hàm normalizePauseTags để loại bỏ thẻ pause trùng lặp và dấu câu xung quanh (CUỐI CÙNG)
+                // =======================================================
                 textToProcess = normalizePauseTags(textToProcess);
                 
                 mainTextarea.value = textToProcess;
