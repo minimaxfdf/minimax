@@ -1563,16 +1563,34 @@ function normalizePauseTags(text) {
     normalized = normalized.replace(/(\s|^)#>/g, '$1');
     
     // Bước 0.3: Xóa các phần còn sót lại của thẻ pause bị lỗi
-    // CHỈ xóa các phần còn sót lại của thẻ pause, KHÔNG xóa số hoặc ký tự trong văn bản bình thường
+    // QUAN TRỌNG: KHÔNG được xóa các ký tự <# và #> trong thẻ pause hợp lệ
+    // CHỈ xóa các phần còn sót lại của thẻ pause bị lỗi, KHÔNG xóa số hoặc ký tự trong văn bản bình thường
     
-    // Xóa <# không phải số (như <#abc) - CHỈ xóa khi <# xuất hiện cùng nhau và không phải là phần của từ
+    // Bảo vệ các thẻ pause hợp lệ trước khi xóa phần còn sót lại
+    const validPausePlaceholder = '[[VALID_PAUSE_TAG]]';
+    const validPauseTags = [];
+    let validPauseIndex = 0;
+    
+    // Tạm thời thay thế các thẻ pause hợp lệ bằng placeholder để bảo vệ
+    normalized = normalized.replace(/<#[0-9.]+#>/g, (match) => {
+        validPauseTags.push(match);
+        return validPausePlaceholder + validPauseIndex++ + validPausePlaceholder;
+    });
+    
+    // Bây giờ mới xóa các phần còn sót lại của thẻ pause bị lỗi
+    // Xóa <# không phải số (như <#abc) - CHỈ xóa khi <# xuất hiện cùng nhau và không có số sau đó
     // Tránh xóa < đơn lẻ trong văn bản bình thường như "adadasd 0 < lakflaskdasl"
-    // Chỉ xóa khi <# xuất hiện cùng nhau và không có số sau đó
     normalized = normalized.replace(/\s*<#[^0-9#>]*/g, '');
     
     // Xóa các phần còn sót lại như #> đơn lẻ (không phải là thẻ pause hợp lệ)
     // Chỉ xóa khi chúng không nằm trong từ hoặc số hợp lệ
     normalized = normalized.replace(/#>(?=\s|$)/g, '');
+    
+    // Khôi phục lại các thẻ pause hợp lệ
+    validPauseTags.forEach((tag, index) => {
+        const placeholderPattern = validPausePlaceholder + index + validPausePlaceholder;
+        normalized = normalized.replace(placeholderPattern, tag);
+    });
     
     // Bước 0.4: Normalize khoảng trắng sau khi xóa thẻ lỗi
     normalized = normalized.replace(/\s+/g, ' ').trim();
