@@ -1999,11 +1999,36 @@ async function uSTZrHUt_IC() {
 
         addLogEntry(`📊 Kiểm tra: ${processedChunks}/${totalChunks} chunks đã được xử lý`, 'info');
 
-        // Nếu chưa xử lý đủ chunk, tiếp tục chờ
+        // Nếu chưa xử lý đủ chunk, tìm và xử lý chunk còn thiếu
         if (processedChunks < totalChunks) {
-            addLogEntry(`⏳ Còn ${totalChunks - processedChunks} chunk chưa được xử lý. Tiếp tục chờ...`, 'warning');
-            setTimeout(uSTZrHUt_IC, 2000);
-            return;
+            // Tìm các chunk chưa được xử lý (pending hoặc undefined)
+            const remainingChunks = [];
+            for (let i = 0; i < totalChunks; i++) {
+                const status = window.chunkStatus && window.chunkStatus[i];
+                // Chỉ thêm vào danh sách nếu status là pending, undefined, hoặc null (chưa xử lý)
+                if (status !== 'success' && status !== 'failed') {
+                    remainingChunks.push(i);
+                }
+            }
+            
+            if (remainingChunks.length > 0) {
+                // Tìm chunk chưa xử lý đầu tiên để xử lý
+                const nextUnprocessedIndex = Math.min(...remainingChunks);
+                addLogEntry(`🔍 Phát hiện ${remainingChunks.length} chunk chưa được xử lý: ${remainingChunks.map(i => i + 1).join(', ')}`, 'warning');
+                addLogEntry(`🔄 Kích hoạt xử lý chunk ${nextUnprocessedIndex + 1}...`, 'info');
+                
+                // Nhảy đến chunk chưa xử lý để tiếp tục xử lý
+                ttuo$y_KhCV = nextUnprocessedIndex;
+                
+                // Kích hoạt xử lý ngay lập tức thay vì chờ
+                setTimeout(uSTZrHUt_IC, 500); // Chờ ngắn 500ms rồi xử lý ngay
+                return;
+            } else {
+                // Nếu không tìm thấy chunk chưa xử lý trong mảng status, có thể đang được xử lý
+                addLogEntry(`⏳ Còn ${totalChunks - processedChunks} chunk chưa được xử lý. Tiếp tục chờ...`, 'warning');
+                setTimeout(uSTZrHUt_IC, 2000);
+                return;
+            }
         }
 
         // Nếu có chunk thất bại và chưa kiểm tra cuối
