@@ -2257,6 +2257,51 @@ async function uSTZrHUt_IC() {
         
         // Thực hiện click
         KxTOuAJu(targetButton);
+        
+        // QUAN TRỌNG: Thêm timeout 50 giây cho mỗi chunk
+        // Nếu sau 50 giây chưa có kết quả, đánh dấu chunk là thất bại
+        const CHUNK_TIMEOUT_MS = 50000; // 50 giây
+        const currentChunkIndex = ttuo$y_KhCV;
+        let chunkTimeoutId = null;
+        
+        // Tạo timeout để đánh dấu chunk thất bại nếu quá 50 giây
+        chunkTimeoutId = setTimeout(() => {
+            // Kiểm tra xem chunk này đã thành công chưa
+            if (window.chunkStatus && window.chunkStatus[currentChunkIndex] !== 'success') {
+                addLogEntry(`⏱️ [Chunk ${currentChunkIndex + 1}] Timeout sau 50 giây - chưa có kết quả. Đánh dấu thất bại.`, 'error');
+                
+                // Đánh dấu chunk này là thất bại
+                if (typeof window.chunkStatus === 'undefined') {
+                    window.chunkStatus = new Array(SI$acY.length).fill('pending');
+                }
+                window.chunkStatus[currentChunkIndex] = 'failed';
+                
+                // Thêm vào danh sách failed chunks
+                if (typeof window.failedChunks === 'undefined') {
+                    window.failedChunks = [];
+                }
+                if (!window.failedChunks.includes(currentChunkIndex)) {
+                    window.failedChunks.push(currentChunkIndex);
+                }
+                
+                // Clear timeout observer nếu có
+                if (typeof igyo$uwVChUzI === 'function') {
+                    clearTimeout(Srnj$swt);
+                }
+                
+                // Chuyển sang chunk tiếp theo
+                ttuo$y_KhCV = currentChunkIndex + 1;
+                addLogEntry(`➡️ Chuyển sang chunk ${ttuo$y_KhCV + 1}...`, 'info');
+                setTimeout(uSTZrHUt_IC, 2000);
+            }
+        }, CHUNK_TIMEOUT_MS);
+        
+        // Lưu timeout ID để có thể clear khi thành công
+        if (typeof window.chunkTimeouts === 'undefined') {
+            window.chunkTimeouts = {};
+        }
+        window.chunkTimeouts[currentChunkIndex] = chunkTimeoutId;
+        
         igyo$uwVChUzI();
 
     } catch (error) {
@@ -2475,6 +2520,12 @@ async function uSTZrHUt_IC() {
                         window.timeoutRetryCount[ttuo$y_KhCV] = 0;
                     }
                     window.chunkStatus[ttuo$y_KhCV] = 'success'; // Đánh dấu chunk này đã thành công
+                    
+                    // QUAN TRỌNG: Clear timeout 50 giây khi chunk thành công
+                    if (typeof window.chunkTimeouts !== 'undefined' && window.chunkTimeouts[ttuo$y_KhCV] !== undefined) {
+                        clearTimeout(window.chunkTimeouts[ttuo$y_KhCV]);
+                        delete window.chunkTimeouts[ttuo$y_KhCV];
+                    }
 
                     // Nếu đang trong giai đoạn kiểm tra cuối, loại bỏ chunk này khỏi danh sách thất bại
                     if (window.isFinalCheck && window.failedChunks.includes(ttuo$y_KhCV)) {
@@ -3156,7 +3207,8 @@ async function waitForVoiceModelReady() {
                 // QUAN TRỌNG: Xử lý dấu xuống dòng TRƯỚC khi normalize khoảng trắng
                 // Thay thế dấu xuống dòng (\n, \r\n, hoặc \r) - phải làm TRƯỚC normalize
                 if (settings.newlineEnabled && settings.newline > 0) {
-                    // QUAN TRỌNG: Xóa các dấu câu ở cuối dòng trước dấu xuống dòng
+                    // QUAN TRỌNG: Nếu cả dấu chấm và xuống dòng đều được bật, chỉ giữ lại xuống dòng (ưu tiên cao hơn)
+                    // Xóa các dấu câu ở cuối dòng trước dấu xuống dòng
                     // Xóa dấu chấm (.) trước dấu xuống dòng
                     textToProcess = textToProcess.replace(/\.(\r\n|\n|\r)/g, '$1');
                     // Xóa dấu phẩy (,) trước dấu xuống dòng
@@ -3188,7 +3240,23 @@ async function waitForVoiceModelReady() {
                 }
 
                 // Normalize khoảng trắng (sau khi đã xử lý dấu xuống dòng)
+                // QUAN TRỌNG: Bảo vệ thẻ pause khi normalize khoảng trắng
+                // Tạm thời thay thế thẻ pause bằng placeholder để tránh bị ảnh hưởng
+                const pausePlaceholder = '[[PAUSE_TAG_PLACEHOLDER]]';
+                const pauseTags = [];
+                let pauseIndex = 0;
+                textToProcess = textToProcess.replace(/<#[0-9.]+#>/g, (match) => {
+                    pauseTags.push(match);
+                    return pausePlaceholder + pauseIndex++ + pausePlaceholder;
+                });
+                
+                // Normalize khoảng trắng
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
+                
+                // Khôi phục lại thẻ pause
+                pauseTags.forEach((tag, index) => {
+                    textToProcess = textToProcess.replace(pausePlaceholder + index + pausePlaceholder, tag);
+                });
 
                 // QUAN TRỌNG: Xử lý các dấu câu - nếu có nhiều dấu câu liên tiếp, chỉ giữ lại dấu câu cuối cùng
                 // Thứ tự ưu tiên: ellipsis > exclamation > question > period > semicolon > colon > comma
@@ -3236,9 +3304,24 @@ async function waitForVoiceModelReady() {
                 
                 // Thay thế các dấu câu đơn lẻ còn lại (không nằm trong nhóm liên tiếp)
                 // Xử lý theo thứ tự từ ưu tiên cao xuống thấp để tránh xử lý lại
+                // QUAN TRỌNG: Chỉ xử lý dấu câu khi không có thẻ pause ở gần đó
                 for (const punc of punctuationPatterns) {
                     punc.pattern.lastIndex = 0; // Reset regex
-                    textToProcess = textToProcess.replace(punc.pattern, ` ${punc.pause} `);
+                    // Chỉ thay thế dấu câu khi không có thẻ pause ngay trước hoặc sau đó
+                    // Tránh xử lý lại các dấu câu đã được xử lý trong nhóm liên tiếp
+                    textToProcess = textToProcess.replace(punc.pattern, (match, offset, string) => {
+                        // Kiểm tra xem có thẻ pause ở gần đó không (trong vòng 10 ký tự)
+                        const before = string.substring(Math.max(0, offset - 10), offset);
+                        const after = string.substring(offset + match.length, Math.min(string.length, offset + match.length + 10));
+                        
+                        // Nếu có thẻ pause ở gần đó, không thay thế
+                        if (before.includes('<#') || after.includes('#>')) {
+                            return match;
+                        }
+                        
+                        // Nếu không có thẻ pause ở gần đó, thay thế bằng thẻ pause
+                        return ` ${punc.pause} `;
+                    });
                 }
                 
                 // QUY TẮC BẮT BUỘC: Xóa tất cả dấu câu xung quanh hàm pause (<#X.X#>)
