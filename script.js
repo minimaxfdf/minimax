@@ -2643,8 +2643,8 @@ async function uSTZrHUt_IC() {
                         if (window.chunkBlobs.length < SI$acY.length) {
                             // Mở rộng mảng đến độ dài đúng của SI$acY để đảm bảo có đủ vị trí cho tất cả chunks
                             while (window.chunkBlobs.length < SI$acY.length) {
-                                window.chunkBlobs.push(null);
-                            }
+                            window.chunkBlobs.push(null);
+                        }
                         }
                         
                         // Lưu chunk vào đúng vị trí index (không phải vị trí cuối cùng)
@@ -2654,7 +2654,7 @@ async function uSTZrHUt_IC() {
                         // Nếu ZTQj$LF$o chưa đủ độ dài, mở rộng mảng
                         if (ZTQj$LF$o.length < SI$acY.length) {
                             while (ZTQj$LF$o.length < SI$acY.length) {
-                                ZTQj$LF$o.push(null);
+                            ZTQj$LF$o.push(null);
                             }
                         }
                         ZTQj$LF$o[currentChunkIndex] = qILAV;
@@ -2672,8 +2672,8 @@ async function uSTZrHUt_IC() {
                     } catch (FBleqcOZcLNC$NKSlfC) {}
                     const currentChunkNum = ttuo$y_KhCV + 1;
                     ttuo$y_KhCV++;
-                    // Thêm delay ngẫu nhiên từ 5-10 giây trước khi gửi chunk tiếp theo
-                    const randomDelay = Math.floor(Math.random() * 5000) + 5000; // 5000-10000ms
+                    // Thêm delay ngẫu nhiên từ 10-20 giây trước khi gửi chunk tiếp theo
+                    const randomDelay = Math.floor(Math.random() * 10000) + 10000; // 10000-20000ms (10-20 giây)
                     addLogEntry(`⏳ [Chunk ${currentChunkNum}] Đã thành công! trước khi gửi chunk tiếp theo.`, 'info');
                     setTimeout(uSTZrHUt_IC, randomDelay);
                     return;
@@ -3338,7 +3338,7 @@ async function waitForVoiceModelReady() {
                 
                 // Normalize khoảng trắng (chỉ normalize khoảng trắng, không động vào placeholder)
                 textToProcess = textToProcess.replace(/\s+/g, ' ').trim();
-                
+
                 // Xóa các khoảng trắng thừa xung quanh placeholder (nhưng giữ lại 1 khoảng trắng)
                 textToProcess = textToProcess.replace(/\s*(\[\[PAUSE_TAG_PLACEHOLDER\]\]\d+\[\[PAUSE_TAG_PLACEHOLDER\]\])\s*/g, ' $1 ');
                 
