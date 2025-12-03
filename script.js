@@ -2052,9 +2052,34 @@ async function waitForButton(buttonTexts, timeout = 15000) {
 
 // =======================================================
 
+// QUAN TRỌNG: Hàm helper để quản lý setTimeout tập trung, đảm bảo chỉ có 1 setTimeout được gọi tại một thời điểm
+function scheduleNextChunk(delay) {
+    // Clear timeout cũ nếu có
+    if (window.nextChunkTimeoutId) {
+        clearTimeout(window.nextChunkTimeoutId);
+        window.nextChunkTimeoutId = null;
+    }
+    
+    // Reset flag trước khi schedule timeout mới
+    window.isProcessingChunk = false;
+    
+    // Tạo timeout mới
+    window.nextChunkTimeoutId = setTimeout(() => {
+        window.nextChunkTimeoutId = null;
+        uSTZrHUt_IC();
+    }, delay);
+}
+
 async function uSTZrHUt_IC() {
     const tQqGbytKzpHwhGmeQJucsrq = AP$u_huhInYfTj;
     if (MEpJezGZUsmpZdAgFRBRZW) return;
+
+    // QUAN TRỌNG: Chặn nhiều lần gọi hàm đồng thời để tránh xung đột
+    if (window.isProcessingChunk === true) {
+        // Đang xử lý chunk khác, bỏ qua lần gọi này
+        return;
+    }
+    window.isProcessingChunk = true; // Đánh dấu đang xử lý
 
     // QUAN TRỌNG: Kiểm tra và khôi phục SI$acY nếu bị mất
     // Nếu SI$acY bị mất hoặc rỗng, thử khôi phục từ window.SI$acY
@@ -2120,12 +2145,14 @@ async function uSTZrHUt_IC() {
                 }
                 
                 // Kích hoạt xử lý ngay lập tức thay vì chờ
-                setTimeout(uSTZrHUt_IC, 500); // Chờ ngắn 500ms rồi xử lý ngay
+                window.isProcessingChunk = false; // Reset flag trước khi schedule
+                scheduleNextChunk(500); // Chờ ngắn 500ms rồi xử lý ngay
                 return;
             } else {
                 // Nếu không tìm thấy chunk chưa xử lý trong mảng status, có thể đang được xử lý
             addLogEntry(`⏳ Còn ${totalChunks - processedChunks} chunk chưa được xử lý. Tiếp tục chờ...`, 'warning');
-            setTimeout(uSTZrHUt_IC, 2000);
+            window.isProcessingChunk = false; // Reset flag trước khi schedule
+            scheduleNextChunk(2000);
             return;
             }
         }
@@ -2208,7 +2235,8 @@ async function uSTZrHUt_IC() {
                 }
                 
                 addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên), chỉ xử lý chunks lỗi`, 'info');
-                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi bắt đầu xử lý
+                window.isProcessingChunk = false; // Reset flag trước khi schedule
+                scheduleNextChunk(2000); // Chờ 2 giây rồi bắt đầu xử lý
             })();
             return;
         }
@@ -2306,7 +2334,8 @@ async function uSTZrHUt_IC() {
                     }
                     
                     addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên), chỉ xử lý chunks lỗi`, 'info');
-                    setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi bắt đầu lại
+                    window.isProcessingChunk = false; // Reset flag trước khi schedule
+                    scheduleNextChunk(2000); // Chờ 2 giây rồi bắt đầu lại
                 })();
                 return;
             } else {
@@ -2368,28 +2397,37 @@ async function uSTZrHUt_IC() {
     try {
         // Nếu đang trong giai đoạn kiểm tra cuối (RETRY MODE)
         if (window.isFinalCheck) {
-            // Nếu chunk hiện tại không phải chunk lỗi, nhảy thẳng đến chunk lỗi tiếp theo
-            if (window.chunkStatus[ttuo$y_KhCV] !== 'failed') {
-                // Tìm chunk lỗi tiếp theo
+            // QUAN TRỌNG: Chỉ nhảy nếu chunk hiện tại không phải failed VÀ không có trong failedChunks
+            // Điều này tránh nhảy đến chunk đã thành công nhưng vẫn còn trong failedChunks
+            const currentStatus = window.chunkStatus && window.chunkStatus[ttuo$y_KhCV];
+            const isInFailedList = window.failedChunks && window.failedChunks.includes(ttuo$y_KhCV);
+            
+            // Nếu chunk hiện tại không phải failed VÀ không có trong danh sách failed, nhảy đến chunk failed tiếp theo
+            if (currentStatus !== 'failed' && !isInFailedList) {
+                // Tìm chunk lỗi tiếp theo từ danh sách failedChunks
                 const remainingFailedChunks = window.failedChunks.filter(idx => idx > ttuo$y_KhCV);
                 if (remainingFailedChunks.length > 0) {
                     const nextFailedIndex = Math.min(...remainingFailedChunks);
                     addLogEntry(`⏭️ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
                     
-                    // QUAN TRỌNG: nextFailedIndex là index gốc của chunk trong SI$acY (0-based)
-                    // Đảm bảo ttuo$y_KhCV = index gốc để khi lưu chunk sẽ lưu vào đúng vị trí
-                    ttuo$y_KhCV = nextFailedIndex;
-                    
+                    // QUAN TRỌNG: Sử dụng currentSI$acY đã được khai báo ở đầu hàm
                     // VALIDATION: Đảm bảo index hợp lệ
-                    if (ttuo$y_KhCV < 0 || ttuo$y_KhCV >= SI$acY.length) {
-                        addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${ttuo$y_KhCV} (phải từ 0 đến ${SI$acY.length - 1})`, 'error');
+                    if (nextFailedIndex < 0 || nextFailedIndex >= currentSI$acY.length) {
+                        addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${nextFailedIndex} (phải từ 0 đến ${currentSI$acY.length - 1})`, 'error');
+                        window.isProcessingChunk = false; // Reset flag trước khi return
                         return;
                     }
+                    
+                    ttuo$y_KhCV = nextFailedIndex;
+                    // QUAN TRỌNG: Return ngay sau khi nhảy để tránh tiếp tục chạy code phía dưới
+                    window.isProcessingChunk = false; // Reset flag trước khi tiếp tục
+                    return; // Return ngay để tránh nhảy liên tục
                 } else {
                     // Không còn chunk lỗi nào, kết thúc
                     addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
-                    ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
-                    setTimeout(uSTZrHUt_IC, 1000);
+                    ttuo$y_KhCV = currentSI$acY.length; // Đánh dấu hoàn thành
+                    window.isProcessingChunk = false; // Reset flag trước khi schedule
+                    scheduleNextChunk(1000);
                     return;
                 }
             }
@@ -2585,7 +2623,8 @@ async function uSTZrHUt_IC() {
                 // Chuyển sang chunk tiếp theo
                 ttuo$y_KhCV = currentChunkIndex + 1;
                 addLogEntry(`➡️ Chuyển sang chunk ${ttuo$y_KhCV + 1}...`, 'info');
-                setTimeout(uSTZrHUt_IC, 2000);
+                window.isProcessingChunk = false; // Reset flag trước khi schedule
+                scheduleNextChunk(2000);
             }
         }, CHUNK_TIMEOUT_MS);
         
@@ -2690,7 +2729,8 @@ async function uSTZrHUt_IC() {
                 addLogEntry(`❌ Lỗi khi reset web: ${resetError.message}`, 'error');
             }
 
-            setTimeout(uSTZrHUt_IC, 2000 * window.retryCount); // Chờ lâu hơn sau mỗi lần thử
+            window.isProcessingChunk = false; // Reset flag trước khi schedule
+            scheduleNextChunk(2000 * window.retryCount); // Chờ lâu hơn sau mỗi lần thử
         } else {
             addLogEntry(`🚫 [Chunk ${ttuo$y_KhCV + 1}] Thất bại sau ${MAX_RETRIES} lần thử. Bỏ qua chunk này.`, 'error');
             // Đánh dấu chunk này là thất bại
@@ -2701,8 +2741,9 @@ async function uSTZrHUt_IC() {
             window.retryCount = 0; // Reset bộ đếm retry
             ttuo$y_KhCV++; // Chuyển sang chunk tiếp theo
             addLogEntry(`➡️ Chuyển sang chunk ${ttuo$y_KhCV + 1}...`, 'info');
-            addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${SI$acY.length} chunks đã xử lý`, 'info');
-            setTimeout(uSTZrHUt_IC, 2000); // Tiếp tục với chunk tiếp theo
+            addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${currentSI$acY.length} chunks đã xử lý`, 'info');
+            window.isProcessingChunk = false; // Reset flag trước khi schedule
+            scheduleNextChunk(2000); // Tiếp tục với chunk tiếp theo
         }
     }
 }function igyo$uwVChUzI() {
@@ -2780,7 +2821,8 @@ async function uSTZrHUt_IC() {
             }
             
             // Thử lại chunk này sau khi đã làm sạch web
-            setTimeout(uSTZrHUt_IC, 2000 * window.timeoutRetryCount[ttuo$y_KhCV]); // Chờ lâu hơn sau mỗi lần thử
+            window.isProcessingChunk = false; // Reset flag trước khi schedule
+            scheduleNextChunk(2000 * window.timeoutRetryCount[ttuo$y_KhCV]); // Chờ lâu hơn sau mỗi lần thử
         } else {
             addLogEntry(`🚫 [Chunk ${ttuo$y_KhCV + 1}] Timeout sau ${MAX_TIMEOUT_RETRIES} lần thử. Bỏ qua chunk này.`, 'error');
             // Đánh dấu chunk này là thất bại
@@ -2792,8 +2834,9 @@ async function uSTZrHUt_IC() {
             window.timeoutRetryCount[ttuo$y_KhCV] = 0;
             ttuo$y_KhCV++; // Chuyển sang chunk tiếp theo
             addLogEntry(`➡️ Chuyển sang chunk ${ttuo$y_KhCV + 1}...`, 'info');
-            addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${SI$acY.length} chunks đã xử lý`, 'info');
-            setTimeout(uSTZrHUt_IC, 2000); // Tiếp tục với chunk tiếp theo
+            addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${currentSI$acY.length} chunks đã xử lý`, 'info');
+            window.isProcessingChunk = false; // Reset flag trước khi schedule
+            scheduleNextChunk(2000); // Tiếp tục với chunk tiếp theo
         }
     }, parseFloat(0x11a62) + -0x13f58 + 0x19b * parseInt(0xf2));
 
@@ -2820,10 +2863,11 @@ async function uSTZrHUt_IC() {
                         delete window.chunkTimeouts[ttuo$y_KhCV];
                     }
 
-                    // Nếu đang trong giai đoạn kiểm tra cuối, loại bỏ chunk này khỏi danh sách thất bại
-                    if (window.isFinalCheck && window.failedChunks.includes(ttuo$y_KhCV)) {
+                    // QUAN TRỌNG: Loại bỏ chunk thành công khỏi failedChunks (bất kể có đang trong isFinalCheck hay không)
+                    // Điều này đảm bảo logic nhảy chunk failed không nhảy đến chunk đã thành công
+                    if (window.failedChunks && window.failedChunks.includes(ttuo$y_KhCV)) {
                         window.failedChunks = window.failedChunks.filter(index => index !== ttuo$y_KhCV);
-                        addLogEntry(`🎉 [Chunk ${ttuo$y_KhCV + 1}] Đã khôi phục thành công từ trạng thái thất bại!`, 'success');
+                        addLogEntry(`🎉 [Chunk ${ttuo$y_KhCV + 1}] Đã khôi phục thành công từ trạng thái thất bại và loại khỏi danh sách failed!`, 'success');
                     }
 
                     // ĐỒNG BỘ HÓA KHI RETRY: Đảm bảo window.chunkBlobs được cập nhật khi retry thành công
@@ -2926,7 +2970,8 @@ async function uSTZrHUt_IC() {
                     // Thêm delay ngẫu nhiên từ 10-20 giây trước khi gửi chunk tiếp theo
                     const randomDelay = Math.floor(Math.random() * 10000) + 10000; // 10000-20000ms (10-20 giây)
                     addLogEntry(`⏳ [Chunk ${currentChunkNum}] Đã thành công! trước khi gửi chunk tiếp theo.`, 'info');
-                    setTimeout(uSTZrHUt_IC, randomDelay);
+                    window.isProcessingChunk = false; // Reset flag trước khi schedule
+                    scheduleNextChunk(randomDelay);
                     return;
                 }
             }
