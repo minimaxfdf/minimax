@@ -1333,8 +1333,8 @@ const aZpcvyD_mnWYN_qgEq=DHk$uTvcFuLEMnixYuADkCeA;let SI$acY=[],ZTQj$LF$o=[],ttu
     // Trả về tên file hoàn chỉnh với đuôi .mp3
     return fileName + '.mp3';
 }function nWHrScjZnIyNYzztyEWwM(RHDrdenxMcTQywSbrFGWcRi,supYmMedzDRWZEr){const j$DXl$iN=AP$u_huhInYfTj;if(supYmMedzDRWZEr===-parseInt(0x1)*-parseInt(0x9ff)+parseInt(0x4)*parseInt(0x6d7)+Math.trunc(0x49)*-parseInt(0x83))return;const W_gEcM_tWt=Math[j$DXl$iN(0x238)](RHDrdenxMcTQywSbrFGWcRi/supYmMedzDRWZEr*(Number(parseInt(0x24f2))*0x1+-parseInt(0x1af3)+parseInt(-0x99b)));pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=W_gEcM_tWt+j$DXl$iN(0x1c3)+RHDrdenxMcTQywSbrFGWcRi+'/'+supYmMedzDRWZEr+')';}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 600, minLength = 500, maxLength = 700) {
-    // Mặc định chunk lớn 900 ký tự
-    const actualMaxLength = 900;
+    // Mặc định chunk lớn 700 ký tự (đã giảm từ 900)
+    const actualMaxLength = 700;
     const chunks = [];
     if (!text || typeof text !== 'string') {
         return chunks;
@@ -1469,9 +1469,63 @@ function normalizeChunkText(text) {
         // Lưu độ dài ban đầu
         const originalLength = text.length;
         
-        // Bước 1: Chỉ loại bỏ ký tự điều khiển và ký tự không hợp lệ
+        // Bước 1: Loại bỏ text mặc định của Minimax (nếu có)
+        // Minimax tự động thêm text mặc định vào chunk, cần loại bỏ ở BẤT KỲ VỊ TRÍ NÀO
+        let normalized = text;
+        
+        // Loại bỏ text mặc định tiếng Việt của Minimax
+        const minimaxDefaultTextVN = "Xin chào, tôi rất vui được hỗ trợ bạn với dịch vụ giọng nói của chúng tôi. Hãy chọn một giọng nói phù hợp với bạn và cùng nhau bắt đầu hành trình sáng tạo âm thanh nhé.";
+        // Loại bỏ text mặc định tiếng Anh của Minimax
+        const minimaxDefaultTextEN = "Hello, I'm delighted to assist you with our voice services. Choose a voice that resonates with you, and let's begin our creative audio journey together";
+        
+        // Escape các ký tự đặc biệt trong regex
+        const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        // Loại bỏ text mặc định ở BẤT KỲ VỊ TRÍ NÀO trong chunk (case-insensitive)
+        // Lặp lại nhiều lần để đảm bảo loại bỏ hết (có thể có nhiều lần xuất hiện)
+        let prevLength = normalized.length;
+        let removedCount = 0;
+        let iterations = 0;
+        const MAX_ITERATIONS = 10;
+        
+        while (iterations < MAX_ITERATIONS) {
+            const beforeLength = normalized.length;
+            
+            // Loại bỏ text mặc định tiếng Việt (có thể có khoảng trắng xung quanh)
+            normalized = normalized.replace(new RegExp(`\\s*${escapeRegex(minimaxDefaultTextVN)}\\s*`, 'gi'), ' ');
+            if (normalized.length < beforeLength) {
+                removedCount++;
+            }
+            
+            // Loại bỏ text mặc định tiếng Anh (có thể có khoảng trắng xung quanh)
+            normalized = normalized.replace(new RegExp(`\\s*${escapeRegex(minimaxDefaultTextEN)}\\s*`, 'gi'), ' ');
+            if (normalized.length < beforeLength) {
+                removedCount++;
+            }
+            
+            // Nếu không còn thay đổi, dừng lại
+            if (normalized.length === prevLength) {
+                break;
+            }
+            prevLength = normalized.length;
+            iterations++;
+        }
+        
+        // Log nếu đã loại bỏ text mặc định
+        if (removedCount > 0) {
+            const removedChars = text.length - normalized.length;
+            console.log(`[normalizeChunkText] Đã loại bỏ ${removedCount} lần xuất hiện text mặc định của Minimax (${removedChars} ký tự)`);
+            if (typeof addLogEntry === 'function') {
+                addLogEntry(`🧹 Đã loại bỏ ${removedCount} lần xuất hiện text mặc định của Minimax (${removedChars} ký tự)`, 'info');
+            }
+        }
+        
+        // Chuẩn hóa khoảng trắng sau khi loại bỏ text mặc định
+        normalized = normalized.replace(/\s+/g, ' ').trim();
+        
+        // Bước 2: Chỉ loại bỏ ký tự điều khiển và ký tự không hợp lệ
         // GIỮ LẠI TẤT CẢ ký tự Unicode (tiếng Việt, Nhật, Hàn, Trung, Thái, Ả Rập, v.v.)
-        let normalized = text
+        normalized = normalized
             // Loại bỏ các ký tự control và invisible (có thể gây lỗi)
             .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
             // Xóa tất cả dấu * nếu có
@@ -2036,9 +2090,9 @@ async function uSTZrHUt_IC() {
                 return;
             } else {
                 // Nếu không tìm thấy chunk chưa xử lý trong mảng status, có thể đang được xử lý
-                addLogEntry(`⏳ Còn ${totalChunks - processedChunks} chunk chưa được xử lý. Tiếp tục chờ...`, 'warning');
-                setTimeout(uSTZrHUt_IC, 2000);
-                return;
+            addLogEntry(`⏳ Còn ${totalChunks - processedChunks} chunk chưa được xử lý. Tiếp tục chờ...`, 'warning');
+            setTimeout(uSTZrHUt_IC, 2000);
+            return;
             }
         }
 
@@ -2111,7 +2165,19 @@ async function uSTZrHUt_IC() {
         OdKzziXLxtOGjvaBMHm[tQqGbytKzpHwhGmeQJucsrq(0x1fb)][tQqGbytKzpHwhGmeQJucsrq(0x1e1)] = tQqGbytKzpHwhGmeQJucsrq(0x209);
         LrkOcBYz_$AGjPqXLWnyiATpCI[tQqGbytKzpHwhGmeQJucsrq(0x243)] = ![];
         LrkOcBYz_$AGjPqXLWnyiATpCI[tQqGbytKzpHwhGmeQJucsrq(0x273)] = tQqGbytKzpHwhGmeQJucsrq(0x275);
+        
+        // QUAN TRỌNG: Cập nhật progress bar dựa trên số chunk đã thành công, không phải ttuo$y_KhCV
+        // Khi retry, ttuo$y_KhCV có thể nhảy về chunk failed đầu tiên, nhưng progress phải giữ nguyên
+        if (window.isFinalCheck && window.chunkStatus) {
+            // Tính số chunk đã thành công
+            const successfulChunks = window.chunkStatus.filter(status => status === 'success').length;
+            const totalChunks = SI$acY.length;
+            // Cập nhật progress bar dựa trên số chunk đã thành công
+            nWHrScjZnIyNYzztyEWwM(successfulChunks, totalChunks);
+        } else {
+            // Bình thường: dùng ttuo$y_KhCV
         nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
+        }
 
         if (window.isFinalCheck) {
             const remainingFailedChunks = window.failedChunks.length;
@@ -2203,18 +2269,42 @@ async function uSTZrHUt_IC() {
         return;
     }
 
+    // QUAN TRỌNG: Cập nhật progress bar dựa trên số chunk đã thành công khi retry
+    // Khi retry, ttuo$y_KhCV có thể nhảy về chunk failed đầu tiên, nhưng progress phải giữ nguyên
+    if (window.isFinalCheck && window.chunkStatus) {
+        // Tính số chunk đã thành công
+        const successfulChunks = window.chunkStatus.filter(status => status === 'success').length;
+        const totalChunks = SI$acY.length;
+        // Cập nhật progress bar dựa trên số chunk đã thành công
+        nWHrScjZnIyNYzztyEWwM(successfulChunks, totalChunks);
+    } else {
+        // Bình thường: dùng ttuo$y_KhCV
     nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
+    }
 
     // Khởi tạo hệ thống theo dõi chunk
-    if (typeof window.chunkStatus === 'undefined') window.chunkStatus = [];
+    // QUAN TRỌNG: Không reset lại chunkStatus khi retry - giữ nguyên các chunk đã thành công
+    if (typeof window.chunkStatus === 'undefined') {
+        window.chunkStatus = [];
+    }
     if (typeof window.failedChunks === 'undefined') window.failedChunks = [];
     if (typeof window.isFinalCheck === 'undefined') window.isFinalCheck = false;
     if (typeof window.retryCount === 'undefined') window.retryCount = 0;
     if (typeof window.totalRetryAttempts === 'undefined') window.totalRetryAttempts = 0;
 
-    // Đảm bảo mảng chunkStatus có đủ phần tử
+    // QUAN TRỌNG: Chỉ thêm phần tử mới cho các chunk chưa có status, KHÔNG ghi đè status cũ
+    // Điều này đảm bảo các chunk đã thành công không bị reset về 'pending'
     while (window.chunkStatus.length < SI$acY.length) {
         window.chunkStatus.push('pending');
+    }
+    
+    // QUAN TRỌNG: Đảm bảo không reset lại các chunk đã thành công hoặc đã failed
+    // Chỉ khởi tạo các phần tử chưa có (undefined hoặc null)
+    for (let i = 0; i < SI$acY.length; i++) {
+        if (window.chunkStatus[i] === undefined || window.chunkStatus[i] === null) {
+            window.chunkStatus[i] = 'pending';
+        }
+        // KHÔNG ghi đè các giá trị 'success' hoặc 'failed' đã có
     }
 
     // Logic thông minh: Tìm nút và click với retry
@@ -2362,8 +2452,18 @@ async function uSTZrHUt_IC() {
         // Đặt text đã chuẩn hóa vào ô input ẩn
         rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] = chunkText;
 
-        // Cập nhật progress bar
+        // QUAN TRỌNG: Cập nhật progress bar dựa trên số chunk đã thành công khi retry
+        // Khi retry, ttuo$y_KhCV có thể nhảy về chunk failed đầu tiên, nhưng progress phải giữ nguyên
+        if (window.isFinalCheck && window.chunkStatus) {
+            // Tính số chunk đã thành công
+            const successfulChunks = window.chunkStatus.filter(status => status === 'success').length;
+            const totalChunks = SI$acY.length;
+            // Cập nhật progress bar dựa trên số chunk đã thành công
+            nWHrScjZnIyNYzztyEWwM(successfulChunks, totalChunks);
+        } else {
+            // Bình thường: dùng ttuo$y_KhCV
         nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
+        }
         addLogEntry(`📦 [Chunk ${ttuo$y_KhCV + 1}/${SI$acY.length}] Đang gửi đi... (độ dài: ${chunkText.length} ký tự sau chuẩn hóa)`, 'info');
 
         // ANTI-DETECTION: Thêm delay ngẫu nhiên trước khi click
@@ -2385,10 +2485,18 @@ async function uSTZrHUt_IC() {
                 addLogEntry(`⏱️ [Chunk ${currentChunkIndex + 1}] Timeout sau 50 giây - chưa có kết quả. Đánh dấu thất bại.`, 'error');
                 
                 // Đánh dấu chunk này là thất bại
+                // QUAN TRỌNG: Không reset lại chunkStatus - chỉ khởi tạo nếu chưa có
                 if (typeof window.chunkStatus === 'undefined') {
-                    window.chunkStatus = new Array(SI$acY.length).fill('pending');
+                    window.chunkStatus = [];
                 }
-                window.chunkStatus[currentChunkIndex] = 'failed';
+                // Đảm bảo mảng có đủ phần tử
+                while (window.chunkStatus.length < SI$acY.length) {
+                    window.chunkStatus.push('pending');
+                }
+                // CHỈ đánh dấu failed nếu chưa thành công (giữ nguyên status 'success' nếu có)
+                if (window.chunkStatus[currentChunkIndex] !== 'success') {
+                    window.chunkStatus[currentChunkIndex] = 'failed';
+                }
                 
                 // Thêm vào danh sách failed chunks
                 if (typeof window.failedChunks === 'undefined') {
@@ -2693,7 +2801,7 @@ async function uSTZrHUt_IC() {
                         // QUAN TRỌNG: Đảm bảo lưu đúng vị trí chunk theo index gốc
                         // ttuo$y_KhCV luôn đúng với index gốc của chunk trong SI$acY (0, 1, 2, ...)
                         const currentChunkIndex = ttuo$y_KhCV;
-                        
+
                         // VALIDATION: Đảm bảo index hợp lệ
                         if (currentChunkIndex < 0 || currentChunkIndex >= SI$acY.length) {
                             addLogEntry(`❌ LỖI: Index chunk không hợp lệ: ${currentChunkIndex} (phải từ 0 đến ${SI$acY.length - 1})`, 'error');
@@ -2704,8 +2812,8 @@ async function uSTZrHUt_IC() {
                         if (window.chunkBlobs.length < SI$acY.length) {
                             // Mở rộng mảng đến độ dài đúng của SI$acY để đảm bảo có đủ vị trí cho tất cả chunks
                             while (window.chunkBlobs.length < SI$acY.length) {
-                                window.chunkBlobs.push(null);
-                            }
+                            window.chunkBlobs.push(null);
+                        }
                         }
                         
                         // QUAN TRỌNG: Lưu chunk vào đúng vị trí index (ghi đè nếu đã có - khi retry)
@@ -2716,8 +2824,8 @@ async function uSTZrHUt_IC() {
                         // Nếu ZTQj$LF$o chưa đủ độ dài, mở rộng mảng
                         if (ZTQj$LF$o.length < SI$acY.length) {
                             while (ZTQj$LF$o.length < SI$acY.length) {
-                                ZTQj$LF$o.push(null);
-                            }
+                            ZTQj$LF$o.push(null);
+                        }
                         }
                         // QUAN TRỌNG: Lưu vào đúng vị trí index để đồng bộ với window.chunkBlobs
                         ZTQj$LF$o[currentChunkIndex] = qILAV;
@@ -2732,6 +2840,15 @@ async function uSTZrHUt_IC() {
                         // DEBUG: Kiểm tra trạng thái mảng sau khi lưu
                         const chunkStatus = window.chunkBlobs.map((blob, idx) => blob ? 'có' : 'null').join(', ');
                         addLogEntry(`🔍 Trạng thái window.chunkBlobs: [${chunkStatus}]`, 'info');
+                        
+                        // QUAN TRỌNG: Cập nhật progress bar dựa trên số chunk đã thành công khi retry
+                        // Khi retry, progress bar phải phản ánh số chunk đã thành công, không phải ttuo$y_KhCV
+                        if (window.isFinalCheck && window.chunkStatus) {
+                            const successfulChunks = window.chunkStatus.filter(status => status === 'success').length;
+                            const totalChunks = SI$acY.length;
+                            nWHrScjZnIyNYzztyEWwM(successfulChunks, totalChunks);
+                            addLogEntry(`📊 Progress: ${successfulChunks}/${totalChunks} chunks đã thành công (${Math.round(successfulChunks/totalChunks*100)}%)`, 'info');
+                        }
                     } catch (FBleqcOZcLNC$NKSlfC) {}
                     const currentChunkNum = ttuo$y_KhCV + 1;
                     ttuo$y_KhCV++;
