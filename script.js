@@ -3224,6 +3224,30 @@ const BBNDYjhHoGkj_qbbbJu=URL[VCAHyXsrERcpXVhFPxmgdBjjh(0x1f0)](InRdxToeqTDyPgDG
             // =======================================================
             window.isMerging = false;
             addLogEntry(`✅ Hoàn tất merge file!`, 'success');
+            
+            // =======================================================
+            // == CẬP NHẬT PROGRESS BAR LÊN 100% SAU KHI MERGE XONG ==
+            // =======================================================
+            try {
+                const progressBar = document.getElementById('gemini-progress-bar');
+                const progressLabel = document.getElementById('gemini-progress-label');
+                
+                if (progressBar && progressLabel) {
+                    // Cập nhật progress bar lên 100%
+                    progressBar.style.width = '100%';
+                    
+                    // Cập nhật label với thông tin đầy đủ
+                    const totalChunks = finalBlobs.length;
+                    progressLabel.textContent = `100% (Chunk ${totalChunks}/${totalChunks})`;
+                    
+                    // Cập nhật maxProgress để đảm bảo không bị giảm
+                    window.maxProgress = 100;
+                    
+                    addLogEntry(`✅ Đã cập nhật progress bar lên 100%`, 'success');
+                }
+            } catch (progressError) {
+                console.warn('⚠️ Lỗi khi cập nhật progress bar:', progressError);
+            }
 
             // LƯU Ý: Silent Audio vẫn tiếp tục chạy 100% thời gian để đảm bảo trình duyệt luôn hoạt động
             // Chỉ dừng khi tool/tab bị đóng
