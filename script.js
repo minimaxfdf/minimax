@@ -1644,6 +1644,9 @@ button:disabled {
             <textarea id="gemini-main-textarea" placeholder="Dán nội dung bạn đã chuẩn bị vào đây.
 ⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
             "></textarea>
+            <small id="text-length-warning" style="color: #94a3b8; font-size: 12px; margin-top: 5px; display: block;">
+                ⚠️ Giới hạn: Tối đa 50.000 ký tự
+            </small>
         </div>
         <div id="file-input-area" class="input-area">
             <div class="file-upload-section">
@@ -2435,6 +2438,84 @@ button:disabled {
             // Mặc định ẩn log khi mở tool
             logPanel.style.display = 'none';
             toggleLogBtn.textContent = '📜 Xem log hoạt động';
+        }
+        
+        // Cảnh báo khi vượt quá 50,000 ký tự (không tự động cắt)
+        const MAX_TEXT_LENGTH = 50000;
+        const mainTextarea = document.getElementById('gemini-main-textarea');
+        const textLengthWarning = document.getElementById('text-length-warning');
+        
+        if (mainTextarea && textLengthWarning) {
+            // Cập nhật cảnh báo khi nhập
+            mainTextarea.addEventListener('input', function() {
+                const currentLength = this.value.length;
+                if (currentLength > MAX_TEXT_LENGTH) {
+                    textLengthWarning.textContent = `⚠️ CẢNH BÁO: Văn bản vượt quá giới hạn! Hiện tại: ${currentLength.toLocaleString()} / ${MAX_TEXT_LENGTH.toLocaleString()} ký tự. Vui lòng giảm xuống dưới ${MAX_TEXT_LENGTH.toLocaleString()} ký tự để có thể bắt đầu tạo âm thanh.`;
+                    textLengthWarning.style.color = '#ff5555';
+                    textLengthWarning.style.fontWeight = 'bold';
+                } else {
+                    textLengthWarning.textContent = `⚠️ Giới hạn: Tối đa ${MAX_TEXT_LENGTH.toLocaleString()} ký tự (Hiện tại: ${currentLength.toLocaleString()} ký tự)`;
+                    textLengthWarning.style.color = '#94a3b8';
+                    textLengthWarning.style.fontWeight = 'normal';
+                }
+            });
+            
+            // Cập nhật cảnh báo khi paste
+            mainTextarea.addEventListener('paste', function() {
+                setTimeout(() => {
+                    const currentLength = this.value.length;
+                    if (currentLength > MAX_TEXT_LENGTH) {
+                        textLengthWarning.textContent = `⚠️ CẢNH BÁO: Văn bản vượt quá giới hạn! Hiện tại: ${currentLength.toLocaleString()} / ${MAX_TEXT_LENGTH.toLocaleString()} ký tự. Vui lòng giảm xuống dưới ${MAX_TEXT_LENGTH.toLocaleString()} ký tự để có thể bắt đầu tạo âm thanh.`;
+                        textLengthWarning.style.color = '#ff5555';
+                        textLengthWarning.style.fontWeight = 'bold';
+                    } else {
+                        textLengthWarning.textContent = `⚠️ Giới hạn: Tối đa ${MAX_TEXT_LENGTH.toLocaleString()} ký tự (Hiện tại: ${currentLength.toLocaleString()} ký tự)`;
+                        textLengthWarning.style.color = '#94a3b8';
+                        textLengthWarning.style.fontWeight = 'normal';
+                    }
+                }, 0);
+            });
+        }
+        
+        // Validation khi bấm nút "Bắt đầu tạo âm thanh"
+        const startQueueBtn = document.getElementById('gemini-start-queue-btn');
+        if (startQueueBtn) {
+            const originalClickHandler = startQueueBtn.onclick;
+            startQueueBtn.addEventListener('click', function(e) {
+                const textarea = document.getElementById('gemini-main-textarea');
+                if (textarea && textarea.value.length > MAX_TEXT_LENGTH) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const currentLength = textarea.value.length;
+                    const exceededLength = currentLength - MAX_TEXT_LENGTH;
+                    const message = `❌ CẢNH BÁO: Văn bản vượt quá quy định!\n\n` +
+                                   `📊 Số ký tự hiện tại: ${currentLength.toLocaleString()} ký tự\n` +
+                                   `⚠️ Vượt quá: ${exceededLength.toLocaleString()} ký tự\n` +
+                                   `📏 Giới hạn cho phép: ${MAX_TEXT_LENGTH.toLocaleString()} ký tự\n\n` +
+                                   `Vui lòng giảm văn bản xuống dưới ${MAX_TEXT_LENGTH.toLocaleString()} ký tự để có thể bắt đầu tạo âm thanh.`;
+                    
+                    // Hiển thị alert để người dùng chú ý
+                    alert(message);
+                    
+                    // Log vào log panel nếu có
+                    if (typeof addLogEntry === 'function') {
+                        addLogEntry(`❌ CẢNH BÁO: Văn bản vượt quá quy định! Hiện tại: ${currentLength.toLocaleString()} ký tự, vượt quá: ${exceededLength.toLocaleString()} ký tự. Giới hạn: ${MAX_TEXT_LENGTH.toLocaleString()} ký tự.`, 'error');
+                    }
+                    
+                    // Cập nhật cảnh báo visual
+                    if (textLengthWarning) {
+                        textLengthWarning.textContent = `❌ CẢNH BÁO: Vượt quá ${exceededLength.toLocaleString()} ký tự! (${currentLength.toLocaleString()} / ${MAX_TEXT_LENGTH.toLocaleString()})`;
+                        textLengthWarning.style.color = '#ff5555';
+                        textLengthWarning.style.fontWeight = 'bold';
+                    }
+                    
+                    return false;
+                }
+                // Nếu validation pass, gọi handler gốc nếu có
+                if (originalClickHandler) {
+                    originalClickHandler.call(this, e);
+                }
+            });
         }
     });
 
