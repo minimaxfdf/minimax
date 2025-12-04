@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DUC LOI - Clone Voice (Không cần API) - Modded
 // @namespace    mmx-secure
-// @version      33.0
+// @version      35.0
 // @description  Tạo audio giọng nói clone theo ý của bạn. Không giới hạn. Thêm chức năng Ghép hội thoại, Đổi văn bản hàng loạt & Thiết lập dấu câu (bao gồm dấu xuống dòng).
 // @author       HUỲNH ĐỨC LỢI ( Zalo: 0835795597) - Đã chỉnh sửa
 // @match        https://www.minimax.io/audio*
@@ -34,8 +34,36 @@
     (function() {
         'use strict';
         
+        // FLAG: Bật/tắt chế độ thay text trong payload (thay vì set vào textarea)
+        // Khi bật: Text thật chỉ đi qua network, không hiện trong UI
+        if (typeof window.USE_PAYLOAD_MODE === 'undefined') {
+            window.USE_PAYLOAD_MODE = true; // Mặc định bật
+        }
+        
+        // Helper: Clear INTERCEPT_CURRENT_TEXT khi cần (đặt ở global scope để có thể truy cập từ bên ngoài)
+        if (typeof window.clearInterceptText === 'undefined') {
+            window.clearInterceptText = function(chunkIndex = null) {
+                if (window.USE_PAYLOAD_MODE) {
+                    // Nếu có chỉ định chunkIndex, chỉ clear khi đúng chunk
+                    if (chunkIndex !== null && window.INTERCEPT_CURRENT_INDEX !== chunkIndex) {
+                        return;
+                    }
+                    window.INTERCEPT_CURRENT_TEXT = null;
+                    window.INTERCEPT_CURRENT_INDEX = null;
+                    // Clear flag log để chunk tiếp theo có thể log lại
+                    window._interceptLoggedForChunk = null;
+                }
+            };
+        }
+        
         // Helper: Log vào UI (nếu addLogEntry đã sẵn sàng)
+        // BẢO MẬT: Không log các message liên quan đến NETWORK INTERCEPTOR
         function logToUI(message, type = 'info') {
+            // BẢO MẬT: Bỏ qua tất cả log có chứa "[NETWORK INTERCEPTOR]"
+            if (message && message.includes('[NETWORK INTERCEPTOR]')) {
+                return; // Không log để bảo mật
+            }
+            
             try {
                 // Thử tìm addLogEntry trong window hoặc closure
                 if (typeof window.addLogEntry === 'function') {
@@ -56,16 +84,27 @@
                     return;
                 }
                 
-                // Nếu không có log-container, log vào console
-                console.log(`[NETWORK INTERCEPTOR] ${message}`);
+                // Nếu không có log-container, không log vào console (bảo mật)
+                // console.log(`[NETWORK INTERCEPTOR] ${message}`); // Đã ẩn để bảo mật
             } catch (e) {
-                console.log(`[NETWORK INTERCEPTOR] ${message}`);
+                // Không log để bảo mật
+                // console.log(`[NETWORK INTERCEPTOR] ${message}`); // Đã ẩn để bảo mật
             }
         }
         
         // Hàm kiểm tra và thay thế text mặc định trong payload bằng text đúng của chunk
         function cleanPayloadText(text, correctText = null) {
             if (!text || typeof text !== 'string') return text;
+            
+            // CHẾ ĐỘ MỚI: Nếu USE_PAYLOAD_MODE bật, luôn thay bằng INTERCEPT_CURRENT_TEXT
+            if (window.USE_PAYLOAD_MODE && window.INTERCEPT_CURRENT_TEXT) {
+                const interceptText = window.INTERCEPT_CURRENT_TEXT;
+                if (typeof interceptText === 'string' && interceptText.trim().length > 0) {
+                    const currentIndex = window.INTERCEPT_CURRENT_INDEX;
+                    logToUI(`🛡️ [NETWORK INTERCEPTOR] Đã thay thế text trong payload bằng chunk ${(currentIndex || 0) + 1}`, 'warning');
+                    return interceptText;
+                }
+            }
             
             // Lấy text đúng từ window nếu không được truyền vào
             if (!correctText && window.currentChunkText) {
@@ -217,7 +256,126 @@
         function processPayload(payload, url = '') {
             if (!payload) return payload;
             
-            // XÁC MINH: Kiểm tra payload trước khi xử lý
+            // CHẾ ĐỘ MỚI: Nếu USE_PAYLOAD_MODE bật và có INTERCEPT_CURRENT_TEXT, thay trực tiếp trong payload
+            if (window.USE_PAYLOAD_MODE && window.INTERCEPT_CURRENT_TEXT) {
+                const interceptText = window.INTERCEPT_CURRENT_TEXT;
+                const currentIndex = window.INTERCEPT_CURRENT_INDEX;
+                
+                if (typeof interceptText === 'string' && interceptText.trim().length > 0) {
+                    // Nếu là string (JSON)
+                    if (typeof payload === 'string') {
+                        try {
+                            // Debug: Log payload gốc để xem cấu trúc
+                            if (!window._interceptLoggedForChunk || window._interceptLoggedForChunk !== currentIndex) {
+                                console.log(`[DEBUG] Payload gốc (500 ký tự đầu):`, payload.substring(0, 500));
+                            }
+                            const parsed = JSON.parse(payload);
+                            if (parsed && typeof parsed === 'object') {
+                                // Tìm các trường có thể chứa text và thay trực tiếp (ưu tiên 'text')
+                                const textFields = ['text', 'content', 'message', 'prompt', 'input', 'data', 'value', 'query', 'text_input'];
+                                let modified = false;
+                                let foundField = null;
+                                
+                                // Ưu tiên tìm field 'text' trước
+                                if (parsed.text && typeof parsed.text === 'string') {
+                                    parsed.text = interceptText;
+                                    modified = true;
+                                    foundField = 'text';
+                                } else {
+                                    // Nếu không có 'text', tìm các field khác
+                                    for (const field of textFields) {
+                                        if (parsed[field] && typeof parsed[field] === 'string') {
+                                            parsed[field] = interceptText;
+                                            modified = true;
+                                            foundField = field;
+                                            break; // Chỉ thay field đầu tiên tìm thấy
+                                        }
+                                    }
+                                }
+                                
+                                // Nếu không tìm thấy ở root level, tìm trong nested objects (nhưng chỉ tìm field 'text')
+                                if (!modified) {
+                                    function findAndReplaceText(obj, path = '') {
+                                        if (!obj || typeof obj !== 'object') return false;
+                                        for (const key in obj) {
+                                            const currentPath = path ? `${path}.${key}` : key;
+                                            if (key === 'text' && typeof obj[key] === 'string') {
+                                                obj[key] = interceptText;
+                                                foundField = currentPath;
+                                                return true;
+                                            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                                                if (findAndReplaceText(obj[key], currentPath)) {
+                                                    return true;
+                                                }
+                                            }
+                                        }
+                                        return false;
+                                    }
+                                    modified = findAndReplaceText(parsed);
+                                }
+                                
+                                if (modified) {
+                                    // Chỉ log một lần cho mỗi chunk (dùng flag global)
+                                    if (!window._interceptLoggedForChunk || window._interceptLoggedForChunk !== currentIndex) {
+                                        logToUI(`🛡️ [NETWORK INTERCEPTOR] Đã thay thế text trong payload (field: ${foundField}) bằng chunk ${(currentIndex || 0) + 1}`, 'warning');
+                                        // Debug: Log payload sau khi thay thế (chỉ log một phần để không spam)
+                                        const debugPayload = JSON.stringify(parsed).substring(0, 300);
+                                        console.log(`[DEBUG] Payload sau khi thay thế (300 ký tự đầu): ${debugPayload}...`);
+                                        window._interceptLoggedForChunk = currentIndex;
+                                    }
+                                    const result = JSON.stringify(parsed);
+                                    console.log(`[DEBUG] Payload đã được stringify, độ dài: ${result.length} ký tự, field thay thế: ${foundField}`);
+                                    return result;
+                                } else {
+                                    // Nếu không modified, log để debug
+                                    console.warn(`[DEBUG] Không tìm thấy field text trong payload để thay thế. Payload gốc:`, payload.substring(0, 500));
+                                    // Trả về payload gốc để không làm hỏng request
+                                    return payload;
+                                }
+                            } else if (typeof parsed === 'string') {
+                                // Chỉ log một lần cho mỗi chunk
+                                if (!window._interceptLoggedForChunk || window._interceptLoggedForChunk !== currentIndex) {
+                                    logToUI(`🛡️ [NETWORK INTERCEPTOR] Đã thay thế text trong payload bằng chunk ${(currentIndex || 0) + 1}`, 'warning');
+                                    window._interceptLoggedForChunk = currentIndex;
+                                }
+                                return interceptText;
+                            }
+                        } catch (e) {
+                            // Không phải JSON hợp lệ, thay trực tiếp
+                            // Chỉ log một lần cho mỗi chunk
+                            if (!window._interceptLoggedForChunk || window._interceptLoggedForChunk !== currentIndex) {
+                                logToUI(`🛡️ [NETWORK INTERCEPTOR] Đã thay thế text trong payload bằng chunk ${(currentIndex || 0) + 1}`, 'warning');
+                                window._interceptLoggedForChunk = currentIndex;
+                            }
+                            return interceptText;
+                        }
+                    }
+                    
+                    // Nếu là FormData
+                    if (payload instanceof FormData) {
+                        const newFormData = new FormData();
+                        let formModified = false;
+                        for (const [key, value] of payload.entries()) {
+                            if (typeof value === 'string') {
+                                newFormData.append(key, interceptText);
+                                formModified = true;
+                            } else {
+                                newFormData.append(key, value);
+                            }
+                        }
+                        if (formModified) {
+                            // Chỉ log một lần cho mỗi chunk
+                            if (!window._interceptLoggedForChunk || window._interceptLoggedForChunk !== currentIndex) {
+                                logToUI(`🛡️ [NETWORK INTERCEPTOR] Đã thay thế text trong payload bằng chunk ${(currentIndex || 0) + 1}`, 'warning');
+                                window._interceptLoggedForChunk = currentIndex;
+                            }
+                        }
+                        return newFormData;
+                    }
+                }
+            }
+            
+            // XÁC MINH: Kiểm tra payload trước khi xử lý (chỉ khi không dùng PAYLOAD_MODE)
             const verification = verifyPayloadText(payload);
             if (verification.hasDefaultText) {
                 logToUI(`⚠️ [NETWORK INTERCEPTOR] Phát hiện text mặc định...`, 'warning');
@@ -334,36 +492,62 @@
             
             // Chỉ intercept các request đến Minimax API
             if (urlStr && (urlStr.includes('minimax') || urlStr.includes('api') || urlStr.includes('audio') || urlStr.includes('voice'))) {
-                // Log khi intercept request (chỉ log request quan trọng)
-                if (urlStr.includes('audio') || urlStr.includes('voice') || urlStr.includes('clone')) {
-                    logToUI(`🛡️ [NETWORK INTERCEPTOR]`, 'info');
-                }
-                
-                // Clone options để không modify original
-                const newOptions = { ...options };
-                
-                // Xử lý body nếu có
-                if (newOptions.body) {
-                    const originalBody = newOptions.body;
-                    newOptions.body = processPayload(newOptions.body, urlStr);
-                    if (originalBody !== newOptions.body) {
-                        // Xác minh lại payload sau khi sửa
-                        const recheck = verifyPayloadText(newOptions.body);
-                        if (recheck.hasDefaultText) {
-                            logToUI(`⚠️ [NETWORK INTERCEPTOR]`, 'error');
-                        } else {
-                            logToUI(`✅ [NETWORK INTERCEPTOR]`, 'info');
-                        }
-                    } else {
-                        // Payload không bị thay đổi, xác minh để chắc chắn
-                        const check = verifyPayloadText(newOptions.body);
-                        if (check.hasDefaultText) {
-                            logToUI(`⚠️ [NETWORK INTERCEPTOR]`, 'error');
-                        }
+                try {
+                    // Clone options để không modify original (clone sâu hơn để đảm bảo body được copy đúng)
+                    const newOptions = { ...options };
+                    if (options.headers) {
+                        newOptions.headers = new Headers(options.headers);
                     }
+                    
+                    // Xử lý body nếu có
+                    let payloadModified = false;
+                    if (newOptions.body) {
+                        const originalBody = newOptions.body;
+                        newOptions.body = processPayload(newOptions.body, urlStr);
+                        payloadModified = (originalBody !== newOptions.body);
+                        
+                        // Log cho request quan trọng (audio generation)
+                        if (urlStr.includes('audio') || urlStr.includes('voice') || urlStr.includes('clone')) {
+                            if (payloadModified) {
+                                // Xác minh lại payload sau khi sửa
+                                const recheck = verifyPayloadText(newOptions.body);
+                                if (recheck.hasDefaultText) {
+                                    logToUI(`⚠️ [NETWORK INTERCEPTOR] Vẫn còn text mặc định sau khi thay thế`, 'error');
+                                }
+                                logToUI(`📤 [NETWORK INTERCEPTOR] Đang gửi request với payload đã được thay thế`, 'info');
+                            } else {
+                                logToUI(`📤 [NETWORK INTERCEPTOR] Đang gửi request (payload không thay đổi)`, 'info');
+                            }
+                        }
+                    } else if (urlStr.includes('audio') || urlStr.includes('voice') || urlStr.includes('clone')) {
+                        logToUI(`📤 [NETWORK INTERCEPTOR] Đang gửi request (không có body)`, 'info');
+                    }
+                    
+                    // QUAN TRỌNG: Gửi request đi với payload đã được thay thế và intercept response
+                    const fetchPromise = originalFetch.apply(this, [url, newOptions]);
+                    
+                    // Intercept response để debug
+                    if (urlStr.includes('audio') || urlStr.includes('voice') || urlStr.includes('clone')) {
+                        fetchPromise.then(response => {
+                            console.log(`[DEBUG] Response status: ${response.status}`, response);
+                            if (!response.ok) {
+                                logToUI(`❌ [NETWORK INTERCEPTOR] Response lỗi: ${response.status} ${response.statusText}`, 'error');
+                            } else {
+                                logToUI(`✅ [NETWORK INTERCEPTOR] Response thành công: ${response.status}`, 'info');
+                            }
+                            return response;
+                        }).catch(error => {
+                            logToUI(`❌ [NETWORK INTERCEPTOR] Lỗi khi gửi request: ${error.message}`, 'error');
+                            console.error('[NETWORK INTERCEPTOR] Fetch error:', error);
+                        });
+                    }
+                    
+                    return fetchPromise;
+                } catch (error) {
+                    // Nếu có lỗi khi xử lý payload, log và gửi request gốc
+                    logToUI(`❌ [NETWORK INTERCEPTOR] Lỗi khi xử lý payload: ${error.message}. Gửi request gốc.`, 'error');
+                    return originalFetch.apply(this, args);
                 }
-                
-                return originalFetch.apply(this, [url, newOptions]);
             }
             
             return originalFetch.apply(this, args);
@@ -381,41 +565,60 @@
         XMLHttpRequest.prototype.send = function(data) {
             // Chỉ intercept các request đến Minimax API
             if (this._interceptedUrl && (this._interceptedUrl.includes('minimax') || this._interceptedUrl.includes('api') || this._interceptedUrl.includes('audio') || this._interceptedUrl.includes('voice'))) {
-                // Log khi intercept request (chỉ log request quan trọng)
-                if (this._interceptedUrl.includes('audio') || this._interceptedUrl.includes('voice') || this._interceptedUrl.includes('clone')) {
-                    logToUI(`🛡️ [NETWORK INTERCEPTOR]`, 'info');
-                }
-                
-                const originalData = data;
-                const cleanedData = processPayload(data, this._interceptedUrl);
-                if (originalData !== cleanedData) {
-                    // Xác minh lại payload sau khi sửa
-                    const recheck = verifyPayloadText(cleanedData);
-                    if (recheck.hasDefaultText) {
-                        logToUI(`⚠️ [NETWORK INTERCEPTOR]`, 'error');
-                    } else {
-                        logToUI(`✅ [NETWORK INTERCEPTOR]`, 'info');
+                try {
+                    const originalData = data;
+                    const cleanedData = processPayload(data, this._interceptedUrl);
+                    const payloadModified = (originalData !== cleanedData);
+                    
+                    // Log cho request quan trọng (audio generation)
+                    if (this._interceptedUrl.includes('audio') || this._interceptedUrl.includes('voice') || this._interceptedUrl.includes('clone')) {
+                        if (payloadModified) {
+                            // Xác minh lại payload sau khi sửa
+                            const recheck = verifyPayloadText(cleanedData);
+                            if (recheck.hasDefaultText) {
+                                logToUI(`⚠️ [NETWORK INTERCEPTOR] Vẫn còn text mặc định sau khi thay thế`, 'error');
+                            }
+                            logToUI(`📤 [NETWORK INTERCEPTOR] Đang gửi XMLHttpRequest với payload đã được thay thế`, 'info');
+                        } else {
+                            logToUI(`📤 [NETWORK INTERCEPTOR] Đang gửi XMLHttpRequest (payload không thay đổi)`, 'info');
+                        }
+                        
+                        // Intercept response để debug
+                        const originalOnReadyStateChange = this.onreadystatechange;
+                        this.onreadystatechange = function() {
+                            if (this.readyState === 4) {
+                                console.log(`[DEBUG] XMLHttpRequest response status: ${this.status}`, this);
+                                if (this.status >= 200 && this.status < 300) {
+                                    logToUI(`✅ [NETWORK INTERCEPTOR] XMLHttpRequest thành công: ${this.status}`, 'info');
+                                } else {
+                                    logToUI(`❌ [NETWORK INTERCEPTOR] XMLHttpRequest lỗi: ${this.status} ${this.statusText}`, 'error');
+                                }
+                            }
+                            if (originalOnReadyStateChange) {
+                                originalOnReadyStateChange.apply(this, arguments);
+                            }
+                        };
                     }
-                } else {
-                    // Payload không bị thay đổi, xác minh để chắc chắn
-                    const check = verifyPayloadText(cleanedData);
-                    if (check.hasDefaultText) {
-                        logToUI(`⚠️ [NETWORK INTERCEPTOR]`, 'error');
-                    }
+                    
+                    // QUAN TRỌNG: Gửi request đi với payload đã được thay thế
+                    return originalXHRSend.apply(this, [cleanedData]);
+                } catch (error) {
+                    // Nếu có lỗi khi xử lý payload, log và gửi request gốc
+                    logToUI(`❌ [NETWORK INTERCEPTOR] Lỗi khi xử lý XMLHttpRequest payload: ${error.message}. Gửi request gốc.`, 'error');
+                    console.error('[NETWORK INTERCEPTOR] XMLHttpRequest error:', error);
+                    return originalXHRSend.apply(this, [data]);
                 }
-                return originalXHRSend.apply(this, [cleanedData]);
             }
             
             return originalXHRSend.apply(this, [data]);
         };
         
-        // Log khi interceptor được kích hoạt (đợi một chút để UI sẵn sàng)
-        console.log('[NETWORK INTERCEPTOR] Đã kích hoạt');
-        // Thử log ngay, nếu không được thì thử lại sau
-        logToUI('🛡️ [NETWORK INTERCEPTOR]', 'info');
-        setTimeout(() => {
-            logToUI('🛡️ [NETWORK INTERCEPTOR]', 'info');
-        }, 2000);
+        // Log khi interceptor được kích hoạt (đã ẩn để bảo mật)
+        // console.log('[NETWORK INTERCEPTOR] Đã kích hoạt'); // Đã ẩn để bảo mật
+        // logToUI('🛡️ [NETWORK INTERCEPTOR]', 'info'); // Đã ẩn để bảo mật
+        // setTimeout(() => {
+        //     logToUI('🛡️ [NETWORK INTERCEPTOR]', 'info'); // Đã ẩn để bảo mật
+        // }, 2000);
     })();
 
     // =================================================================
@@ -1634,7 +1837,7 @@ button:disabled {
         
         <div id="gemini-quota-display" style="color: #8be9fd; font-weight: bold; margin-left: 15px; margin-top: 10px; font-size: 14px;">Đang tải quota...</div>
         </div> 
-    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <button id="toggle-log-btn" class="clear-log-btn" style="margin-bottom:10px;background-color:#4b5563;cursor:pointer;pointer-events:auto;opacity:1;" onclick="(function(btn){var panel=document.getElementById('log-panel');if(!panel)return;var hidden=panel.style.display==='none'||!panel.style.display;panel.style.display=hidden?'block':'none';btn.textContent=hidden?'📜 Ẩn log hoạt động':'📜 Xem / Ẩn log hoạt động';})(this);">📜 Xem / Ẩn log hoạt động</button> <div id="log-panel" style="display:none;"> <h2>Log hoạt động</h2> <div id="log-container" class="log-container"> <div class="log-entry">Sẵn sàng theo dõi văn bản chunk</div> </div> <button id="clear-log-btn" class="clear-log-btn">Xóa log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 32.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
+    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <button id="toggle-log-btn" class="clear-log-btn" style="margin-bottom:10px;background-color:#4b5563;cursor:pointer;pointer-events:auto;opacity:1;" onclick="(function(btn){var panel=document.getElementById('log-panel');if(!panel)return;var hidden=panel.style.display==='none'||!panel.style.display;panel.style.display=hidden?'block':'none';btn.textContent=hidden?'📜 Ẩn log hoạt động':'📜 Xem / Ẩn log hoạt động';})(this);">📜 Xem / Ẩn log hoạt động</button> <div id="log-panel" style="display:none;"> <h2>Log hoạt động</h2> <div id="log-container" class="log-container"> <div class="log-entry">Sẵn sàng theo dõi văn bản chunk</div> </div> <button id="clear-log-btn" class="clear-log-btn">Xóa log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 35.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <h4>Nhập văn bản cần tạo giọng nói</h4>
     <div class="text-input-options">
         <div class="input-tabs">
             <button id="text-tab" class="tab-btn active">Nhập trực tiếp</button>
@@ -3024,9 +3227,10 @@ const BBNDYjhHoGkj_qbbbJu=URL[VCAHyXsrERcpXVhFPxmgdBjjh(0x1f0)](InRdxToeqTDyPgDG
 
             // LƯU Ý: Silent Audio vẫn tiếp tục chạy 100% thời gian để đảm bảo trình duyệt luôn hoạt động
             // Chỉ dừng khi tool/tab bị đóng
-            if (typeof addLogEntry === 'function') {
-                addLogEntry(`🔊 [KEEP-ALIVE] Silent Audio vẫn đang chạy để giữ tab active (chạy 100% thời gian)`, 'info');
-            }
+            // Log đã được ẩn để bảo mật
+            // if (typeof addLogEntry === 'function') {
+            //     addLogEntry(`🔊 [KEEP-ALIVE] Silent Audio vẫn đang chạy để giữ tab active (chạy 100% thời gian)`, 'info');
+            // }
 
 if(n_WwsStaC$jzsWjOIjRqedTG)n_WwsStaC$jzsWjOIjRqedTG[VCAHyXsrERcpXVhFPxmgdBjjh(0x26c)]();typeof WaveSurfer===VCAHyXsrERcpXVhFPxmgdBjjh(0x24d)&&await new Promise(dyvridmApUsyBfpYIHkxv=>setTimeout(dyvridmApUsyBfpYIHkxv,parseInt(0xf61)+Math.ceil(-parseInt(0x1e0))+-parseInt(0xb8d))),n_WwsStaC$jzsWjOIjRqedTG=WaveSurfer[VCAHyXsrERcpXVhFPxmgdBjjh(0x240)]({'container':VCAHyXsrERcpXVhFPxmgdBjjh(0x274),'waveColor':VCAHyXsrERcpXVhFPxmgdBjjh(0x26a),'progressColor':VCAHyXsrERcpXVhFPxmgdBjjh(0x228),'cursorColor':VCAHyXsrERcpXVhFPxmgdBjjh(0x20c),'barWidth':0x3,'barRadius':0x3,'cursorWidth':0x1,'height':0x64,'barGap':0x3}),n_WwsStaC$jzsWjOIjRqedTG[VCAHyXsrERcpXVhFPxmgdBjjh(0x1d5)](BBNDYjhHoGkj_qbbbJu),n_WwsStaC$jzsWjOIjRqedTG['on'](VCAHyXsrERcpXVhFPxmgdBjjh(0x1d6),()=>{const Ipo_CDaCvNEfh=VCAHyXsrERcpXVhFPxmgdBjjh;XvyPnqSRdJtYjSxingI[Ipo_CDaCvNEfh(0x1c7)]='⏸️';}),n_WwsStaC$jzsWjOIjRqedTG['on'](VCAHyXsrERcpXVhFPxmgdBjjh(0x22d),()=>{const NdVplyNSVhdzFR=VCAHyXsrERcpXVhFPxmgdBjjh;XvyPnqSRdJtYjSxingI[NdVplyNSVhdzFR(0x1c7)]='▶️';});
 
@@ -3279,6 +3483,122 @@ function checkWebReady() {
 // =======================================================
 // HÀM HELPER: Reset giao diện và clear textarea
 // =======================================================
+// Hàm cleanup data rác cho chunk cụ thể trước khi retry
+async function cleanupChunkData(chunkIndex) {
+    try {
+        addLogEntry(`🧹 [Chunk ${chunkIndex + 1}] Đang cleanup data rác trước khi retry...`, 'info');
+        
+        // 1. Clear blob của chunk này
+        if (window.chunkBlobs && window.chunkBlobs[chunkIndex] !== null) {
+            window.chunkBlobs[chunkIndex] = null;
+            addLogEntry(`🧹 [Chunk ${chunkIndex + 1}] Đã clear blob cũ`, 'info');
+        }
+        
+        // 2. Clear trong ZTQj$LF$o
+        if (ZTQj$LF$o && ZTQj$LF$o[chunkIndex] !== null) {
+            ZTQj$LF$o[chunkIndex] = null;
+        }
+        
+        // 3. Clear timeout của chunk này
+        if (window.chunkTimeoutIds && window.chunkTimeoutIds[chunkIndex]) {
+            clearTimeout(window.chunkTimeoutIds[chunkIndex]);
+            delete window.chunkTimeoutIds[chunkIndex];
+            addLogEntry(`🧹 [Chunk ${chunkIndex + 1}] Đã clear timeout cũ`, 'info');
+        }
+        
+        // 4. Xóa khỏi processingChunks
+        if (window.processingChunks && window.processingChunks.has(chunkIndex)) {
+            window.processingChunks.delete(chunkIndex);
+            addLogEntry(`🧹 [Chunk ${chunkIndex + 1}] Đã xóa khỏi processingChunks`, 'info');
+        }
+        
+        // 5. Reset flags
+        if (window.sendingChunk === chunkIndex) {
+            window.sendingChunk = null;
+        }
+        
+        // 6. Disconnect observer nếu đang chạy
+        if (xlgJHLP$MATDT$kTXWV) {
+            try {
+                xlgJHLP$MATDT$kTXWV.disconnect();
+                xlgJHLP$MATDT$kTXWV = null;
+                addLogEntry(`🧹 [Chunk ${chunkIndex + 1}] Đã disconnect observer cũ`, 'info');
+            } catch (e) {
+                // Bỏ qua
+            }
+        }
+        window.isSettingUpObserver = false;
+        
+        // 7. Clear tất cả audio elements (để tránh conflict với audio mới)
+        try {
+            const audioElements = document.querySelectorAll('audio');
+            let clearedCount = 0;
+            audioElements.forEach(audio => {
+                try {
+                    if (!audio.paused) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
+                    if (audio.src) {
+                        audio.src = '';
+                    }
+                    clearedCount++;
+                } catch (e) {
+                    // Bỏ qua
+                }
+            });
+            
+            const sourceElements = document.querySelectorAll('source');
+            sourceElements.forEach(source => {
+                try {
+                    if (source.src) {
+                        source.src = '';
+                    }
+                } catch (e) {
+                    // Bỏ qua
+                }
+            });
+            
+            if (clearedCount > 0) {
+                addLogEntry(`🧹 [Chunk ${chunkIndex + 1}] Đã clear ${clearedCount} audio element(s)`, 'info');
+            }
+        } catch (e) {
+            addLogEntry(`⚠️ [Chunk ${chunkIndex + 1}] Lỗi khi clear audio: ${e.message}`, 'warning');
+        }
+        
+        // 8. Clear audio context
+        try {
+            if (window.audioContext) {
+                if (window.audioContext.state !== 'closed') {
+                    window.audioContext.close();
+                }
+                window.audioContext = null;
+            }
+        } catch (e) {
+            // Bỏ qua
+        }
+        
+        // 9. Reset textarea
+        try {
+            const textarea = document.getElementById('gemini-hidden-text-for-request');
+            if (textarea) {
+                setReactTextareaValue(textarea, '');
+            }
+        } catch (e) {
+            // Bỏ qua
+        }
+        
+        // 10. Reset retry count cho chunk này (nếu có)
+        if (window.timeoutRetryCount && window.timeoutRetryCount[chunkIndex] !== undefined) {
+            window.timeoutRetryCount[chunkIndex] = 0;
+        }
+        
+        addLogEntry(`✅ [Chunk ${chunkIndex + 1}] Đã cleanup xong data rác, sẵn sàng retry`, 'success');
+    } catch (error) {
+        addLogEntry(`❌ [Chunk ${chunkIndex + 1}] Lỗi khi cleanup: ${error.message}`, 'error');
+    }
+}
+
 async function resetWebInterface() {
     try {
         addLogEntry(`🔄 Áp dụng cơ chế Reset an toàn: Khôi phục Giao diện...`, 'info');
@@ -3471,10 +3791,10 @@ async function resetWebInterface() {
 
 // =======================================================
 
-// Helper: trả về delay ngẫu nhiên (5–10 giây) giữa các lần gửi chunk
+// Helper: trả về delay ngẫu nhiên (1–3 giây) giữa các lần gửi chunk
 function getRandomChunkDelay() {
-    const min = 5000; // 5s
-    const max = 10000; // 10s
+    const min = 1000; // 1s
+    const max = 3000; // 3s
     const delay = Math.floor(Math.random() * (max - min + 1)) + min;
     return delay;
 }
@@ -3503,9 +3823,10 @@ function startKeepAliveLoop() {
         };
 
         window.mmxKeepAliveId = requestAnimationFrame(loop);
-        if (typeof addLogEntry === 'function') {
-            addLogEntry('🩺 Keep-Alive: Đã kích hoạt vòng requestAnimationFrame để giữ tốc độ render ổn định.', 'info');
-        }
+        // Log đã được ẩn để bảo mật
+        // if (typeof addLogEntry === 'function') {
+        //     addLogEntry('🩺 Keep-Alive: Đã kích hoạt vòng requestAnimationFrame để giữ tốc độ render ổn định.', 'info');
+        // }
     } catch (e) {
         console.warn('Không thể khởi động keep-alive loop:', e);
     }
@@ -3570,9 +3891,10 @@ function createSilentAudio() {
         // Buffer đã được tạo với giá trị 0 (âm thanh câm)
         // Không cần fill vì mặc định đã là 0
         
-        if (typeof addLogEntry === 'function') {
-            addLogEntry('🔇 [KEEP-ALIVE] Đã tạo Silent Audio buffer', 'info');
-        }
+        // Log đã được ẩn để bảo mật
+        // if (typeof addLogEntry === 'function') {
+        //     addLogEntry('🔇 [KEEP-ALIVE] Đã tạo Silent Audio buffer', 'info');
+        // }
         return true;
     } catch (e) {
         console.warn('[KEEP-ALIVE] Lỗi tạo Silent Audio:', e);
@@ -3663,23 +3985,25 @@ function startKeepAliveLoop() {
             }
         }, 5000); // Phát lại mỗi 5 giây
         
-        // 4. Theo dõi visibility để cảnh báo
+        // 4. Theo dõi visibility để cảnh báo (đã ẩn log để bảo mật)
         const handleVisibilityChange = () => {
-            if (document.hidden) {
-                if (typeof addLogEntry === 'function') {
-                    addLogEntry('⚠️ [KEEP-ALIVE] Tab bị ẩn! Silent Audio đang hoạt động để giữ tab active...', 'warning');
-                }
-            } else {
-                if (typeof addLogEntry === 'function') {
-                    addLogEntry('✅ [KEEP-ALIVE] Tab đã hiện lại', 'info');
-                }
-            }
+            // Log đã được ẩn để bảo mật
+            // if (document.hidden) {
+            //     if (typeof addLogEntry === 'function') {
+            //         addLogEntry('⚠️ [KEEP-ALIVE] Tab bị ẩn! Silent Audio đang hoạt động để giữ tab active...', 'warning');
+            //     }
+            // } else {
+            //     if (typeof addLogEntry === 'function') {
+            //         addLogEntry('✅ [KEEP-ALIVE] Tab đã hiện lại', 'info');
+            //     }
+            // }
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
         
-        if (typeof addLogEntry === 'function') {
-            addLogEntry('🩺 [KEEP-ALIVE] Đã kích hoạt: Silent Audio + requestAnimationFrame để giữ tab active', 'info');
-        }
+        // Log đã được ẩn để bảo mật
+        // if (typeof addLogEntry === 'function') {
+        //     addLogEntry('🩺 [KEEP-ALIVE] Đã kích hoạt: Silent Audio + requestAnimationFrame để giữ tab active', 'info');
+        // }
     } catch (e) {
         console.warn('[KEEP-ALIVE] Không thể khởi động:', e);
     }
@@ -3705,9 +4029,10 @@ function stopKeepAliveLoop() {
         // Dừng Silent Audio
         stopSilentAudio();
         
-        if (typeof addLogEntry === 'function') {
-            addLogEntry('🛑 [KEEP-ALIVE] Đã dừng hoàn toàn: Silent Audio + requestAnimationFrame (tool bị tắt)', 'info');
-        }
+        // Log đã được ẩn để bảo mật
+        // if (typeof addLogEntry === 'function') {
+        //     addLogEntry('🛑 [KEEP-ALIVE] Đã dừng hoàn toàn: Silent Audio + requestAnimationFrame (tool bị tắt)', 'info');
+        // }
     } catch (e) {
         console.warn('[KEEP-ALIVE] Không thể dừng:', e);
     }
@@ -3759,10 +4084,10 @@ function stopKeepAliveLoop() {
         setInterval(() => {
             if (document.hidden && hiddenStartTime && (Date.now() - hiddenStartTime > 300000)) {
                 // Tab bị ẩn quá 5 phút, nhưng vẫn giữ Silent Audio chạy
-                // Chỉ log để theo dõi
-                if (typeof addLogEntry === 'function') {
-                    addLogEntry('⏰ [KEEP-ALIVE] Tab đã bị ẩn hơn 5 phút, nhưng Silent Audio vẫn hoạt động để giữ tab active', 'info');
-                }
+                // Log đã được ẩn để bảo mật
+                // if (typeof addLogEntry === 'function') {
+                //     addLogEntry('⏰ [KEEP-ALIVE] Tab đã bị ẩn hơn 5 phút, nhưng Silent Audio vẫn hoạt động để giữ tab active', 'info');
+                // }
             }
         }, 60000); // Kiểm tra mỗi phút
         
@@ -3887,27 +4212,22 @@ async function uSTZrHUt_IC() {
             }
         }
 
-        // Nếu có chunk thất bại và chưa kiểm tra cuối
-        // CHỈ reset khi 1 chunk cụ thể render lỗi, không reset khi retry failed chunks
-        if (failedChunks.length > 0 && !window.isFinalCheck) {
-            addLogEntry(`🔍 Phát hiện ${failedChunks.length} chunk thất bại. Bắt đầu xử lý lại...`, 'warning');
-            addLogEntry(`📋 Danh sách chunk thất bại: ${failedChunks.map(i => i + 1).join(', ')}`, 'info');
-            window.isFinalCheck = true;
-            window.retryCount = 0; // Reset bộ đếm retry
-            
-            // KHÔNG reset ở đây - chỉ nhảy đến chunk lỗi và retry
-            // Reset chỉ xảy ra khi 1 chunk cụ thể render lỗi (trong catch block hoặc timeout)
-            (async () => {
-                // Nhảy thẳng đến chunk lỗi đầu tiên, không đếm lại từ đầu
-                const firstFailedIndex = Math.min(...failedChunks);
-                ttuo$y_KhCV = firstFailedIndex;
-                addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên), chỉ xử lý chunks lỗi`, 'info');
-                setTimeout(uSTZrHUt_IC, 500); // Chờ ngắn rồi bắt đầu xử lý ngay
-            })();
+        // CƠ CHẾ RETRY MỚI: Mỗi chunk tự retry vô hạn khi lỗi, không cần phase retry riêng
+        // Kiểm tra xem tất cả chunks đã thành công chưa
+        const allChunksSuccess = window.chunkStatus && window.chunkStatus.every((status, idx) => {
+            // Chunk đã được xử lý và có blob hợp lệ
+            return status === 'success' && window.chunkBlobs && window.chunkBlobs[idx] !== null;
+        });
+
+        if (allChunksSuccess && window.chunkStatus.length === SI$acY.length) {
+            addLogEntry(`🎉 Tất cả ${SI$acY.length} chunks đã được xử lý xong!`, 'success');
+            addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
+            // CHỈ ghép file khi TẤT CẢ chunk đã thành công
+            tt__SfNwBHDebpWJOqrSTR();
             return;
         }
 
-        // Nếu đã kiểm tra cuối cùng hoặc không có chunk thất bại
+        // Nếu chưa xong tất cả chunks, tiếp tục xử lý chunk tiếp theo
         EfNjYNYj_O_CGB = ![];
         LrkOcBYz_$AGjPqXLWnyiATpCI[tQqGbytKzpHwhGmeQJucsrq(0x1fb)][tQqGbytKzpHwhGmeQJucsrq(0x1e1)] = tQqGbytKzpHwhGmeQJucsrq(0x258);
         lraDK$WDOgsXHRO[tQqGbytKzpHwhGmeQJucsrq(0x1fb)][tQqGbytKzpHwhGmeQJucsrq(0x1e1)] = tQqGbytKzpHwhGmeQJucsrq(0x209);
@@ -3915,43 +4235,6 @@ async function uSTZrHUt_IC() {
         LrkOcBYz_$AGjPqXLWnyiATpCI[tQqGbytKzpHwhGmeQJucsrq(0x243)] = ![];
         LrkOcBYz_$AGjPqXLWnyiATpCI[tQqGbytKzpHwhGmeQJucsrq(0x273)] = tQqGbytKzpHwhGmeQJucsrq(0x275);
         nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
-
-        if (window.isFinalCheck) {
-            const remainingFailedChunks = window.failedChunks.length;
-
-            if (remainingFailedChunks > 0) {
-                addLogEntry(`⚠️ Hoàn thành với ${SI$acY.length - remainingFailedChunks}/${SI$acY.length} chunk thành công.`, 'warning');
-                addLogEntry(`❌ ${remainingFailedChunks} chunk vẫn thất bại: ${window.failedChunks.map(i => i + 1).join(', ')}`, 'error');
-                addLogEntry(`🔄 Tiếp tục retry các chunk thất bại... (Lần ${window.totalRetryAttempts + 1})`, 'info');
-                addLogEntry(`⏳ Tool sẽ retry VÔ HẠN cho đến khi TẤT CẢ chunk thành công!`, 'info');
-                addLogEntry(`📊 Thống kê: ${window.totalRetryAttempts} lần retry đã thực hiện`, 'info');
-                
-                // KHÔNG reset ở đây - chỉ nhảy đến chunk lỗi và retry
-                // Reset chỉ xảy ra khi 1 chunk cụ thể render lỗi (trong catch block hoặc timeout)
-                (async () => {
-                    // KHÔNG ghép file khi còn chunk thất bại - tiếp tục retry VÔ HẠN
-                    window.retryCount = 0; // Reset bộ đếm retry
-                    window.totalRetryAttempts++; // Tăng bộ đếm retry tổng thể
-                    // Nhảy thẳng đến chunk lỗi đầu tiên, không đếm lại từ đầu
-                    const firstFailedIndex = Math.min(...window.failedChunks);
-                    ttuo$y_KhCV = firstFailedIndex;
-                    addLogEntry(`🔄 RETRY MODE: Nhảy thẳng đến chunk ${firstFailedIndex + 1} (chunk lỗi đầu tiên), chỉ xử lý chunks lỗi`, 'info');
-                    setTimeout(uSTZrHUt_IC, 500); // Chờ ngắn rồi bắt đầu lại ngay
-                })();
-                return;
-            } else {
-                addLogEntry(`🎉 Hoàn thành xử lý tất cả chunks (đã thử lại các chunk thất bại)!`, 'success');
-                addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
-                // CHỈ ghép file khi TẤT CẢ chunk đã thành công
-                tt__SfNwBHDebpWJOqrSTR();
-            }
-        } else {
-            addLogEntry(`🎉 Tất cả ${SI$acY.length} chunks đã được xử lý xong!`, 'success');
-            addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
-            // CHỈ ghép file khi TẤT CẢ chunk đã thành công
-            tt__SfNwBHDebpWJOqrSTR();
-        }
-        return;
     }
 
     nWHrScjZnIyNYzztyEWwM(ttuo$y_KhCV, SI$acY[tQqGbytKzpHwhGmeQJucsrq(0x216)]);
@@ -4036,30 +4319,21 @@ async function uSTZrHUt_IC() {
             }
         }
 
-        // Nếu đang trong giai đoạn kiểm tra cuối và chunk này thất bại, thông báo đang xử lý lại
-        if (window.isFinalCheck && window.chunkStatus[ttuo$y_KhCV] === 'failed') {
-            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang xử lý lại chunk thất bại...`, 'warning');
-        }
-        
-        // QUAN TRỌNG: Nếu đang trong RETRY MODE và chunk này không phải failed, không xử lý
-        if (window.isFinalCheck && window.chunkStatus[ttuo$y_KhCV] === 'success') {
-            // Chunk này đã thành công, không cần xử lý lại
-            addLogEntry(`⏭️ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, bỏ qua trong retry mode`, 'info');
-            // Nhảy đến chunk lỗi tiếp theo
-            const remainingFailedChunks = window.failedChunks.filter(idx => idx > ttuo$y_KhCV);
-            if (remainingFailedChunks.length > 0) {
-                const nextFailedIndex = Math.min(...remainingFailedChunks);
-                addLogEntry(`⏭️ Nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
-                ttuo$y_KhCV = nextFailedIndex;
-                setTimeout(uSTZrHUt_IC, 500);
-                return;
-            } else {
-                // Không còn chunk lỗi nào, kết thúc
-                addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
-                ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
+        // CƠ CHẾ RETRY MỚI: Mỗi chunk tự retry vô hạn khi lỗi, không cần kiểm tra isFinalCheck
+        // Nếu chunk này đã thành công và có blob hợp lệ, bỏ qua và chuyển sang chunk tiếp theo
+        if (window.chunkStatus && window.chunkStatus[ttuo$y_KhCV] === 'success' && 
+            window.chunkBlobs && window.chunkBlobs[ttuo$y_KhCV] !== null) {
+            addLogEntry(`⏭️ [Chunk ${ttuo$y_KhCV + 1}] Đã thành công, chuyển sang chunk tiếp theo`, 'info');
+            ttuo$y_KhCV++;
+            if (ttuo$y_KhCV >= SI$acY.length) {
+                // Đã xử lý xong tất cả chunks
+                addLogEntry(`✅ Đã xử lý xong tất cả chunks!`, 'success');
+                ttuo$y_KhCV = SI$acY.length;
                 setTimeout(uSTZrHUt_IC, 1000);
                 return;
             }
+            setTimeout(uSTZrHUt_IC, getRandomChunkDelay());
+            return;
         }
 
         // Logic thông minh: Tìm bất kỳ nút nào có sẵn để gửi chunk
@@ -4223,6 +4497,12 @@ async function uSTZrHUt_IC() {
         try {
             window.currentChunkText = chunkText;
             window.currentChunkIndex = ttuo$y_KhCV;
+            
+            // CHẾ ĐỘ MỚI: Set INTERCEPT_CURRENT_TEXT để interceptor thay text trong payload
+            if (window.USE_PAYLOAD_MODE) {
+                window.INTERCEPT_CURRENT_TEXT = chunkText;
+                window.INTERCEPT_CURRENT_INDEX = ttuo$y_KhCV;
+            }
         } catch (e) {
             console.warn('Không thể lưu currentChunkText:', e);
         }
@@ -4247,202 +4527,25 @@ async function uSTZrHUt_IC() {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
         
         // =======================================================
-        // == ĐẢM BẢO TEXT KHÔNG BỊ THAY ĐỔI BỞI VĂN BẢN MẶC ĐỊNH ==
-        // == PHƯƠNG ÁN 6: KẾT HỢP NHIỀU LỚP BẢO VỆ ==
+        // == XỬ LÝ TEXTAREA: CHẾ ĐỘ MỚI (PAYLOAD MODE) vs CHẾ ĐỘ CŨ ==
         // =======================================================
-        
-        // Lớp 1: MutationObserver theo dõi textarea và tự động set lại nếu bị thay đổi
         let textObserver = null;
-        let isSettingText = false; // Flag để tránh vòng lặp vô hạn
+        let isSettingText = false;
         
-        try {
-            textObserver = new MutationObserver((mutations) => {
-                // Chỉ xử lý nếu không phải đang set text từ tool
-                if (isSettingText) return;
-                
-                const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
-                
-                // Nếu text bị thay đổi và không phải text của chunk, set lại ngay
-                if (currentText !== chunkText && currentText.length > 0) {
-                    // Kiểm tra xem có phải văn bản mặc định không (chứa các từ khóa)
-                    const defaultTextKeywords = ['delighted', 'assist', 'voice services', 'choose a voice', 'creative audio journey'];
-                    const isDefaultText = defaultTextKeywords.some(keyword => 
-                        currentText.toLowerCase().includes(keyword.toLowerCase())
-                    );
-                    
-                    if (isDefaultText || currentText !== chunkText) {
-                        isSettingText = true;
-                        setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText);
-                        addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] MutationObserver phát hiện text bị thay đổi, đã tự động set lại`, 'warning');
-                        
-                        // Trigger event
-                        try {
-                            const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-                            rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
-                        } catch (e) {
-                            // Bỏ qua
-                        }
-                        
-                        setTimeout(() => { isSettingText = false; }, 100);
-                    }
-                }
-            });
+        if (window.USE_PAYLOAD_MODE) {
+            // CHẾ ĐỘ MỚI: Set text thật vào textarea một lần ngắn gọn, sau đó interceptor sẽ thay trong payload
+            // Log đã được ẩn để bảo mật
+            // addLogEntry(`🚀 [Chunk ${ttuo$y_KhCV + 1}] Đang dùng chế độ PAYLOAD MODE - Set text thật vào textarea một lần, sau đó thay trong payload`, 'info');
             
-            // Bắt đầu observe textarea
-            textObserver.observe(rUxbIRagbBVychZ$GfsogD, {
-                attributes: false,
-                childList: false,
-                subtree: false,
-                characterData: true,
-                characterDataOldValue: true
-            });
-            
-            // Observe cả attribute value
-            textObserver.observe(rUxbIRagbBVychZ$GfsogD, {
-                attributes: true,
-                attributeFilter: ['value'],
-                childList: false,
-                subtree: false
-            });
-            
-            addLogEntry(`👁️ [Chunk ${ttuo$y_KhCV + 1}] Đã khởi tạo MutationObserver để theo dõi textarea`, 'info');
-        } catch (observerError) {
-            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Không thể tạo MutationObserver: ${observerError.message}`, 'warning');
-        }
-        
-        // Lớp 2: Set text nhiều lần liên tiếp (8 lần) để đảm bảo
-        // LƯU Ý: Mỗi lần set là GÁN GIÁ TRỊ MỚI (value = chunkText), KHÔNG PHẢI APPEND
-        // => KHÔNG BỊ LẶP LẠI TEXT
-        const SET_TEXT_COUNT = 8;
-        addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang set text ${SET_TEXT_COUNT} lần liên tiếp để đảm bảo...`, 'info');
-
-        // WATCHDOG: giới hạn tối đa 10 giây cho cả vòng set text 8 lần
-        const MAX_SET_TEXT_DURATION_MS = 10000;
-        const setTextStartTime = Date.now();
-        
-        for (let i = 0; i < SET_TEXT_COUNT; i++) {
-            // Nếu đã quá 10 giây mà vẫn còn trong vòng lặp → coi là lỗi, đánh dấu failed và thoát
-            const elapsed = Date.now() - setTextStartTime;
-            if (elapsed > MAX_SET_TEXT_DURATION_MS) {
-                const currentIndex = ttuo$y_KhCV;
-                addLogEntry(`⏰ [Chunk ${currentIndex + 1}] Vòng set text ${SET_TEXT_COUNT} lần vượt quá ${Math.round(MAX_SET_TEXT_DURATION_MS/1000)} giây (đã chạy ~${Math.round(elapsed/1000)} giây). Đánh dấu chunk THẤT BẠI để retry và chuyển sang chunk tiếp theo.`, 'warning');
-
-                if (!window.chunkStatus) window.chunkStatus = [];
-                window.chunkStatus[currentIndex] = 'failed';
-
-                if (!window.failedChunks) window.failedChunks = [];
-                if (!window.failedChunks.includes(currentIndex)) {
-                    window.failedChunks.push(currentIndex);
-                }
-
-                // Không giữ cờ sending cho chunk này nữa để hệ thống có thể retry
-                if (window.sendingChunk === currentIndex) {
-                    window.sendingChunk = null;
-                }
-
-                // Clear timeout render nếu đã được thiết lập cho chunk này
-                if (window.chunkTimeoutIds && window.chunkTimeoutIds[currentIndex]) {
-                    clearTimeout(window.chunkTimeoutIds[currentIndex]);
-                    delete window.chunkTimeoutIds[currentIndex];
-                }
-
-                // Chuyển sang chunk tiếp theo, chunk hiện tại sẽ được retry ở phase cuối
-                ttuo$y_KhCV = currentIndex + 1;
-                addLogEntry(`🔄 Đã đánh dấu [Chunk ${currentIndex + 1}] thất bại do watchdog và sẽ chuyển sang chunk ${ttuo$y_KhCV + 1} sau delay ngẫu nhiên.`, 'info');
-
-                setTimeout(uSTZrHUt_IC, getRandomChunkDelay());
-
-                // Thoát sớm, không tiếp tục xử lý bước này nữa
-                return;
-            }
-
-            isSettingText = true;
-            setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText); // Gán giá trị mới, không append
-            
-            // KEEP-ALIVE: Phát Silent Audio để giữ tab active (chống browser throttle)
-            if (window.mmxKeepAliveRunning) {
-                playSilentAudio();
-            }
-            
-            // Trigger event để website nhận biết
+            // Set text thật vào textarea một lần để Minimax validate, nhưng không giữ lâu
+            // Interceptor sẽ đảm bảo payload có text thật khi gửi đi
             try {
-                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-                rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
-            } catch (e) {
-                // Bỏ qua
-            }
-            
-            // Chờ 50ms giữa các lần set
-            await new Promise(resolve => setTimeout(resolve, 50));
-            isSettingText = false;
-        }
-        
-        addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set text ${SET_TEXT_COUNT} lần liên tiếp`, 'info');
-        
-        // =======================================================
-        // == QUAN SÁT SAU KHI SET TEXT: Chờ 2 giây để kiểm tra Minimax có thay đổi text không ==
-        // =======================================================
-        addLogEntry(`👁️ [Chunk ${ttuo$y_KhCV + 1}] Đang chờ 2 giây để quan sát xem Minimax có thay đổi text không...`, 'info');
-        
-        // KEEP-ALIVE: Phát Silent Audio trong thời gian chờ
-        if (window.mmxKeepAliveRunning) {
-            playSilentAudio();
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Kiểm tra text sau 2 giây
-        const observedText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] || '';
-        if (observedText !== chunkText) {
-            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN: Minimax đã thay đổi text sau khi set! (Chuẩn hóa: ${chunkText.length} ký tự, Hiện tại: ${observedText.length} ký tự)`, 'warning');
-            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang set lại text đúng...`, 'warning');
-            
-            // Set lại text đúng
-            isSettingText = true;
-            setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText);
-            
-            try {
-                rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('input', { bubbles: true }));
-                rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('change', { bubbles: true }));
-            } catch (e) {
-                // Bỏ qua
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 100));
-            isSettingText = false;
-            
-            // Kiểm tra lại lần nữa
-            const recheckText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] || '';
-            if (recheckText === chunkText) {
-                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set lại text thành công sau khi Minimax thay đổi`, 'info');
-            } else {
-                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] VẪN BỊ THAY ĐỔI sau khi set lại! (${recheckText.length} ký tự). Có thể Minimax đang can thiệp mạnh.`, 'warning');
-            }
-        } else {
-            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Sau 2 giây quan sát: Text KHÔNG bị Minimax thay đổi (${observedText.length} ký tự)`, 'info');
-        }
-        
-        // Lớp 3: setInterval giám sát liên tục trong 500ms trước khi click
-        let monitoringInterval = null;
-        let monitoringCount = 0;
-        const MAX_MONITORING_COUNT = 10; // 10 lần x 50ms = 500ms
-        
-        monitoringInterval = setInterval(() => {
-            monitoringCount++;
-            
-            // KEEP-ALIVE: Phát Silent Audio trong vòng lặp monitoring
-            if (window.mmxKeepAliveRunning) {
-                playSilentAudio();
-            }
-            
-            const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
-            
-            if (currentText !== chunkText) {
-                // Text bị thay đổi, set lại ngay
-                isSettingText = true;
+                // Set text thật vào textarea một lần (ngắn gọn, không cần giữ lâu)
                 setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText);
-                addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] setInterval phát hiện text bị thay đổi (lần ${monitoringCount}), đã set lại`, 'warning');
+                // Chờ một chút để đảm bảo set hoàn tất
+                await new Promise(resolve => setTimeout(resolve, 200));
                 
+                // Trigger event để website nhận biết
                 try {
                     const inputEvent = new Event('input', { bubbles: true, cancelable: true });
                     rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
@@ -4450,53 +4553,271 @@ async function uSTZrHUt_IC() {
                     // Bỏ qua
                 }
                 
-                setTimeout(() => { isSettingText = false; }, 50);
+                // Log đã được ẩn để bảo mật
+                // addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set text thật vào textarea một lần. Interceptor sẽ đảm bảo payload có text thật khi gửi`, 'info');
+            } catch (e) {
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Lỗi khi set text vào textarea: ${e.message}`, 'warning');
+            }
+        } else {
+            // CHẾ ĐỘ CŨ: Set text đầy đủ vào textarea như trước
+            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang dùng chế độ CŨ - Set text vào textarea`, 'info');
+            
+            // Lớp 1: MutationObserver theo dõi textarea và tự động set lại nếu bị thay đổi
+            try {
+                textObserver = new MutationObserver((mutations) => {
+                    // Chỉ xử lý nếu không phải đang set text từ tool
+                    if (isSettingText) return;
+                    
+                    const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+                    
+                    // Nếu text bị thay đổi và không phải text của chunk, set lại ngay
+                    if (currentText !== chunkText && currentText.length > 0) {
+                        // Kiểm tra xem có phải văn bản mặc định không (chứa các từ khóa)
+                        const defaultTextKeywords = ['delighted', 'assist', 'voice services', 'choose a voice', 'creative audio journey'];
+                        const isDefaultText = defaultTextKeywords.some(keyword => 
+                            currentText.toLowerCase().includes(keyword.toLowerCase())
+                        );
+                        
+                        if (isDefaultText || currentText !== chunkText) {
+                            isSettingText = true;
+                            setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText);
+                            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] MutationObserver phát hiện text bị thay đổi, đã tự động set lại`, 'warning');
+                            
+                            // Trigger event
+                            try {
+                                const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                                rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
+                            } catch (e) {
+                                // Bỏ qua
+                            }
+                            
+                            setTimeout(() => { isSettingText = false; }, 100);
+                        }
+                    }
+                });
+                
+                // Bắt đầu observe textarea
+                textObserver.observe(rUxbIRagbBVychZ$GfsogD, {
+                    attributes: false,
+                    childList: false,
+                    subtree: false,
+                    characterData: true,
+                    characterDataOldValue: true
+                });
+                
+                // Observe cả attribute value
+                textObserver.observe(rUxbIRagbBVychZ$GfsogD, {
+                    attributes: true,
+                    attributeFilter: ['value'],
+                    childList: false,
+                    subtree: false
+                });
+                
+                addLogEntry(`👁️ [Chunk ${ttuo$y_KhCV + 1}] Đã khởi tạo MutationObserver để theo dõi textarea`, 'info');
+            } catch (observerError) {
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Không thể tạo MutationObserver: ${observerError.message}`, 'warning');
             }
             
-            // Dừng sau 500ms
-            if (monitoringCount >= MAX_MONITORING_COUNT) {
+            // Lớp 2: Set text nhiều lần liên tiếp (8 lần) để đảm bảo
+            const SET_TEXT_COUNT = 8;
+            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang set text ${SET_TEXT_COUNT} lần liên tiếp để đảm bảo...`, 'info');
+
+            // WATCHDOG: giới hạn tối đa 10 giây cho cả vòng set text 8 lần
+            const MAX_SET_TEXT_DURATION_MS = 10000;
+            const setTextStartTime = Date.now();
+            
+            for (let i = 0; i < SET_TEXT_COUNT; i++) {
+                // Nếu đã quá 10 giây mà vẫn còn trong vòng lặp → coi là lỗi, đánh dấu failed và thoát
+                const elapsed = Date.now() - setTextStartTime;
+                if (elapsed > MAX_SET_TEXT_DURATION_MS) {
+                    const currentIndex = ttuo$y_KhCV;
+                    addLogEntry(`⏰ [Chunk ${currentIndex + 1}] Vòng set text ${SET_TEXT_COUNT} lần vượt quá ${Math.round(MAX_SET_TEXT_DURATION_MS/1000)} giây (đã chạy ~${Math.round(elapsed/1000)} giây). Đánh dấu chunk THẤT BẠI để retry và chuyển sang chunk tiếp theo.`, 'warning');
+
+                    if (!window.chunkStatus) window.chunkStatus = [];
+                    window.chunkStatus[currentIndex] = 'failed';
+
+                    if (!window.failedChunks) window.failedChunks = [];
+                    if (!window.failedChunks.includes(currentIndex)) {
+                        window.failedChunks.push(currentIndex);
+                    }
+
+                    // Không giữ cờ sending cho chunk này nữa để hệ thống có thể retry
+                    if (window.sendingChunk === currentIndex) {
+                        window.sendingChunk = null;
+                    }
+
+                    // Clear timeout render nếu đã được thiết lập cho chunk này
+                    if (window.chunkTimeoutIds && window.chunkTimeoutIds[currentIndex]) {
+                        clearTimeout(window.chunkTimeoutIds[currentIndex]);
+                        delete window.chunkTimeoutIds[currentIndex];
+                    }
+
+                    // CƠ CHẾ RETRY MỚI: Reset và retry lại chunk này vô hạn, không chuyển sang chunk tiếp theo
+                    addLogEntry(`🔄 [Chunk ${currentIndex + 1}] Thất bại do watchdog - Reset và retry lại chunk này vô hạn`, 'warning');
+                    
+                    // Reset flag sendingChunk để cho phép retry
+                    if (window.sendingChunk === currentIndex) {
+                        window.sendingChunk = null;
+                    }
+                    
+                    // Clear timeout render nếu đã được thiết lập cho chunk này
+                    if (window.chunkTimeoutIds && window.chunkTimeoutIds[currentIndex]) {
+                        clearTimeout(window.chunkTimeoutIds[currentIndex]);
+                        delete window.chunkTimeoutIds[currentIndex];
+                    }
+                    
+                    // Cleanup data rác và reset web interface trước khi retry
+                    (async () => {
+                        await cleanupChunkData(currentIndex); // Cleanup data rác trước
+                        await resetWebInterface(); // Reset web interface
+                        addLogEntry(`🔄 [Chunk ${currentIndex + 1}] Đã cleanup và reset web, retry lại chunk này...`, 'info');
+                        ttuo$y_KhCV = currentIndex; // Giữ nguyên chunk index để retry
+                        setTimeout(uSTZrHUt_IC, getRandomChunkDelay()); // Retry sau delay
+                    })();
+                    
+                    // Thoát sớm, không tiếp tục xử lý bước này nữa
+                    return;
+                }
+
+                isSettingText = true;
+                setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText); // Gán giá trị mới, không append
+                
+                // KEEP-ALIVE: Phát Silent Audio để giữ tab active (chống browser throttle)
+                if (window.mmxKeepAliveRunning) {
+                    playSilentAudio();
+                }
+                
+                // Trigger event để website nhận biết
+                try {
+                    const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                    rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
+                } catch (e) {
+                    // Bỏ qua
+                }
+                
+                // Chờ 50ms giữa các lần set
+                await new Promise(resolve => setTimeout(resolve, 50));
+                isSettingText = false;
+            }
+            
+            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set text ${SET_TEXT_COUNT} lần liên tiếp`, 'info');
+            
+            // Quan sát sau khi set text: Chờ 2 giây để kiểm tra Minimax có thay đổi text không
+            addLogEntry(`👁️ [Chunk ${ttuo$y_KhCV + 1}] Đang chờ 2 giây để quan sát xem Minimax có thay đổi text không...`, 'info');
+            
+            // KEEP-ALIVE: Phát Silent Audio trong thời gian chờ
+            if (window.mmxKeepAliveRunning) {
+                playSilentAudio();
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Kiểm tra text sau 2 giây
+            const observedText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] || '';
+            if (observedText !== chunkText) {
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] PHÁT HIỆN: Minimax đã thay đổi text sau khi set! (Chuẩn hóa: ${chunkText.length} ký tự, Hiện tại: ${observedText.length} ký tự)`, 'warning');
+                addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đang set lại text đúng...`, 'warning');
+                
+                // Set lại text đúng
+                isSettingText = true;
+                setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText);
+                
+                try {
+                    rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('input', { bubbles: true }));
+                    rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('change', { bubbles: true }));
+                } catch (e) {
+                    // Bỏ qua
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                isSettingText = false;
+                
+                // Kiểm tra lại lần nữa
+                const recheckText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] || '';
+                if (recheckText === chunkText) {
+                    addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã set lại text thành công sau khi Minimax thay đổi`, 'info');
+                } else {
+                    addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] VẪN BỊ THAY ĐỔI sau khi set lại! (${recheckText.length} ký tự). Có thể Minimax đang can thiệp mạnh.`, 'warning');
+                }
+            } else {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Sau 2 giây quan sát: Text KHÔNG bị Minimax thay đổi (${observedText.length} ký tự)`, 'info');
+            }
+            
+            // Lớp 3: setInterval giám sát liên tục trong 500ms trước khi click
+            let monitoringInterval = null;
+            let monitoringCount = 0;
+            const MAX_MONITORING_COUNT = 10; // 10 lần x 50ms = 500ms
+            
+            monitoringInterval = setInterval(() => {
+                monitoringCount++;
+                
+                // KEEP-ALIVE: Phát Silent Audio trong vòng lặp monitoring
+                if (window.mmxKeepAliveRunning) {
+                    playSilentAudio();
+                }
+                
+                const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+                
+                if (currentText !== chunkText) {
+                    // Text bị thay đổi, set lại ngay
+                    isSettingText = true;
+                    setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, chunkText);
+                    addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] setInterval phát hiện text bị thay đổi (lần ${monitoringCount}), đã set lại`, 'warning');
+                    
+                    try {
+                        const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                        rUxbIRagbBVychZ$GfsogD.dispatchEvent(inputEvent);
+                    } catch (e) {
+                        // Bỏ qua
+                    }
+                    
+                    setTimeout(() => { isSettingText = false; }, 50);
+                }
+                
+                // Dừng sau 500ms
+                if (monitoringCount >= MAX_MONITORING_COUNT) {
+                    clearInterval(monitoringInterval);
+                    monitoringInterval = null;
+                }
+            }, 50); // Kiểm tra mỗi 50ms
+            
+            // Chờ 500ms để setInterval hoàn thành giám sát
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Dọn dẹp: Dừng setInterval nếu còn chạy
+            if (monitoringInterval) {
                 clearInterval(monitoringInterval);
                 monitoringInterval = null;
             }
-        }, 50); // Kiểm tra mỗi 50ms
-        
-        // Chờ 500ms để setInterval hoàn thành giám sát
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Dọn dẹp: Dừng setInterval nếu còn chạy
-        if (monitoringInterval) {
-            clearInterval(monitoringInterval);
-            monitoringInterval = null;
-        }
-        
-        // Lớp 4: Kiểm tra lần cuối và force set nếu cần
-        // --- FIX: Kiểm tra và xóa text rác lần cuối ngay trên ô input ---
-        const finalCheckText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
-        let finalText = chunkText;
+            
+            // Lớp 4: Kiểm tra lần cuối và force set nếu cần
+            const finalCheckText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)];
+            let finalText = chunkText;
 
-        // Regex lọc rác (giống logic trong normalizeChunkText)
-        finalText = finalText.replace(/Hello, I'm delighted[\s\S]*?journey together/gi, "");
-        finalText = finalText.replace(/Xin chào, tôi rất vui[\s\S]*?sáng tạo âm thanh nhé\.?/gi, "");
-        finalText = finalText.replace(/Choose a voice that resonates with you/gi, "");
-        finalText = finalText.replace(/Hãy chọn một giọng nói phù hợp/gi, "");
+            // Regex lọc rác (giống logic trong normalizeChunkText)
+            finalText = finalText.replace(/Hello, I'm delighted[\s\S]*?journey together/gi, "");
+            finalText = finalText.replace(/Xin chào, tôi rất vui[\s\S]*?sáng tạo âm thanh nhé\.?/gi, "");
+            finalText = finalText.replace(/Choose a voice that resonates with you/gi, "");
+            finalText = finalText.replace(/Hãy chọn một giọng nói phù hợp/gi, "");
 
-        if (finalText !== finalCheckText) {
-            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Phát hiện text rác hoặc sai lệch, đã lọc sạch và set lại`, 'warning');
-            isSettingText = true;
-            setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, finalText);
+            if (finalText !== finalCheckText) {
+                addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Phát hiện text rác hoặc sai lệch, đã lọc sạch và set lại`, 'warning');
+                isSettingText = true;
+                setReactTextareaValue(rUxbIRagbBVychZ$GfsogD, finalText);
 
-            try {
-                // Gửi sự kiện 'input' và 'change' để web biết ta đã thay đổi, đè lên auto-fill
-                rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('input', { bubbles: true }));
-                rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('change', { bubbles: true }));
-            } catch (e) {
-                // Bỏ qua
+                try {
+                    // Gửi sự kiện 'input' và 'change' để web biết ta đã thay đổi, đè lên auto-fill
+                    rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('input', { bubbles: true }));
+                    rUxbIRagbBVychZ$GfsogD.dispatchEvent(new Event('change', { bubbles: true }));
+                } catch (e) {
+                    // Bỏ qua
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 50));
+                isSettingText = false;
+            } else {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text đúng (${finalCheckText.length} ký tự)`, 'info');
             }
-
-            await new Promise(resolve => setTimeout(resolve, 50));
-            isSettingText = false;
-        } else {
-            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text đúng (${finalCheckText.length} ký tự)`, 'info');
         }
         
         // =======================================================
@@ -4666,40 +4987,48 @@ async function uSTZrHUt_IC() {
         // Nếu sau 3 giây độ dài trong textarea KHÁC với độ dài đã chuẩn hóa,
         // coi như Minimax đã chèn thêm văn bản → đánh dấu chunk thất bại
         // để hệ thống retry lại giống các chunk lỗi khác.
+        // LƯU Ý: Khi USE_PAYLOAD_MODE bật, textarea đã được clear nên không cần kiểm tra này.
         // =======================================================
         try {
-            setTimeout(() => {
-                try {
-                    if (!window.expectedChunkLengths) return;
-                    const expectedLen = window.expectedChunkLengths[ttuo$y_KhCV];
-                    if (typeof expectedLen !== 'number') return;
+            // CHẾ ĐỘ MỚI: Bỏ qua kiểm tra độ dài khi USE_PAYLOAD_MODE bật
+            if (window.USE_PAYLOAD_MODE) {
+                // Log đã được ẩn để bảo mật
+                // addLogEntry(`ℹ️ [Chunk ${ttuo$y_KhCV + 1}] PAYLOAD MODE: Bỏ qua kiểm tra độ dài textarea (textarea đã được clear, text thật đi qua payload)`, 'info');
+            } else {
+                // CHẾ ĐỘ CŨ: Vẫn kiểm tra độ dài như trước
+                setTimeout(() => {
+                    try {
+                        if (!window.expectedChunkLengths) return;
+                        const expectedLen = window.expectedChunkLengths[ttuo$y_KhCV];
+                        if (typeof expectedLen !== 'number') return;
 
-                    const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] || '';
-                    const actualLen = currentText.length;
+                        const currentText = rUxbIRagbBVychZ$GfsogD[tQqGbytKzpHwhGmeQJucsrq(0x24c)] || '';
+                        const actualLen = currentText.length;
 
-                    if (actualLen !== expectedLen) {
-                        addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Phát hiện văn bản bị thay đổi sau khi gửi (chuẩn hóa: ${expectedLen} ký tự, hiện tại: ${actualLen} ký tự). Đánh dấu chunk THẤT BẠI để retry.`, 'warning');
+                        if (actualLen !== expectedLen) {
+                            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Phát hiện văn bản bị thay đổi sau khi gửi (chuẩn hóa: ${expectedLen} ký tự, hiện tại: ${actualLen} ký tự). Đánh dấu chunk THẤT BẠI để retry.`, 'warning');
 
-                        // Đánh dấu thất bại giống các nhánh lỗi khác
-                        if (!window.chunkStatus) window.chunkStatus = [];
-                        window.chunkStatus[ttuo$y_KhCV] = 'failed';
+                            // Đánh dấu thất bại giống các nhánh lỗi khác
+                            if (!window.chunkStatus) window.chunkStatus = [];
+                            window.chunkStatus[ttuo$y_KhCV] = 'failed';
 
-                        if (!window.failedChunks) window.failedChunks = [];
-                        if (!window.failedChunks.includes(ttuo$y_KhCV)) {
-                            window.failedChunks.push(ttuo$y_KhCV);
+                            if (!window.failedChunks) window.failedChunks = [];
+                            if (!window.failedChunks.includes(ttuo$y_KhCV)) {
+                                window.failedChunks.push(ttuo$y_KhCV);
+                            }
+
+                            // Không giữ cờ sending cho chunk này nữa
+                            if (window.sendingChunk === ttuo$y_KhCV) {
+                                window.sendingChunk = null;
+                            }
+                        } else {
+                            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Xác minh độ dài sau khi gửi: KHỚP (${actualLen} ký tự)`, 'info');
                         }
-
-                        // Không giữ cờ sending cho chunk này nữa
-                        if (window.sendingChunk === ttuo$y_KhCV) {
-                            window.sendingChunk = null;
-                        }
-                    } else {
-                        addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Xác minh độ dài sau khi gửi: KHỚP (${actualLen} ký tự)`, 'info');
+                    } catch (lengthCheckError) {
+                        console.warn('Lỗi khi kiểm tra lại độ dài chunk sau 3 giây:', lengthCheckError);
                     }
-                } catch (lengthCheckError) {
-                    console.warn('Lỗi khi kiểm tra lại độ dài chunk sau 3 giây:', lengthCheckError);
-                }
-            }, 3000);
+                }, 3000);
+            }
         } catch (e) {
             console.warn('Không thể thiết lập vòng xác minh độ dài sau khi gửi chunk:', e);
         }
@@ -4710,6 +5039,20 @@ async function uSTZrHUt_IC() {
                 textObserver.disconnect();
                 textObserver = null;
                 addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã dừng MutationObserver`, 'info');
+            }
+            
+            // CHẾ ĐỘ MỚI: Clear INTERCEPT_CURRENT_TEXT sau khi request đã được gửi
+            if (window.USE_PAYLOAD_MODE) {
+                // Chờ thêm một chút để đảm bảo request đã được intercept và xử lý
+                setTimeout(() => {
+                    if (window.INTERCEPT_CURRENT_TEXT && window.INTERCEPT_CURRENT_INDEX === ttuo$y_KhCV) {
+                        window.INTERCEPT_CURRENT_TEXT = null;
+                        window.INTERCEPT_CURRENT_INDEX = null;
+                        // Clear flag log để chunk tiếp theo có thể log lại
+                        window._interceptLoggedForChunk = null;
+                        addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã clear INTERCEPT_CURRENT_TEXT sau khi gửi request`, 'info');
+                    }
+                }, 2000); // Chờ 2 giây để đảm bảo request đã được gửi
             }
         }, 1000);
         
@@ -4778,13 +5121,17 @@ async function uSTZrHUt_IC() {
             
             addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Đã timeout sau 60 giây.`, 'warning');
             
-            // Sau khi reset, tiếp tục với chunk tiếp theo (không retry chunk lỗi ngay)
+            // CƠ CHẾ RETRY MỚI: Cleanup data rác và retry lại chunk này vô hạn
+            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Timeout - Cleanup data rác và retry lại chunk này vô hạn cho đến khi thành công`, 'warning');
             window.retryCount = 0; // Reset bộ đếm retry
-            ttuo$y_KhCV++; // Chuyển sang chunk tiếp theo
-            addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
-            addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${SI$acY.length} chunks đã xử lý`, 'info');
-            addLogEntry(`💡 Chunk bị timeout sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
-            setTimeout(uSTZrHUt_IC, getRandomChunkDelay()); // Chờ ngẫu nhiên 8–15 giây rồi tiếp tục với chunk tiếp theo
+            
+            // Cleanup data rác và reset trước khi retry
+            (async () => {
+                await cleanupChunkData(ttuo$y_KhCV); // Cleanup data rác trước
+                await resetWebInterface(); // Reset web interface
+                // KHÔNG tăng ttuo$y_KhCV, giữ nguyên để retry lại chunk này
+                setTimeout(uSTZrHUt_IC, getRandomChunkDelay()); // Retry sau delay 1-3 giây
+            })();
         }, 60000); // Timeout 60 giây cho mỗi chunk
         
         // QUAN TRỌNG: Gọi igyo$uwVChUzI() để tạo MutationObserver detect audio element
@@ -4824,134 +5171,88 @@ async function uSTZrHUt_IC() {
             return; // Dừng xử lý chunk này
         }
         
-        const MAX_RETRIES = 5;
-        window.retryCount++;
+        // CƠ CHẾ RETRY MỚI: Cleanup data rác và retry lại chunk này vô hạn, không giới hạn số lần
+        addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Render lỗi - Cleanup data rác và retry lại chunk này vô hạn cho đến khi thành công`, 'warning');
+        
+        // Reset flag sendingChunk để cho phép retry
+        window.sendingChunk = null;
 
-        if (window.retryCount <= MAX_RETRIES) {
-            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Thử lại lần ${window.retryCount}/${MAX_RETRIES}...`, 'warning');
-
-            // QUAN TRỌNG: Khi chunk render lỗi, LUÔN reset web trước khi retry
-            // Không kiểm tra checkWebReady() vì chunk đã lỗi, cần reset để đảm bảo trạng thái sạch
-            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Render lỗi - Reset web trước khi retry lần ${window.retryCount}...`, 'info');
-            addLogEntry(`🔄 Đang reset web về trạng thái ban đầu...`, 'info');
-            addLogEntry(`🔄 Đang khôi phục web về trạng thái như lúc gửi chunk thành công...`, 'info');
-            
-            // Reset flag sendingChunk để cho phép retry
-            window.sendingChunk = null;
-
-            // QUAN TRỌNG: Sử dụng resetWebInterface() để đảm bảo cleanup audio được thực hiện
+        // QUAN TRỌNG: Cleanup data rác trước, sau đó reset web interface
+        try {
+            await cleanupChunkData(ttuo$y_KhCV); // Cleanup data rác của chunk này trước
+            await resetWebInterface(); // Reset web interface
+            addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Đã cleanup data rác và reset web thành công!`, 'success');
+        } catch (resetError) {
+            addLogEntry(`❌ Lỗi khi reset web: ${resetError.message}`, 'error');
+            // Vẫn tiếp tục retry ngay cả khi reset lỗi, nhưng cần cleanup audio thủ công
             try {
-                await resetWebInterface();
-                addLogEntry(`✅ Web đã được reset thành công (bao gồm cleanup audio)!`, 'success');
-            } catch (resetError) {
-                addLogEntry(`❌ Lỗi khi reset web: ${resetError.message}`, 'error');
-                // Vẫn tiếp tục retry ngay cả khi reset lỗi, nhưng cần cleanup audio thủ công
-                try {
-                    // Cleanup audio thủ công nếu resetWebInterface() lỗi
-                    const audioElements = document.querySelectorAll('audio');
-                    let stoppedCount = 0;
-                    audioElements.forEach(audio => {
-                        try {
-                            if (!audio.paused) {
-                                audio.pause();
-                                audio.currentTime = 0;
-                                stoppedCount++;
-                            }
-                            if (audio.src) {
-                                audio.src = '';
-                            }
-                        } catch (e) {
-                            // Bỏ qua lỗi từng audio element
+                // Cleanup audio thủ công nếu resetWebInterface() lỗi
+                const audioElements = document.querySelectorAll('audio');
+                let stoppedCount = 0;
+                audioElements.forEach(audio => {
+                    try {
+                        if (!audio.paused) {
+                            audio.pause();
+                            audio.currentTime = 0;
+                            stoppedCount++;
                         }
-                    });
-                    
-                    const sourceElements = document.querySelectorAll('source');
-                    sourceElements.forEach(source => {
-                        try {
-                            if (source.src) {
-                                source.src = '';
-                            }
-                        } catch (e) {
-                            // Bỏ qua lỗi
+                        if (audio.src) {
+                            audio.src = '';
                         }
-                    });
-                    
-                    if (window.audioContext) {
+                    } catch (e) {
+                        // Bỏ qua lỗi từng audio element
+                    }
+                });
+                
+                const sourceElements = document.querySelectorAll('source');
+                sourceElements.forEach(source => {
+                    try {
+                        if (source.src) {
+                            source.src = '';
+                        }
+                    } catch (e) {
+                        // Bỏ qua lỗi
+                    }
+                });
+                
+                if (window.audioContext) {
+                    try {
+                        if (window.audioContext.state !== 'closed') {
+                            window.audioContext.close();
+                        }
+                        window.audioContext = null;
+                    } catch (e) {
+                        // Bỏ qua
+                    }
+                }
+                
+                if (window.AudioContext || window.webkitAudioContext) {
+                    Object.keys(window).forEach(key => {
                         try {
-                            if (window.audioContext.state !== 'closed') {
-                                window.audioContext.close();
+                            const value = window[key];
+                            if (value && typeof value === 'object' && typeof value.close === 'function' && typeof value.state === 'string') {
+                                if (value.state !== 'closed') {
+                                    value.close();
+                                }
+                                window[key] = null;
                             }
-                            window.audioContext = null;
                         } catch (e) {
                             // Bỏ qua
                         }
-                    }
-                    
-                    if (window.AudioContext || window.webkitAudioContext) {
-                        Object.keys(window).forEach(key => {
-                            try {
-                                const value = window[key];
-                                if (value && typeof value === 'object' && typeof value.close === 'function' && typeof value.state === 'string') {
-                                    if (value.state !== 'closed') {
-                                        value.close();
-                                    }
-                                    window[key] = null;
-                                }
-                            } catch (e) {
-                                // Bỏ qua
-                            }
-                        });
-                    }
-                    
-                    if (stoppedCount > 0) {
-                        addLogEntry(`🧹 Đã dừng ${stoppedCount} audio element(s) và clear audio context (fallback)`, 'info');
-                    }
-                } catch (audioError) {
-                    addLogEntry(`⚠️ Lỗi khi cleanup audio thủ công: ${audioError.message}`, 'warning');
+                    });
                 }
+                
+                if (stoppedCount > 0) {
+                    addLogEntry(`🧹 Đã dừng ${stoppedCount} audio element(s) và clear audio context (fallback)`, 'info');
+                }
+            } catch (audioError) {
+                addLogEntry(`⚠️ Lỗi khi cleanup audio thủ công: ${audioError.message}`, 'warning');
             }
-
-            setTimeout(uSTZrHUt_IC, 2000 * window.retryCount); // Chờ lâu hơn sau mỗi lần thử
-        } else {
-            addLogEntry(`🚫 [Chunk ${ttuo$y_KhCV + 1}] Thất bại sau ${MAX_RETRIES} lần thử. Bỏ qua chunk này.`, 'error');
-            // Đánh dấu chunk này là thất bại
-            window.chunkStatus[ttuo$y_KhCV] = 'failed';
-            if (!window.failedChunks.includes(ttuo$y_KhCV)) {
-                window.failedChunks.push(ttuo$y_KhCV);
-            }
-            
-            // QUAN TRỌNG: Đảm bảo vị trí này để trống (null) để sau này retry có thể lưu vào
-            if (typeof window.chunkBlobs === 'undefined') {
-                window.chunkBlobs = new Array(SI$acY.length).fill(null);
-            }
-            // Đảm bảo window.chunkBlobs có đủ độ dài
-            while (window.chunkBlobs.length <= ttuo$y_KhCV) {
-                window.chunkBlobs.push(null);
-            }
-            window.chunkBlobs[ttuo$y_KhCV] = null; // Đảm bảo vị trí này để trống
-            
-            // ĐỒNG BỘ HÓA ZTQj$LF$o: Đảm bảo ZTQj$LF$o cũng để trống
-            while (ZTQj$LF$o.length <= ttuo$y_KhCV) {
-                ZTQj$LF$o.push(null);
-            }
-            ZTQj$LF$o[ttuo$y_KhCV] = null; // Đảm bảo vị trí này để trống
-            
-            addLogEntry(`🔄 [Chunk ${ttuo$y_KhCV + 1}] Đã đánh dấu thất bại và để trống vị trí ${ttuo$y_KhCV} để retry sau`, 'info');
-            
-            // Reset flag sendingChunk khi chunk thất bại
-            if (window.sendingChunk === ttuo$y_KhCV) {
-                window.sendingChunk = null;
-            }
-            
-            addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Đã bị lỗi.`, 'warning');
-            
-            window.retryCount = 0; // Reset bộ đếm retry
-            ttuo$y_KhCV++; // Chuyển sang chunk tiếp theo
-            
-            addLogEntry(`➡️ Chuyển sang chunk ${ttuo$y_KhCV + 1}...`, 'info');
-            addLogEntry(`📊 Trạng thái: ${window.chunkStatus.filter(s => s === 'success' || s === 'failed').length}/${SI$acY.length} chunks đã xử lý`, 'info');
-            setTimeout(uSTZrHUt_IC, getRandomChunkDelay()); // Tiếp tục với chunk tiếp theo sau delay ngẫu nhiên 8–15 giây
         }
+
+        // KHÔNG tăng ttuo$y_KhCV, giữ nguyên để retry lại chunk này vô hạn
+        // Retry sau delay ngắn
+        setTimeout(uSTZrHUt_IC, getRandomChunkDelay()); // Delay 1-3 giây rồi retry lại
     }
 }
 
@@ -5034,21 +5335,23 @@ function igyo$uwVChUzI() {
                         addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Đã được xử lý thành công trước đó, bỏ qua`, 'warning');
                         return;
                     }
-                    // QUAN TRỌNG: Kiểm tra xem chunk này có đang được xử lý không (pending hoặc failed khi retry)
-                    // Nếu đang trong chế độ retry (isFinalCheck), cho phép xử lý chunk failed
-                    // Nếu không phải retry mode, chỉ xử lý chunk pending
+                    // QUAN TRỌNG: Kiểm tra xem chunk này có đang được xử lý không (pending hoặc failed)
+                    // CƠ CHẾ RETRY MỚI: Cho phép retry chunk failed trong mọi trường hợp (không cần isFinalCheck)
                     if (window.chunkStatus && window.chunkStatus[currentChunkIndex]) {
                         const status = window.chunkStatus[currentChunkIndex];
-                        // Cho phép xử lý nếu: pending (bình thường) hoặc failed (khi retry)
+                        // Cho phép xử lý nếu: pending (bình thường) hoặc failed (retry vô hạn)
                         if (status === 'pending') {
                             // OK, chunk đang pending
-                        } else if (status === 'failed' && window.isFinalCheck) {
-                            // OK, chunk failed và đang trong chế độ retry
-                            addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Đang retry chunk failed...`, 'info');
-                        } else {
-                            // Không phải pending và không phải failed trong retry mode
-                            addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Không phải trạng thái 'pending' hoặc 'failed' trong retry mode (${status}), bỏ qua`, 'warning');
+                        } else if (status === 'failed') {
+                            // OK, chunk failed - cho phép retry vô hạn (cơ chế retry mới)
+                            addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Đang retry chunk failed (retry vô hạn)...`, 'info');
+                        } else if (status === 'success') {
+                            // Chunk đã thành công, không cần xử lý lại
+                            addLogEntry(`✅ [Chunk ${currentChunkIndex + 1}] Đã thành công, bỏ qua`, 'info');
                             return;
+                        } else {
+                            // Trạng thái khác (không rõ), vẫn cho phép xử lý để tránh bỏ sót
+                            addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Trạng thái không rõ (${status}), vẫn tiếp tục xử lý...`, 'warning');
                         }
                     }
                     
@@ -5223,28 +5526,15 @@ function igyo$uwVChUzI() {
                                 delete window.chunkTimeoutIds[currentChunkIndex];
                             }
                             
-                            // Reset web interface - CHỈ reset khi 1 chunk cụ thể render lỗi
-                            await resetWebInterface();
+                            // Cleanup data rác và reset web interface trước khi retry
+                            await cleanupChunkData(currentChunkIndex); // Cleanup data rác trước
+                            await resetWebInterface(); // Reset web interface
                             
-                            // Xử lý retry: Nếu đang trong retry mode, tiếp tục retry chunk hiện tại
-                            // Nếu không phải retry mode, nhảy sang chunk tiếp theo
-                            if (window.isFinalCheck) {
-                                // Đang trong retry mode: tiếp tục retry chunk hiện tại cho đến khi thành công
-                                addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Retry thất bại, sẽ tiếp tục retry chunk này...`, 'warning');
-                                addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
-                                addLogEntry(`💡 Chunk ${currentChunkIndex + 1} sẽ được retry vô hạn cho đến khi thành công`, 'info');
-                                // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
-                                ttuo$y_KhCV = currentChunkIndex;
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi retry lại chunk này
-                            } else {
-                                // Không phải retry mode: nhảy sang chunk tiếp theo
-                                window.retryCount = 0; // Reset bộ đếm retry
-                                ttuo$y_KhCV = currentChunkIndex + 1; // Chuyển sang chunk tiếp theo
-                                addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
-                                addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
-                                addLogEntry(`💡 Chunk có blob null sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi tiếp tục với chunk tiếp theo
-                            }
+                            // CƠ CHẾ RETRY MỚI: Retry lại chunk này vô hạn, không chuyển sang chunk tiếp theo
+                            addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Blob null - Đã cleanup và reset, retry lại chunk này vô hạn cho đến khi thành công`, 'warning');
+                            // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
+                            ttuo$y_KhCV = currentChunkIndex;
+                            setTimeout(uSTZrHUt_IC, getRandomChunkDelay()); // Retry sau delay 1-3 giây
                             return; // Dừng xử lý, không lưu blob
                         }
 
@@ -5319,25 +5609,15 @@ function igyo$uwVChUzI() {
 
                             addLogEntry(`⚠️ [Chunk ${currentChunkIndex + 1}] Dung lượng blob = ${chunkSizeKB.toFixed(2)} KB và không có sóng âm.`, 'warning');
 
-                            // Xử lý retry: Nếu đang trong retry mode, tiếp tục retry chunk hiện tại
-                            // Nếu không phải retry mode, nhảy sang chunk tiếp theo
-                            if (window.isFinalCheck) {
-                                // Đang trong retry mode: tiếp tục retry chunk hiện tại cho đến khi thành công
-                                addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Retry thất bại, sẽ tiếp tục retry chunk này...`, 'warning');
-                                addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
-                                addLogEntry(`💡 Chunk ${currentChunkIndex + 1} sẽ được retry vô hạn cho đến khi thành công`, 'info');
-                                // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
-                                ttuo$y_KhCV = currentChunkIndex;
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi retry lại chunk này
-                            } else {
-                                // Không phải retry mode: nhảy sang chunk tiếp theo
-                                window.retryCount = 0; // Reset bộ đếm retry
-                                ttuo$y_KhCV = currentChunkIndex + 1; // Chuyển sang chunk tiếp theo
-                                addLogEntry(`🔄 Sau khi reset, tiếp tục với chunk ${ttuo$y_KhCV + 1}...`, 'info');
-                                addLogEntry(`📊 Trạng thái: ${window.chunkStatus ? window.chunkStatus.filter(s => s === 'success' || s === 'failed').length : 0}/${SI$acY.length} chunks đã xử lý`, 'info');
-                                addLogEntry(`💡 Chunk không có sóng âm sẽ được retry vô hạn sau khi xong tất cả chunks`, 'info');
-                                setTimeout(uSTZrHUt_IC, 2000); // Chờ 2 giây rồi tiếp tục với chunk tiếp theo
-                            }
+                            // CƠ CHẾ RETRY MỚI: Reset và retry lại chunk này vô hạn, không chuyển sang chunk tiếp theo
+                            // Cleanup data rác và reset web interface trước khi retry
+                            await cleanupChunkData(currentChunkIndex); // Cleanup data rác trước
+                            await resetWebInterface(); // Reset web interface
+                            
+                            addLogEntry(`🔄 [Chunk ${currentChunkIndex + 1}] Không có sóng âm - Đã cleanup và reset, retry lại chunk này vô hạn cho đến khi thành công`, 'warning');
+                            // Giữ nguyên ttuo$y_KhCV = currentChunkIndex để retry lại
+                            ttuo$y_KhCV = currentChunkIndex;
+                            setTimeout(uSTZrHUt_IC, getRandomChunkDelay()); // Retry sau delay 1-3 giây
                             return; // Dừng xử lý, không lưu blob
                         } else {
                             // Có sóng âm → hợp lệ, tiếp tục bình thường
@@ -5421,8 +5701,8 @@ function igyo$uwVChUzI() {
                             addLogEntry(`✅ [Chunk 1] Đã thành công - Reset flag kiểm tra cấu hình`, 'success');
                         }
 
-                        // Nếu đang trong giai đoạn kiểm tra cuối, loại bỏ chunk này khỏi danh sách thất bại
-                        if (window.isFinalCheck && window.failedChunks.includes(currentChunkIndex)) {
+                        // Xóa khỏi failedChunks nếu có
+                        if (window.failedChunks && window.failedChunks.includes(currentChunkIndex)) {
                             window.failedChunks = window.failedChunks.filter(index => index !== currentChunkIndex);
                             addLogEntry(`🎉 [Chunk ${currentChunkIndex + 1}] Đã khôi phục thành công từ trạng thái thất bại!`, 'success');
                         }
@@ -5446,29 +5726,18 @@ function igyo$uwVChUzI() {
                         window.isSettingUpObserver = false;
                     }
                     
-                    // QUAN TRỌNG: Khi retry, sau khi chunk thành công, chỉ nhảy đến chunk lỗi tiếp theo
-                    // Không tăng ttuo$y_KhCV++ để tránh render lại các chunk đã thành công
-                    if (window.isFinalCheck) {
-                        // Đang trong retry mode, chỉ xử lý các chunk lỗi
-                        // Loại bỏ chunk này khỏi danh sách failedChunks nếu có
-                        if (window.failedChunks.includes(currentChunkIndex)) {
-                            window.failedChunks = window.failedChunks.filter(idx => idx !== currentChunkIndex);
-                        }
-                        
-                        // Tìm chunk lỗi tiếp theo
-                        const remainingFailedChunks = window.failedChunks.filter(idx => idx > currentChunkIndex);
-                        if (remainingFailedChunks.length > 0) {
-                            const nextFailedIndex = Math.min(...remainingFailedChunks);
-                            addLogEntry(`⏭️ [Chunk ${currentChunkIndex + 1}] Đã thành công, nhảy thẳng đến chunk ${nextFailedIndex + 1} (chunk lỗi tiếp theo)`, 'info');
-                            ttuo$y_KhCV = nextFailedIndex;
-                        } else {
-                            // Không còn chunk lỗi nào, kết thúc retry
-                            addLogEntry(`✅ Đã xử lý xong tất cả chunks lỗi!`, 'success');
-                            ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
-                        }
-                    } else {
-                        // Không phải retry mode, tiếp tục với chunk tiếp theo như bình thường
-                        ttuo$y_KhCV++;
+                    // CƠ CHẾ RETRY MỚI: Sau khi chunk thành công, chuyển sang chunk tiếp theo
+                    // Xóa khỏi failedChunks nếu có
+                    if (window.failedChunks && window.failedChunks.includes(currentChunkIndex)) {
+                        window.failedChunks = window.failedChunks.filter(idx => idx !== currentChunkIndex);
+                    }
+                    
+                    // Chuyển sang chunk tiếp theo
+                    ttuo$y_KhCV++;
+                    if (ttuo$y_KhCV >= SI$acY.length) {
+                        // Đã xử lý xong tất cả chunks
+                        addLogEntry(`✅ Đã xử lý xong tất cả chunks!`, 'success');
+                        ttuo$y_KhCV = SI$acY.length; // Đánh dấu hoàn thành
                     }
                     
                     // GUARD: Kiểm tra độ sâu recursive calls
@@ -5491,7 +5760,7 @@ function igyo$uwVChUzI() {
                         return;
                     }
                     
-                    // Sau khi xử lý xong chunk hiện tại, luôn đợi ngẫu nhiên 8–15 giây rồi mới xử lý chunk tiếp theo
+                    // Sau khi xử lý xong chunk hiện tại, luôn đợi ngẫu nhiên 1–3 giây rồi mới xử lý chunk tiếp theo
                     setTimeout(() => {
                         window.recursiveCallDepth = Math.max(0, window.recursiveCallDepth - 1); // Giảm độ sâu sau mỗi lần gọi
                         uSTZrHUt_IC();
