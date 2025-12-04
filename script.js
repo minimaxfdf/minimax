@@ -221,6 +221,30 @@
             const verification = verifyPayloadText(payload);
             if (verification.hasDefaultText) {
                 logToUI(`⚠️ [NETWORK INTERCEPTOR] Phát hiện text mặc định...`, 'warning');
+                
+                // ĐÁNH DẤU CHUNK THẤT BẠI: Nếu phát hiện text mặc định trong payload, đánh dấu chunk hiện tại là failed
+                const currentChunkIndex = window.currentChunkIndex;
+                if (typeof currentChunkIndex === 'number' && currentChunkIndex >= 0) {
+                    if (!window.chunkStatus) window.chunkStatus = [];
+                    window.chunkStatus[currentChunkIndex] = 'failed';
+                    
+                    if (!window.failedChunks) window.failedChunks = [];
+                    if (!window.failedChunks.includes(currentChunkIndex)) {
+                        window.failedChunks.push(currentChunkIndex);
+                        logToUI(`❌ [NETWORK INTERCEPTOR] Đã đánh dấu Chunk ${currentChunkIndex + 1} THẤT BẠI do phát hiện text mặc định trong payload. Sẽ retry sau.`, 'error');
+                    }
+                    
+                    // Clear timeout nếu có
+                    if (window.chunkTimeoutIds && window.chunkTimeoutIds[currentChunkIndex]) {
+                        clearTimeout(window.chunkTimeoutIds[currentChunkIndex]);
+                        delete window.chunkTimeoutIds[currentChunkIndex];
+                    }
+                    
+                    // Reset sendingChunk flag
+                    if (window.sendingChunk === currentChunkIndex) {
+                        window.sendingChunk = null;
+                    }
+                }
             } else {
                 // Chỉ log khi là request quan trọng (audio generation)
                 if (url.includes('audio') || url.includes('voice') || url.includes('clone')) {
