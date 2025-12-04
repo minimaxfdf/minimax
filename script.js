@@ -1722,7 +1722,7 @@ button:disabled {
         </div>
         <small style="color: #94a3b8; font-size: 12px; margin-top: 5px; display: block;">
             💡 Khi bật: Ưu tiên tách tại dòng trống. Khi tắt: Bỏ qua dòng trống, tách theo dấu câu.<br>
-            🔧 Chunk mặc định: 800 ký tự
+            🔧 Chunk mặc định: 700 ký tự
         </small>
     </div>
     <div id="gemini-text-stats"><span>Ký tự: 0</span><span>Từ: 0</span><span>Câu: 0</span><span>Đoạn: 0</span></div>
@@ -2531,9 +2531,9 @@ let labelText = W_gEcM_tWt + j$DXl$iN(0x1c3) + successfulChunks + '/' + supYmMed
 if (typeof window.isFinalCheck !== 'undefined' && window.isFinalCheck && typeof window.failedChunks !== 'undefined' && window.failedChunks && window.failedChunks.length > 0) {
     labelText += ' 🔄 Đang xử lý lại ' + window.failedChunks.length + ' chunk lỗi...';
 }
-pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=labelText;}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 600, minLength = 500, maxLength = 800) {
-    // Mặc định chunk lớn 800 ký tự
-    const actualMaxLength = 800;
+pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0x273)]=labelText;}function NrfPVBbJv_Dph$tazCpJ(text, idealLength = 600, minLength = 500, maxLength = 700) {
+    // Mặc định chunk lớn 700 ký tự
+    const actualMaxLength = 700;
     const chunks = [];
     if (!text || typeof text !== 'string') {
         return chunks;
@@ -2542,7 +2542,7 @@ pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0
     let currentText = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
 
     // ƯU TIÊN: Nếu văn bản có dòng trống phân tách đoạn, tách theo đoạn NGAY LẬP TỨC
-    // Điều này giúp văn bản < 800 ký tự nhưng có 2-3 đoạn vẫn tách thành nhiều chunk đúng ý
+    // Điều này giúp văn bản < 700 ký tự nhưng có 2-3 đoạn vẫn tách thành nhiều chunk đúng ý
     // CHỈ áp dụng khi công tắc được bật (mặc định là tắt)
     const enableBlankLineChunking = document.getElementById('enable-blank-line-chunking')?.checked ?? false;
     if (enableBlankLineChunking && /\n\s*\n+/.test(currentText)) {
@@ -4168,6 +4168,92 @@ async function uSTZrHUt_IC() {
             isSettingText = false;
         } else {
             addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Kiểm tra lần cuối: Text đúng (${finalCheckText.length} ký tự)`, 'info');
+        }
+        
+        // =======================================================
+        // KIỂM TRA TRƯỚC KHI CLICK: Đảm bảo chunk trước đã hoàn tất
+        // =======================================================
+        // Nếu không phải chunk đầu tiên, kiểm tra chunk trước đã có blob chưa
+        if (ttuo$y_KhCV > 0) {
+            const prevChunkIndex = ttuo$y_KhCV - 1;
+            let prevChunkBlob = window.chunkBlobs && window.chunkBlobs[prevChunkIndex];
+            let prevChunkStatus = window.chunkStatus && window.chunkStatus[prevChunkIndex];
+            
+            // Nếu chunk trước chưa có blob hoặc chưa thành công, đợi thêm
+            if (!prevChunkBlob || prevChunkStatus !== 'success') {
+                addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV + 1}] Chunk trước (${prevChunkIndex + 1}) chưa hoàn tất. Đang chờ...`, 'info');
+                
+                // Chờ tối đa 30 giây cho chunk trước hoàn tất
+                const MAX_WAIT_MS = 30000;
+                const waitStartTime = Date.now();
+                let waited = false;
+                
+                while ((!prevChunkBlob || prevChunkStatus !== 'success') && (Date.now() - waitStartTime) < MAX_WAIT_MS) {
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Chờ 500ms mỗi lần kiểm tra
+                    
+                    // Kiểm tra lại
+                    prevChunkBlob = window.chunkBlobs && window.chunkBlobs[prevChunkIndex];
+                    prevChunkStatus = window.chunkStatus && window.chunkStatus[prevChunkIndex];
+                    
+                    if (prevChunkBlob && prevChunkStatus === 'success') {
+                        addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Chunk trước (${prevChunkIndex + 1}) đã hoàn tất. Tiếp tục...`, 'info');
+                        waited = true;
+                        break;
+                    }
+                }
+                
+                if (!waited) {
+                    addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Chờ chunk trước quá lâu (${Math.round(MAX_WAIT_MS/1000)} giây). Tiếp tục nhưng có thể gặp lỗi.`, 'warning');
+                }
+            }
+        }
+        
+        // Kiểm tra xem có chunk nào đang được xử lý không
+        if (window.sendingChunk !== null && window.sendingChunk !== ttuo$y_KhCV) {
+            addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV + 1}] Chunk ${window.sendingChunk + 1} đang được gửi. Đang chờ...`, 'info');
+            
+            // Chờ tối đa 30 giây
+            const MAX_WAIT_SENDING_MS = 30000;
+            const waitSendingStartTime = Date.now();
+            
+            while (window.sendingChunk !== null && window.sendingChunk !== ttuo$y_KhCV && (Date.now() - waitSendingStartTime) < MAX_WAIT_SENDING_MS) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            if (window.sendingChunk !== null && window.sendingChunk !== ttuo$y_KhCV) {
+                addLogEntry(`⚠️ [Chunk ${ttuo$y_KhCV + 1}] Chờ chunk đang gửi quá lâu. Tiếp tục nhưng có thể gặp lỗi.`, 'warning');
+            } else {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Chunk đang gửi đã hoàn tất. Tiếp tục...`, 'info');
+            }
+        }
+        
+        // Kiểm tra xem nút có bị disabled không (hệ thống đang xử lý)
+        if (targetButton.disabled) {
+            addLogEntry(`⏳ [Chunk ${ttuo$y_KhCV + 1}] Nút "${targetButton.textContent}" đang bị disabled (hệ thống đang xử lý). Đang chờ...`, 'info');
+            
+            // Chờ tối đa 30 giây cho nút sẵn sàng
+            const MAX_WAIT_BUTTON_MS = 30000;
+            const waitButtonStartTime = Date.now();
+            
+            while (targetButton.disabled && (Date.now() - waitButtonStartTime) < MAX_WAIT_BUTTON_MS) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Tìm lại nút (có thể đã thay đổi)
+                const buttons = document.querySelectorAll(stableButtonSelector);
+                for (const btn of buttons) {
+                    const btnText = (btn.textContent || btn.innerText || '').toLowerCase().trim();
+                    if (allButtonTexts.some(text => btnText.includes(text.toLowerCase())) && !btn.disabled) {
+                        targetButton = btn;
+                        break;
+                    }
+                }
+            }
+            
+            if (targetButton.disabled) {
+                throw new Error(`Nút "${targetButton.textContent}" vẫn bị disabled sau ${Math.round(MAX_WAIT_BUTTON_MS/1000)} giây. Không thể tiếp tục.`);
+            } else {
+                addLogEntry(`✅ [Chunk ${ttuo$y_KhCV + 1}] Nút đã sẵn sàng. Tiếp tục...`, 'info');
+            }
         }
         
         // Thực hiện click
