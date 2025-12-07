@@ -3201,8 +3201,21 @@ function smartSplitter(text, maxLength = 800) {
         .trim();
 
     // Luôn gọi hàm tách chunk cũ với toàn bộ văn bản đã chuẩn hóa
+    // BẢO VỆ: Tránh gọi nhiều lần do nhiều event listener
+    if (typeof window._smartSplitterRunning === 'undefined') {
+        window._smartSplitterRunning = false;
+    }
+    
+    if (window._smartSplitterRunning) {
+        // Đang chạy rồi, bỏ qua lần gọi này
+        console.warn('[smartSplitter] Đang chạy rồi, bỏ qua lần gọi trùng lặp');
+        return []; // Trả về mảng rỗng để tránh lỗi
+    }
+    
+    window._smartSplitterRunning = true;
     addLogEntry(`🧠 Áp dụng tách chunk thông minh (smartSplitter)`, 'info');
     const chunks = NrfPVBbJv_Dph$tazCpJ(normalized, 600, 500, actualMaxLength);
+    window._smartSplitterRunning = false; // Reset flag sau khi xong
 
     return chunks.filter(c => c.length > 0);
 }
@@ -8282,6 +8295,11 @@ async function waitForVoiceModelReady() {
             
             // 5. QUAN TRỌNG: Sử dụng hàm smartSplitter MỚI để chia chunk
             // Đảm bảo EfNjYNYj_O_CGB = true TRƯỚC KHI chia chunk để uSTZrHUt_IC() biết đây là job mới
+            // BẢO VỆ: Tránh gọi nhiều lần do nhiều event listener
+            if (window._smartSplitterRunning) {
+                addLogEntry(`⚠️ smartSplitter đang chạy, bỏ qua lần gọi trùng lặp`, 'warning');
+                return; // Dừng xử lý để tránh gọi lại
+            }
             SI$acY = smartSplitter(sanitizedText, 3000); // Mảng chứa text (legacy)
             
             // Kiểm tra xem có chunk nào không
