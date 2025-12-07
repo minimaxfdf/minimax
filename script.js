@@ -3049,8 +3049,33 @@ pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0
                     if (lastSpace >= minLength) {
                         splitIndex = lastSpace;
                     } else {
-                        // Giải pháp cuối cùng: Cắt cứng tại độ dài lý tưởng
-                        splitIndex = idealLength;
+                        // CẢI THIỆN: Thay vì cắt cứng, tìm điểm cắt gần nhất trong phạm vi cho phép
+                        // Tìm bất kỳ ký tự nào không phải chữ cái/số gần cuối (dấu câu, ký tự đặc biệt)
+                        let bestSplit = -1;
+                        // Tìm từ cuối lên, trong phạm vi minLength đến actualMaxLength
+                        for (let i = Math.min(actualMaxLength - 1, tempSlice.length - 1); i >= minLength; i--) {
+                            const char = tempSlice[i];
+                            // Nếu là ký tự không phải chữ cái/số (dấu câu, ký tự đặc biệt)
+                            if (!/[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/.test(char)) {
+                                bestSplit = i + 1; // Cắt sau ký tự này
+                                break;
+                            }
+                        }
+                        
+                        if (bestSplit >= minLength) {
+                            splitIndex = bestSplit;
+                            // Log cảnh báo nếu phải cắt tại điểm không lý tưởng
+                            if (typeof addLogEntry === 'function') {
+                                addLogEntry(`⚠️ Chunk được cắt tại vị trí ${bestSplit} (không tìm được điểm cắt lý tưởng)`, 'warning');
+                            }
+                        } else {
+                            // Giải pháp cuối cùng: Cắt cứng tại độ dài lý tưởng
+                            splitIndex = idealLength;
+                            // Log cảnh báo khi phải cắt cứng
+                            if (typeof addLogEntry === 'function') {
+                                addLogEntry(`⚠️ CẢNH BÁO: Phải cắt cứng chunk tại vị trí ${idealLength} - có thể cắt giữa từ/câu!`, 'warning');
+                            }
+                        }
                     }
                 }
             }
@@ -3227,11 +3252,37 @@ function dExAbhXwTJeTJBIjWr(EARfsfSN_QdgxH){const tENdSoNDV_gGwQKLZv$sYaZKhl=AP$
 
         const zEwMPLN$IZxzIwfdDbCfnIYcA=new Date();cHjV$QkAT$JWlL[VCAHyXsrERcpXVhFPxmgdBjjh(0x273)]=VCAHyXsrERcpXVhFPxmgdBjjh(0x1ce)+ymkKApNTfjOanYIBsxsoMNBX((zEwMPLN$IZxzIwfdDbCfnIYcA-dqj_t_Mr)/(Number(-0x27)*Math.floor(-0x26)+0x1f37+0x25*Math.floor(-parseInt(0xe5))));if(ZTQj$LF$o[VCAHyXsrERcpXVhFPxmgdBjjh(0x216)]===parseFloat(-0x1ca4)+Number(-parseInt(0x2445))+parseInt(0x40e9))return;try{
 // Sử dụng window.chunkBlobs nếu có và có dữ liệu, nếu không thì dùng ZTQj$LF$o
+// QUAN TRỌNG: Đảm bảo thứ tự và số lượng chunk đầy đủ để tránh thiếu câu
 let finalBlobs = ZTQj$LF$o; // Mặc định dùng ZTQj$LF$o như code gốc
 if (window.chunkBlobs && window.chunkBlobs.length > 0) {
-    const validBlobs = window.chunkBlobs.filter(blob => blob !== null);
+    // SỬA LỖI: Thay vì filter (mất thứ tự), dùng vòng lặp để giữ nguyên thứ tự và index
+    const validBlobs = [];
+    const missingChunkIndices = [];
+    
+    // Đảm bảo có đủ số lượng chunk như SI$acY.length
+    const expectedChunkCount = SI$acY ? SI$acY.length : window.chunkBlobs.length;
+    
+    for (let i = 0; i < expectedChunkCount; i++) {
+        if (window.chunkBlobs[i] !== null && window.chunkBlobs[i] !== undefined) {
+            validBlobs.push(window.chunkBlobs[i]);
+        } else {
+            // Đánh dấu chunk bị thiếu
+            missingChunkIndices.push(i);
+        }
+    }
+    
     if (validBlobs.length > 0) {
-        finalBlobs = validBlobs; // Chỉ dùng window.chunkBlobs nếu có dữ liệu
+        // Kiểm tra xem có đủ số lượng chunk không
+        if (validBlobs.length < expectedChunkCount) {
+            addLogEntry(`⚠️ CẢNH BÁO: Chỉ có ${validBlobs.length}/${expectedChunkCount} chunks hợp lệ. Thiếu ${missingChunkIndices.length} chunk tại index: ${missingChunkIndices.map(i => i + 1).join(', ')}`, 'warning');
+            addLogEntry(`🔄 Không merge để tránh thiếu câu. Sẽ retry các chunk thiếu...`, 'warning');
+            // KHÔNG merge nếu thiếu chunk - để logic retry xử lý
+            window.isMerging = false;
+            return;
+        }
+        
+        finalBlobs = validBlobs; // Chỉ dùng window.chunkBlobs nếu có đủ dữ liệu
+        addLogEntry(`✅ Đã kiểm tra: ${finalBlobs.length}/${expectedChunkCount} chunks hợp lệ và đầy đủ`, 'success');
     }
 }
 
@@ -3241,6 +3292,7 @@ if (window.chunkBlobs && window.chunkBlobs.length > 0) {
 // Kiểm tra số lượng chunks
 if (finalBlobs.length === 0) {
     addLogEntry('❌ Không có chunks để gộp file', 'error');
+    window.isMerging = false;
     return;
 }
 
@@ -3252,7 +3304,38 @@ if (validFinalBlobs.length !== finalBlobs.length) {
     finalBlobs = validFinalBlobs;
 }
 
-addLogEntry(`✅ Validation hoàn tất: ${finalBlobs.length} chunks hợp lệ`, 'success');
+// QUAN TRỌNG: Kiểm tra số lượng chunk có đủ như SI$acY.length không
+const expectedChunkCount = SI$acY ? SI$acY.length : 0;
+if (expectedChunkCount > 0 && finalBlobs.length < expectedChunkCount) {
+    const missingCount = expectedChunkCount - finalBlobs.length;
+    addLogEntry(`❌ THIẾU CHUNK: Chỉ có ${finalBlobs.length}/${expectedChunkCount} chunks. Thiếu ${missingCount} chunk!`, 'error');
+    addLogEntry(`🔄 Không merge để tránh thiếu câu. Sẽ retry các chunk thiếu...`, 'warning');
+    window.isMerging = false;
+    
+    // Tìm các chunk bị thiếu và đánh dấu để retry
+    if (window.chunkBlobs && window.chunkBlobs.length > 0) {
+        const missingIndices = [];
+        for (let i = 0; i < expectedChunkCount; i++) {
+            if (!window.chunkBlobs[i] || window.chunkBlobs[i] === null) {
+                missingIndices.push(i);
+                // Đánh dấu chunk này là failed để retry
+                if (window.chunkStatus) {
+                    window.chunkStatus[i] = 'failed';
+                }
+                if (!window.failedChunks) window.failedChunks = [];
+                if (!window.failedChunks.includes(i)) {
+                    window.failedChunks.push(i);
+                }
+            }
+        }
+        if (missingIndices.length > 0) {
+            addLogEntry(`📋 Các chunk bị thiếu: ${missingIndices.map(i => i + 1).join(', ')}. Sẽ retry...`, 'info');
+        }
+    }
+    return;
+}
+
+addLogEntry(`✅ Validation hoàn tất: ${finalBlobs.length}/${expectedChunkCount} chunks hợp lệ và đầy đủ`, 'success');
 
 // =======================================================
 // BATCH MERGE: Merge từng batch để tránh hết RAM
@@ -4516,17 +4599,41 @@ async function uSTZrHUt_IC() {
 
         // CƠ CHẾ RETRY MỚI: Mỗi chunk tự retry vô hạn khi lỗi, không cần phase retry riêng
         // Kiểm tra xem tất cả chunks đã thành công chưa
-        const allChunksSuccess = window.chunkStatus && window.chunkStatus.every((status, idx) => {
+        const expectedChunkCount = SI$acY ? SI$acY.length : 0;
+        
+        // QUAN TRỌNG: Kiểm tra số lượng chunk có đủ không
+        if (expectedChunkCount === 0) {
+            addLogEntry(`⚠️ Không có chunks để kiểm tra. SI$acY.length = 0`, 'warning');
+            return;
+        }
+        
+        // Đảm bảo chunkStatus có đủ phần tử
+        if (!window.chunkStatus || window.chunkStatus.length < expectedChunkCount) {
+            addLogEntry(`⚠️ chunkStatus chưa đủ phần tử (${window.chunkStatus ? window.chunkStatus.length : 0}/${expectedChunkCount}). Tiếp tục xử lý...`, 'warning');
+            return;
+        }
+        
+        // Kiểm tra từng chunk: phải có status 'success' VÀ có blob hợp lệ
+        const allChunksSuccess = window.chunkStatus.every((status, idx) => {
             // Chunk đã được xử lý và có blob hợp lệ
-            return status === 'success' && window.chunkBlobs && window.chunkBlobs[idx] !== null;
+            const hasBlob = window.chunkBlobs && window.chunkBlobs[idx] !== null && window.chunkBlobs[idx] !== undefined;
+            return status === 'success' && hasBlob;
         });
-
-        if (allChunksSuccess && window.chunkStatus.length === SI$acY.length) {
-            addLogEntry(`🎉 Tất cả ${SI$acY.length} chunks đã được xử lý xong!`, 'success');
-            addLogEntry(`✅ TẤT CẢ ${SI$acY.length} chunks đã thành công! Bắt đầu ghép file...`, 'success');
-            // CHỈ ghép file khi TẤT CẢ chunk đã thành công
+        
+        // Kiểm tra số lượng chunk có đủ không
+        const validChunkCount = window.chunkBlobs ? window.chunkBlobs.filter(blob => blob !== null && blob !== undefined).length : 0;
+        
+        if (allChunksSuccess && window.chunkStatus.length === expectedChunkCount && validChunkCount === expectedChunkCount) {
+            addLogEntry(`🎉 Tất cả ${expectedChunkCount} chunks đã được xử lý xong!`, 'success');
+            addLogEntry(`✅ TẤT CẢ ${expectedChunkCount} chunks đã thành công và có đủ blob! Bắt đầu ghép file...`, 'success');
+            // CHỈ ghép file khi TẤT CẢ chunk đã thành công VÀ có đủ số lượng
             tt__SfNwBHDebpWJOqrSTR();
             return;
+        } else {
+            // Log chi tiết nếu chưa đủ
+            if (validChunkCount < expectedChunkCount) {
+                addLogEntry(`⏳ Chưa đủ chunk: ${validChunkCount}/${expectedChunkCount} chunks có blob. Tiếp tục xử lý...`, 'info');
+            }
         }
 
         // Nếu chưa xong tất cả chunks, tiếp tục xử lý chunk tiếp theo
