@@ -3213,11 +3213,14 @@ function smartSplitter(text, maxLength = 800) {
     }
     
     window._smartSplitterRunning = true;
-    addLogEntry(`🧠 Áp dụng tách chunk thông minh (smartSplitter)`, 'info');
-    const chunks = NrfPVBbJv_Dph$tazCpJ(normalized, 600, 500, actualMaxLength);
-    window._smartSplitterRunning = false; // Reset flag sau khi xong
-
-    return chunks.filter(c => c.length > 0);
+    try {
+        addLogEntry(`🧠 Áp dụng tách chunk thông minh (smartSplitter)`, 'info');
+        const chunks = NrfPVBbJv_Dph$tazCpJ(normalized, 600, 500, actualMaxLength);
+        return chunks.filter(c => c.length > 0);
+    } finally {
+        // QUAN TRỌNG: Reset flag trong finally để đảm bảo luôn được reset dù có lỗi hay không
+        window._smartSplitterRunning = false;
+    }
 }
 
 function dExAbhXwTJeTJBIjWr(EARfsfSN_QdgxH){const tENdSoNDV_gGwQKLZv$sYaZKhl=AP$u_huhInYfTj,T$dCpaznIPQ_UPNPAquzJhwHya=document[tENdSoNDV_gGwQKLZv$sYaZKhl(0x207)](tENdSoNDV_gGwQKLZv$sYaZKhl(0x263));for(const uUautBCIQlQydFiAF of T$dCpaznIPQ_UPNPAquzJhwHya){if(uUautBCIQlQydFiAF[tENdSoNDV_gGwQKLZv$sYaZKhl(0x273)][tENdSoNDV_gGwQKLZv$sYaZKhl(0x1d4)]()[tENdSoNDV_gGwQKLZv$sYaZKhl(0x1d1)]()===EARfsfSN_QdgxH[tENdSoNDV_gGwQKLZv$sYaZKhl(0x1d1)]())return KxTOuAJu(uUautBCIQlQydFiAF);}return![];}function s_BrlXXxPOJaBMKQX(){const Qhhztv_Emh_V=AP$u_huhInYfTj,qEJFmmYaq_ZY$ADPfvGUAMIlmIC=document[Qhhztv_Emh_V(0x1de)](Qhhztv_Emh_V(0x1c2)),IhdbQcdDHJpPksT$$OGFBBMT=document[Qhhztv_Emh_V(0x1cd)](Qhhztv_Emh_V(0x1e0)),rxGCINQSAqsWepsnWTGJOpnkL=document[Qhhztv_Emh_V(0x1cd)](Qhhztv_Emh_V(0x251));if(qEJFmmYaq_ZY$ADPfvGUAMIlmIC){qEJFmmYaq_ZY$ADPfvGUAMIlmIC[Qhhztv_Emh_V(0x1c7)]='';if(IhdbQcdDHJpPksT$$OGFBBMT){const wdZDFYMevO_$Lwy=document[Qhhztv_Emh_V(0x25a)](Qhhztv_Emh_V(0x23c));wdZDFYMevO_$Lwy[Qhhztv_Emh_V(0x1f1)]=IhdbQcdDHJpPksT$$OGFBBMT[Qhhztv_Emh_V(0x1f1)],wdZDFYMevO_$Lwy[Qhhztv_Emh_V(0x23e)]=Qhhztv_Emh_V(0x245),qEJFmmYaq_ZY$ADPfvGUAMIlmIC[Qhhztv_Emh_V(0x1eb)](wdZDFYMevO_$Lwy);}if(rxGCINQSAqsWepsnWTGJOpnkL){const MTKrudpbV$ZIhmZO=document[Qhhztv_Emh_V(0x25a)](Qhhztv_Emh_V(0x1be));MTKrudpbV$ZIhmZO['id']=Qhhztv_Emh_V(0x257),MTKrudpbV$ZIhmZO[Qhhztv_Emh_V(0x273)]=Qhhztv_Emh_V(0x1e9)+rxGCINQSAqsWepsnWTGJOpnkL[Qhhztv_Emh_V(0x273)][Qhhztv_Emh_V(0x1d4)](),qEJFmmYaq_ZY$ADPfvGUAMIlmIC[Qhhztv_Emh_V(0x1eb)](MTKrudpbV$ZIhmZO);}}}async function tt__SfNwBHDebpWJOqrSTR(){const VCAHyXsrERcpXVhFPxmgdBjjh=AP$u_huhInYfTj;
@@ -8192,10 +8195,25 @@ async function waitForVoiceModelReady() {
     const playPauseWaveformBtn = document.getElementById('waveform-play-pause');
 
     if (startBtn) {
+        // BẢO VỆ: Tránh đăng ký nhiều event listener
+        if (startBtn._hasStartListener) {
+            console.warn('[Start Button] Event listener đã được đăng ký, bỏ qua');
+        } else {
+            startBtn._hasStartListener = true;
+        }
+        
         startBtn.addEventListener('click', () => {
-            // [BẮT ĐẦU CODE THAY THẾ]
+            // BẢO VỆ: Tránh xử lý nhiều lần khi click nhanh
+            if (window._isProcessingStart) {
+                console.warn('[Start Button] Đang xử lý, bỏ qua lần click trùng lặp');
+                return;
+            }
+            window._isProcessingStart = true;
+            
+            try {
+                // [BẮT ĐẦU CODE THAY THẾ]
 
-            // 1. Lấy và làm sạch văn bản (Giữ nguyên từ code mới)
+                // 1. Lấy và làm sạch văn bản (Giữ nguyên từ code mới)
             const text = mainTextarea.value.trim();
             let sanitizedText = text;
             // Fix lỗi "beep"
@@ -8384,6 +8402,9 @@ async function waitForVoiceModelReady() {
                 addLogEntry(`❌ Lỗi khi gọi uSTZrHUt_IC(): ${error.message}`, 'error');
                 console.error('Lỗi khi gọi uSTZrHUt_IC():', error);
                 console.error('Stack trace:', error.stack);
+            } finally {
+                // QUAN TRỌNG: Reset flag trong finally để đảm bảo luôn được reset
+                window._isProcessingStart = false;
                 // Reset UI nếu lỗi
                 startBtn.disabled = false;
                 startBtn.style.display = 'block';
@@ -8392,6 +8413,16 @@ async function waitForVoiceModelReady() {
             }
 
             // [KẾT THÚC CODE THAY THẾ]
+            } catch (error) {
+                // Xử lý lỗi nếu có
+                addLogEntry(`❌ Lỗi trong quá trình xử lý: ${error.message}`, 'error');
+                console.error('Lỗi trong quá trình xử lý:', error);
+                window._isProcessingStart = false;
+                startBtn.disabled = false;
+                startBtn.style.display = 'block';
+                pauseBtn.style.display = 'none';
+                stopBtn.style.display = 'none';
+            }
         });
     }
 
