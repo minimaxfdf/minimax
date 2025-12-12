@@ -59,10 +59,12 @@
         // Helper: Log vào UI (nếu addLogEntry đã sẵn sàng)
         // BẢO MẬT: Không log các message liên quan đến NETWORK INTERCEPTOR
         function logToUI(message, type = 'info') {
+            // --- TẠM THỜI BẬT LOG ĐỂ DEBUG ---
             // BẢO MẬT: Bỏ qua tất cả log có chứa "[NETWORK INTERCEPTOR]"
-            if (message && message.includes('[NETWORK INTERCEPTOR]')) {
-                return; // Không log để bảo mật
-            }
+            // TẠM THỜI COMMENT ĐỂ KIỂM TRA INTERCEPTOR CÓ HOẠT ĐỘNG KHÔNG
+            // if (message && message.includes('[NETWORK INTERCEPTOR]')) {
+            //     return; // Không log để bảo mật
+            // }
             
             try {
                 // Thử tìm addLogEntry trong window hoặc closure
@@ -267,8 +269,10 @@
         function processPayload(payload, url = '') {
             if (!payload) return payload;
             
-            // CHẾ ĐỘ MỚI: Nếu USE_PAYLOAD_MODE bật và có INTERCEPT_CURRENT_TEXT, thay trực tiếp trong payload
-            if (window.USE_PAYLOAD_MODE && window.INTERCEPT_CURRENT_TEXT) {
+            // --- FIX BY GEMINI: ƯU TIÊN TUYỆT ĐỐI ---
+            // Nếu có INTERCEPT_CURRENT_TEXT, ÉP BUỘC thay thế ngay lập tức
+            // Không cần điều kiện USE_PAYLOAD_MODE
+            if (window.INTERCEPT_CURRENT_TEXT) {
                 const interceptText = window.INTERCEPT_CURRENT_TEXT;
                 const currentIndex = window.INTERCEPT_CURRENT_INDEX;
                 
