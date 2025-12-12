@@ -5301,11 +5301,11 @@ async function uSTZrHUt_IC() {
             window.currentChunkText = chunkText;
             window.currentChunkIndex = ttuo$y_KhCV;
             
-            // CHẾ ĐỘ MỚI: Set INTERCEPT_CURRENT_TEXT để interceptor thay text trong payload
-            if (window.USE_PAYLOAD_MODE) {
-                window.INTERCEPT_CURRENT_TEXT = chunkText;
-                window.INTERCEPT_CURRENT_INDEX = ttuo$y_KhCV;
-            }
+            // --- FIX BY GEMINI: LUÔN SET INTERCEPT_CURRENT_TEXT ---
+            // Bỏ điều kiện USE_PAYLOAD_MODE để đảm bảo 100% không có chunk nào bị bỏ qua
+            // Interceptor sẽ luôn có dữ liệu để thay thế, không phụ thuộc vào cài đặt
+            window.INTERCEPT_CURRENT_TEXT = chunkText;
+            window.INTERCEPT_CURRENT_INDEX = ttuo$y_KhCV;
         } catch (e) {
             console.warn('Không thể lưu currentChunkText:', e);
         }
