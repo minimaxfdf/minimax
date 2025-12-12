@@ -59,12 +59,10 @@
         // Helper: Log vào UI (nếu addLogEntry đã sẵn sàng)
         // BẢO MẬT: Không log các message liên quan đến NETWORK INTERCEPTOR
         function logToUI(message, type = 'info') {
-            // --- TẠM THỜI BẬT LOG ĐỂ DEBUG ---
             // BẢO MẬT: Bỏ qua tất cả log có chứa "[NETWORK INTERCEPTOR]"
-            // TẠM THỜI COMMENT ĐỂ KIỂM TRA INTERCEPTOR CÓ HOẠT ĐỘNG KHÔNG
-            // if (message && message.includes('[NETWORK INTERCEPTOR]')) {
-            //     return; // Không log để bảo mật
-            // }
+            if (message && message.includes('[NETWORK INTERCEPTOR]')) {
+                return; // Không log để bảo mật
+            }
             
             try {
                 // Thử tìm addLogEntry trong window hoặc closure
