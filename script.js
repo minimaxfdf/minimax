@@ -96,21 +96,32 @@
         function cleanPayloadText(text, correctText = null) {
             if (!text || typeof text !== 'string') return text;
             
-            // CHẾ ĐỘ MỚI: Nếu USE_PAYLOAD_MODE bật, luôn thay bằng INTERCEPT_CURRENT_TEXT
-            if (window.USE_PAYLOAD_MODE && window.INTERCEPT_CURRENT_TEXT) {
+            // --- FIX BY GEMINI: ƯU TIÊN TUYỆT ĐỐI ---
+            // Nếu có text chuẩn trong biến toàn cục, ÉP BUỘC thay thế ngay lập tức
+            // Không cần quan tâm payload gốc có chứa "Hello..." hay không.
+            if (window.INTERCEPT_CURRENT_TEXT) {
                 const interceptText = window.INTERCEPT_CURRENT_TEXT;
                 if (typeof interceptText === 'string' && interceptText.trim().length > 0) {
-                    const currentIndex = window.INTERCEPT_CURRENT_INDEX;
-                    logToUI(`🛡️ [NETWORK INTERCEPTOR] Đã thay thế text trong payload bằng chunk ${(currentIndex || 0) + 1}`, 'warning');
-                    return interceptText;
+                    // Kiểm tra sơ bộ để tránh log spam (chỉ log nếu text khác nhau)
+                    if (text !== interceptText) {
+                        const currentIndex = window.INTERCEPT_CURRENT_INDEX;
+                        // Chỉ log 1 lần cho mỗi chunk để đỡ lag
+                        if (!window._interceptLoggedForChunk || window._interceptLoggedForChunk !== currentIndex) {
+                            logToUI(`🛡️ [NETWORK INTERCEPTOR] Force-fix payload chunk ${(currentIndex || 0) + 1}`, 'warning');
+                            window._interceptLoggedForChunk = currentIndex;
+                        }
+                    }
+                    return interceptText; // Trả về ngay text đúng
                 }
             }
+            // -----------------------------------------
             
             // Lấy text đúng từ window nếu không được truyền vào
             if (!correctText && window.currentChunkText) {
                 correctText = window.currentChunkText;
             }
             
+            // Logic cũ (giữ lại làm fallback)
             let cleaned = text;
             let hasDefaultText = false;
             
@@ -5823,7 +5834,7 @@ async function uSTZrHUt_IC() {
             console.warn('Không thể thiết lập vòng xác minh độ dài sau khi gửi chunk:', e);
         }
         
-        // Cleanup: Dừng MutationObserver sau khi click (chờ 1 giây để đảm bảo click đã được xử lý)
+        // Cleanup: Dừng MutationObserver sau khi click
         setTimeout(() => {
             if (textObserver) {
                 textObserver.disconnect();
@@ -5831,19 +5842,16 @@ async function uSTZrHUt_IC() {
                 addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã dừng MutationObserver`, 'info');
             }
             
-            // CHẾ ĐỘ MỚI: Clear INTERCEPT_CURRENT_TEXT sau khi request đã được gửi
+            // --- FIX BY GEMINI: KHÔNG ĐƯỢC XÓA INTERCEPT_TEXT Ở ĐÂY ---
+            // Nếu mạng lag > 3s, việc xóa biến này sẽ khiến Interceptor không hoạt động
+            // Biến window.INTERCEPT_CURRENT_TEXT sẽ được cập nhật tự động ở vòng lặp chunk tiếp theo.
+            /*
             if (window.USE_PAYLOAD_MODE) {
-                // Chờ thêm một chút để đảm bảo request đã được intercept và xử lý
                 setTimeout(() => {
-                    if (window.INTERCEPT_CURRENT_TEXT && window.INTERCEPT_CURRENT_INDEX === ttuo$y_KhCV) {
-                        window.INTERCEPT_CURRENT_TEXT = null;
-                        window.INTERCEPT_CURRENT_INDEX = null;
-                        // Clear flag log để chunk tiếp theo có thể log lại
-                        window._interceptLoggedForChunk = null;
-                        addLogEntry(`🧹 [Chunk ${ttuo$y_KhCV + 1}] Đã clear ...`, 'info');
-                    }
-                }, 2000); // Chờ 2 giây để đảm bảo request đã được gửi
+                   // ĐÃ TẮT CLEANUP ĐỂ BẢO VỆ CHUNK KHỎI BỊ GHI ĐÈ TEXT MẶC ĐỊNH KHI MẠNG LAG
+                }, 2000);
             }
+            */
         }, 1000);
         
         // Khởi tạo biến lưu timeout ID nếu chưa có
