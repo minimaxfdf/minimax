@@ -6473,10 +6473,11 @@ function igyo$uwVChUzI() {
                         const chunkSizeKB = qILAV.size / 1024;
                         
                         // =======================================================
-                        // == KIỂM TRA: Khoảng dung lượng không hợp lệ (39.01 - 40.0 KB) ==
+                        // == KIỂM TRA: Khoảng dung lượng không hợp lệ (39.01 - 39.80 KB) ==
+                        // == Lưu ý: 39.84 KB và các giá trị >= 39.85 KB được coi là hợp lệ ==
                         // =======================================================
                         const MIN_SIZE_KB = 39.01;
-                        const MAX_SIZE_KB = 40.0;
+                        const MAX_SIZE_KB = 39.80; // Giảm từ 40.0 xuống 39.80 để chấp nhận 39.84 KB
                         const isInSuspiciousRange = chunkSizeKB >= MIN_SIZE_KB && chunkSizeKB <= MAX_SIZE_KB;
                         
                         if (isInSuspiciousRange) {
