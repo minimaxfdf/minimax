@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DUC LOI - Clone Voice (Không cần API) - Modded
 // @namespace    mmx-secure
-// @version      35.0
+// @version      40.0
 // @description  Tạo audio giọng nói clone theo ý của bạn. Không giới hạn. Thêm chức năng Ghép hội thoại, Đổi văn bản hàng loạt & Thiết lập dấu câu (bao gồm dấu xuống dòng).
 // @author       HUỲNH ĐỨC LỢI ( Zalo: 0835795597) - Đã chỉnh sửa
 // @match        https://www.minimax.io/audio*
@@ -14,6 +14,7 @@
 // @connect      unpkg.com
 // @connect      cdn.jsdelivr.net
 // @connect      cloud.appwrite.io
+// @connect      docs.google.com
 // ==/UserScript==
 
 
@@ -2276,7 +2277,7 @@ button:disabled {
         
         <div id="gemini-quota-display" style="color: #8be9fd; font-weight: bold; margin-left: 15px; margin-top: 10px; font-size: 14px;">Đang tải quota...</div>
         </div> 
-    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <button id="toggle-log-btn" class="clear-log-btn" style="margin-bottom:10px;background-color:#4b5563;cursor:pointer;pointer-events:auto;opacity:1;" onclick="(function(btn){var panel=document.getElementById('log-panel');if(!panel)return;var hidden=panel.style.display==='none'||!panel.style.display;panel.style.display=hidden?'block':'none';btn.textContent=hidden?'📜 Ẩn log hoạt động':'📜 Xem / Ẩn log hoạt động';})(this);">📜 Xem / Ẩn log hoạt động</button> <div id="log-panel" style="display:none;"> <h2>Log hoạt động</h2> <div id="log-container" class="log-container"> <div class="log-entry">Sẵn sàng theo dõi văn bản chunk</div> </div> <button id="clear-log-btn" class="clear-log-btn">Xóa log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 35.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><h4 style="margin: 0;">Nhập văn bản cần tạo giọng nói</h4><button id="open-batch-render-modal-btn" style="background-color: #ffb86c; color: #282a36; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.3s ease; white-space: nowrap;">🎯 Render hàng loạt file</button></div>
+    <div class="column-content"> <div class="section" style="margin-bottom: 10px!important;"> <h4>1. Tải lên tệp âm thanh (Tối đa 1 file, độ dài 20-60 giây)</h4> <input type="file" id="gemini-file-input" accept=".wav,.mp3,.mpeg,.mp4,.m4a,.avi,.mov,.wmv,.flv,.mkv,.webm"> </div> <div class="section"> <h4>2. Chọn ngôn ngữ</h4> <select id="gemini-language-select"><option value="Vietnamese">Vietnamese</option><option value="English">English</option><option value="Arabic">Arabic</option><option value="Cantonese">Cantonese</option><option value="Chinese (Mandarin)">Chinese (Mandarin)</option><option value="Dutch">Dutch</option><option value="French">French</option><option value="German">German</option><option value="Indonesian">Indonesian</option><option value="Italian">Italian</option><option value="Japanese">Japanese</option><option value="Korean">Korean</option><option value="Portuguese">Portuguese</option><option value="Russian">Russian</option><option value="Spanish">Spanish</option><option value="Turkish">Turkish</option><option value="Ukrainian">Ukrainian</option><option value="Thai">Thai</option><option value="Polish">Polish</option><option value="Romanian">Romanian</option><option value="Greek">Greek</option><option value="Czech">Czech</option><option value="Finnish">Finnish</option><option value="Hindi">Hindi</option><option value="Bulgarian">Bulgarian</option><option value="Danish">Danish</option><option value="Hebrew">Hebrew</option><option value="Malay">Malay</option><option value="Persian">Persian</option><option value="Slovak">Slovak</option><option value="Swedish">Swedish</option><option value="Croatian">Croatian</option><option value="Filipino">Filipino</option><option value="Hungarian">Hungarian</option><option value="Norwegian">Norwegian</option><option value="Slovenian">Slovenian</option><option value="Catalan">Catalan</option><option value="Nynorsk">Nynorsk</option><option value="Tamil">Tamil</option><option value="Afrikaans">Afrikaans</option></select> </div> <div class="section"> <button id="gemini-upload-btn">Tải lên & Cấu hình tự động</button> <div id="gemini-upload-status"></div> </div> <div class="log-section"> <button id="toggle-log-btn" class="clear-log-btn" style="margin-bottom:10px;background-color:#4b5563;cursor:pointer;pointer-events:auto;opacity:1;" onclick="(function(btn){var panel=document.getElementById('log-panel');if(!panel)return;var hidden=panel.style.display==='none'||!panel.style.display;panel.style.display=hidden?'block':'none';btn.textContent=hidden?'📜 Ẩn log hoạt động':'📜 Xem / Ẩn log hoạt động';})(this);">📜 Xem / Ẩn log hoạt động</button> <div id="log-panel" style="display:none;"> <h2>Log hoạt động</h2> <div id="log-container" class="log-container"> <div class="log-entry">Sẵn sàng theo dõi văn bản chunk</div> </div> <button id="clear-log-btn" class="clear-log-btn">Xóa log</button> </div> </div> </div> </div> <div id="gemini-col-2" class="gemini-column"> <div class="column-header box-info-version"><h3>Trình tạo nội dung</h3><div>Version: 40.0 - Update: 27/01/2025 - Tạo bởi: <a href="https://fb.com/HuynhDucLoi/" target="_blank">Huỳnh Đức Lợi</a></div></div> <div class="column-content">     <div id="gemini-col-2-left">     <div class="section text-section"> <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><h4 style="margin: 0;">Nhập văn bản cần tạo giọng nói</h4><button id="open-batch-render-modal-btn" style="background-color: #ffb86c; color: #282a36; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.3s ease; white-space: nowrap;">🎯 Render hàng loạt file</button></div>
     <div class="text-input-options">
         <div class="input-tabs">
             <button id="text-tab" class="tab-btn active">Nhập trực tiếp</button>
@@ -2693,6 +2694,9 @@ button:disabled {
             logContainer.scrollTop = logContainer.scrollHeight;
         }
     }
+    
+    // Expose addLogEntry to window for global access
+    window.addLogEntry = addLogEntry;
 
     function clearLog() {
         const logContainer = document.getElementById('log-container');
@@ -3161,11 +3165,232 @@ button:disabled {
             });
         }
         
+        // =================================================================
+        // KHỞI TẠO MULTITHREAD SYSTEM
+        // =================================================================
+        // Đọc số worker từ localStorage hoặc dùng mặc định (3 workers)
+        const savedWorkerCount = localStorage.getItem('multithread_worker_count');
+        const workerCount = savedWorkerCount ? parseInt(savedWorkerCount) : 3; // Mặc định 3 workers
+        
+        // Khởi tạo multithread system - đợi một chút để đảm bảo IIFE đã chạy xong
+        setTimeout(() => {
+            if (typeof window.initMultithreadSystem === 'function') {
+                window.initMultithreadSystem(workerCount);
+                console.log(`[33.js] ✅ Multithread system đã được khởi tạo với ${workerCount} workers`);
+                if (typeof window.addLogEntry === 'function') {
+                    window.addLogEntry(`🚀 Multithread system đã được khởi tạo với ${workerCount} workers`, 'info');
+                }
+            } else {
+                console.warn('[33.js] ⚠️ initMultithreadSystem không tồn tại - Multithread system chưa được load');
+                // Thử lại sau 1 giây
+                setTimeout(() => {
+                    if (typeof window.initMultithreadSystem === 'function') {
+                        window.initMultithreadSystem(workerCount);
+                        console.log(`[33.js] ✅ Multithread system đã được khởi tạo với ${workerCount} workers (retry)`);
+                        if (typeof window.addLogEntry === 'function') {
+                            window.addLogEntry(`🚀 Multithread system đã được khởi tạo với ${workerCount} workers`, 'info');
+                        }
+                    }
+                }, 1000);
+            }
+        }, 100);
+        
+        // =================================================================
+        // CHO PHÉP COPY TRONG LOG PANEL
+        // =================================================================
+        // Thêm CSS để cho phép select và copy trong log-panel
+        const logPanelStyle = document.createElement('style');
+        logPanelStyle.id = 'log-panel-copy-style';
+        logPanelStyle.textContent = `
+            #log-panel, #log-panel *, #log-container, #log-container *, .log-entry, .log-entry * {
+                user-select: text !important;
+                -webkit-user-select: text !important;
+                -moz-user-select: text !important;
+                -ms-user-select: text !important;
+                cursor: text !important;
+                pointer-events: auto !important;
+            }
+            .log-entry {
+                user-select: text !important;
+                -webkit-user-select: text !important;
+                -moz-user-select: text !important;
+                -ms-user-select: text !important;
+                cursor: text !important;
+                -webkit-touch-callout: default !important;
+            }
+        `;
+        // Remove existing style if any
+        const existingStyle = document.getElementById('log-panel-copy-style');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+        document.head.appendChild(logPanelStyle);
+        console.log('[33.js] ✅ Đã thêm CSS cho phép copy trong log-panel');
+        
+        // =================================================================
+        // KIỂM TRA LICENSE TỪ GOOGLE SHEET - LUÔN LẤY DỮ LIỆU MỚI NHẤT
+        // =================================================================
+        // QUAN TRỌNG: Mỗi lần chạy script phải lấy dữ liệu mới nhất từ Google Sheet
+        // Nếu status là BANNED hoặc EXPIRED → Khóa nút "Bắt đầu tạo âm thanh"
+        // URL được lưu trong background.js (obfuscated) để tránh lộ
+        
+        // =================================================================
+        // CHECK LICENSE QUA EXTENSION BACKGROUND SCRIPT
+        // =================================================================
+        // QUAN TRỌNG: Check license hoàn toàn trong background.js để tránh CSP
+        // CSP của minimax.io chặn các request từ MAIN world
+        // Background script có quyền truy cập mọi domain, không bị CSP block
+        async function checkLicenseFromGoogleSheet() {
+            try {
+                // Lấy machine ID từ window (được inject bởi extension)
+                const machineId = window.MY_UNIQUE_MACHINE_ID || window['MY_UNIQUE_MACHINE_ID'];
+                if (!machineId) {
+                    console.warn('[33.js] ⚠️ Không tìm thấy Machine ID - Bỏ qua check license');
+                    return;
+                }
+                
+                // Kiểm tra xem có chrome.runtime không (extension context)
+                if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+                    console.warn('[33.js] ⚠️ Không có chrome.runtime - Không thể check license');
+                    return;
+                }
+                
+                console.log('[33.js] 🔍 Đang kiểm tra license qua extension background script...');
+                if (typeof addLogEntry === 'function') {
+                    addLogEntry('🔍 Đang kiểm tra license từ Google Sheet...', 'info');
+                }
+                
+                // Gửi request đến background.js để check license
+                console.log('[33.js] 📤 Gửi request check license đến background.js với machineId:', machineId);
+                chrome.runtime.sendMessage({
+                    action: 'check_license_from_sheet',
+                    machineId: machineId
+                }, (response) => {
+                    console.log('[33.js] 📥 Nhận được response từ background.js:', response);
+                    
+                    if (chrome.runtime.lastError) {
+                        console.error('[33.js] ❌ Extension error:', chrome.runtime.lastError.message);
+                        if (typeof addLogEntry === 'function') {
+                            addLogEntry(`❌ Lỗi extension: ${chrome.runtime.lastError.message}`, 'error');
+                        }
+                        disableStartButton('❌ Lỗi kiểm tra license');
+                        return;
+                    }
+                    
+                    if (!response) {
+                        console.error('[33.js] ❌ Không nhận được response từ extension');
+                        if (typeof addLogEntry === 'function') {
+                            addLogEntry('❌ Không nhận được response từ extension', 'error');
+                        }
+                        disableStartButton('❌ Lỗi kiểm tra license');
+                        return;
+                    }
+                    
+                    console.log('[33.js] 📊 Response details:', {
+                        success: response.success,
+                        valid: response.valid,
+                        status: response.status,
+                        message: response.message,
+                        days_left: response.days_left
+                    });
+                    
+                    if (!response.success) {
+                        console.error('[33.js] ❌ Lỗi khi check license:', response.error);
+                        if (typeof addLogEntry === 'function') {
+                            addLogEntry(`❌ Lỗi khi kiểm tra license: ${response.error || 'Unknown error'}`, 'error');
+                        }
+                        disableStartButton('❌ Lỗi kiểm tra license');
+                        return;
+                    }
+                    
+                    // Xử lý kết quả từ background.js
+                    const startQueueBtn = document.getElementById('gemini-start-queue-btn');
+                    
+                    // QUAN TRỌNG: Kiểm tra cả valid và status
+                    if (response.valid !== true || response.status !== "ACTIVE") {
+                        const errorMsg = response.message || response.status || 'License không hợp lệ';
+                        console.error(`[33.js] ❌ License không hợp lệ:`, {
+                            valid: response.valid,
+                            status: response.status,
+                            message: response.message
+                        });
+                        if (typeof addLogEntry === 'function') {
+                            addLogEntry(`❌ License không hợp lệ: ${errorMsg}`, 'error');
+                        }
+                        disableStartButton(`❌ ${errorMsg}`);
+                        return;
+                    }
+                    
+                    // License hợp lệ
+                    const daysLeft = response.days_left || 0;
+                    console.log(`[33.js] ✅ License hợp lệ: ACTIVE, còn ${daysLeft} ngày`);
+                    if (typeof addLogEntry === 'function') {
+                        addLogEntry(`✅ License hợp lệ: ACTIVE, còn ${daysLeft} ngày`, 'success');
+                    }
+                    
+                    // Bật nút nếu đã bị disable
+                    if (startQueueBtn) {
+                        startQueueBtn.disabled = false;
+                        startQueueBtn.style.opacity = '1';
+                        startQueueBtn.style.cursor = 'pointer';
+                        startQueueBtn.title = '';
+                        console.log('[33.js] ✅ Đã bật nút "Bắt đầu tạo âm thanh"');
+                    } else {
+                        console.warn('[33.js] ⚠️ Không tìm thấy nút "Bắt đầu tạo âm thanh"');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('[33.js] ❌ Lỗi khi kiểm tra license:', error);
+                console.error('[33.js] ⚠️ Extension phải kết nối server để sử dụng tool!');
+                if (typeof addLogEntry === 'function') {
+                    addLogEntry(`❌ Lỗi kết nối server: ${error.message} - Không thể vào tool`, 'error');
+                }
+                // =================================================================
+                // QUAN TRỌNG: Nếu không kết nối được server → KHÔNG CHO PHÉP VÀO TOOL
+                // =================================================================
+                disableStartButton('❌ Lỗi kết nối server - Không thể vào tool');
+            }
+        }
+        
+        // Hàm disable nút "Bắt đầu tạo âm thanh"
+        function disableStartButton(reason = '') {
+            const startQueueBtn = document.getElementById('gemini-start-queue-btn');
+            if (startQueueBtn) {
+                startQueueBtn.disabled = true;
+                startQueueBtn.style.opacity = '0.5';
+                startQueueBtn.style.cursor = 'not-allowed';
+                startQueueBtn.title = reason || 'License không hợp lệ';
+                
+                // Thay đổi text nút nếu có
+                const originalText = startQueueBtn.textContent || startQueueBtn.innerText;
+                if (!startQueueBtn.dataset.originalText) {
+                    startQueueBtn.dataset.originalText = originalText;
+                }
+                startQueueBtn.textContent = reason || 'License không hợp lệ';
+            }
+        }
+        
+        // =================================================================
+        // CHỈ KIỂM TRA LICENSE 1 LẦN KHI SCRIPT ĐƯỢC INJECT
+        // =================================================================
+        // QUAN TRỌNG: Chỉ check license 1 lần khi script được inject (DOMContentLoaded)
+        // Không check lại định kỳ hoặc trước khi render để tránh tốn tài nguyên
+        checkLicenseFromGoogleSheet();
+        
         // Validation khi bấm nút "Bắt đầu tạo âm thanh"
         const startQueueBtn = document.getElementById('gemini-start-queue-btn');
         if (startQueueBtn) {
             const originalClickHandler = startQueueBtn.onclick;
             startQueueBtn.addEventListener('click', function(e) {
+                // Kiểm tra nút có bị disable không (đã được check khi inject)
+                if (startQueueBtn.disabled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('❌ License không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ admin.');
+                    return false;
+                }
+                
                 const textarea = document.getElementById('gemini-main-textarea');
                 if (textarea && textarea.value.length > MAX_TEXT_LENGTH) {
                     e.preventDefault();
@@ -4779,6 +5004,223 @@ function stopKeepAliveLoop() {
         console.warn('[KEEP-ALIVE] Không thể dừng:', e);
     }
 }
+
+// =======================================================
+// == SCRIPT CHỐNG F12 VÀ DEVTOOLS ==
+// == Phát hiện và reset ngay khi DevTools được mở ==
+// =======================================================
+(function initAntiDevTools() {
+    'use strict';
+    
+    // Tránh chạy nhiều lần
+    if (window.devToolsDetectorStarted && window.devToolsDetectorLoopId) {
+        return;
+    }
+    
+    // Dọn dẹp loop cũ nếu có
+    if (window.devToolsDetectorLoopId) {
+        clearTimeout(window.devToolsDetectorLoopId);
+        window.devToolsDetectorLoopId = null;
+    }
+    
+    window.devToolsDetectorStarted = true;
+
+    const signal = '!!!---DEVTOOLS-DETECTED---!!!';
+    let lastDetection = false;
+    let checkCount = 0;
+    
+    // CHỐNG F12 VÀ TẤT CẢ CÁC PHÍM TẮT DEVTOOLS
+    document.addEventListener('keydown', function(e) {
+        // F12 (Mở DevTools)
+        if (e.keyCode === 123) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+I (Mở DevTools)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+J (Mở Console)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+C (Inspect Element)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+K (Console - Firefox hoặc Network)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 75) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+E (Elements panel)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 69) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+P (Command Palette)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 80) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+M (Device Mode)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 77) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+O (Sources panel)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 79) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+F (Search in all files)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 70) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+S (Screenshot)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 83) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+\ (Toggle sidebar)
+        if (e.ctrlKey && e.keyCode === 220) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && e.keyCode === 85) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+Delete (Clear browsing data - có thể mở DevTools)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 46) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+N (Incognito - có thể mở DevTools)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 78) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+        
+        // Ctrl+Shift+T (Reopen closed tab - có thể mở DevTools)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 84) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPage();
+            return false;
+        }
+    }, true);
+    
+    // CHỐNG RIGHT-CLICK (Context Menu)
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }, true);
+    
+    // CHỐNG SELECT TEXT (có thể dùng để inspect)
+    // NHƯNG: Cho phép select trong log-panel để có thể copy log
+    document.addEventListener('selectstart', function(e) {
+        // Cho phép select trong log-panel và các phần tử con của nó
+        const target = e.target;
+        const logPanel = document.getElementById('log-panel');
+        const logContainer = document.getElementById('log-container');
+        
+        // Kiểm tra xem target có phải là phần tử trong log-panel không
+        if (logPanel && logPanel.contains(target)) {
+            // Cho phép select trong log-panel
+            return true;
+        }
+        
+        if (logContainer && logContainer.contains(target)) {
+            // Cho phép select trong log-container
+            return true;
+        }
+        
+        // Kiểm tra nếu target có class log-entry hoặc là con của log-entry
+        let currentElement = target;
+        while (currentElement && currentElement !== document.body) {
+            if (currentElement.classList && currentElement.classList.contains('log-entry')) {
+                // Cho phép select trong log-entry
+                return true;
+            }
+            currentElement = currentElement.parentElement;
+        }
+        
+        // Chặn select ở các phần tử khác
+        e.preventDefault();
+        return false;
+    }, true);
+    
+    // Hàm reset trang
+    function resetPage() {
+        try {
+            // Xóa tất cả dữ liệu
+            localStorage.clear();
+            sessionStorage.clear();
+        } catch(e) {
+            console.error('[Anti-DevTools] Error clearing storage:', e);
+        }
+        // Reset ngay lập tức
+        window.location.reload(true);
+    }
+
+    // TẮT HOÀN TOÀN LOGIC PHÁT HIỆN TỰ ĐỘNG DEVTOOLS
+    // CHỈ GIỮ LẠI PHẦN CHẶN PHÍM TẮT (F12, Ctrl+Shift+I, etc.)
+    // Lý do: Logic phát hiện tự động dễ gây false positive
+    
+    // KHÔNG CHẠY LOGIC PHÁT HIỆN TỰ ĐỘNG NỮA
+    // Chỉ chặn phím tắt và các thao tác khác
+})();
 
 // =======================================================
 // == KHỞI ĐỘNG SILENT AUDIO NGAY KHI SCRIPT ĐƯỢC LOAD ==
@@ -9338,6 +9780,14 @@ async function waitForVoiceModelReady() {
             }
             SI$acY = smartSplitter(sanitizedText, 3000); // Mảng chứa text (legacy)
             
+            // Đồng bộ chunks với multithread system
+            window.SI$acY = SI$acY;
+            if (window.MULTITHREAD_MASTER && window.MULTITHREAD_MASTER.isMultithreadEnabled) {
+                window.MULTITHREAD_MASTER.chunks = SI$acY;
+                window.MULTITHREAD_MASTER.chunkBlobs = new Array(SI$acY.length).fill(null);
+                console.log(`[Multithread] Đã đồng bộ ${SI$acY.length} chunks vào MULTITHREAD_MASTER`);
+            }
+            
             // Kiểm tra xem có chunk nào không
             if (!SI$acY || SI$acY.length === 0) {
                 addLogEntry(`❌ Lỗi: Không thể chia văn bản thành chunks. Văn bản có thể quá ngắn hoặc có lỗi.`, 'error');
@@ -10056,3 +10506,376 @@ async function waitForVoiceModelReady() {
             errorObserver.disconnect();
         }
     });
+
+    // =================================================================
+    // MULTITHREAD RENDERING SYSTEM - Tích hợp vào 33.js
+    // =================================================================
+    (function() {
+        'use strict';
+
+        const MULTITHREAD_CONFIG = {
+            BROADCAST_CHANNEL_NAME: 'minimax_multithread_channel',
+            MAX_WORKERS: 3,
+            STAGGERED_DELAY: 2000,
+            WORKER_READY_TIMEOUT: 10000,
+        };
+
+        function detectMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isWorker = urlParams.get('worker') === 'true' || sessionStorage.getItem('multithread_worker') === 'true';
+            return isWorker ? 'WORKER' : 'MASTER';
+        }
+
+        const CURRENT_MODE = detectMode();
+        let broadcastChannel = null;
+
+        function initBroadcastChannel() {
+            if (!broadcastChannel) {
+                broadcastChannel = new BroadcastChannel(MULTITHREAD_CONFIG.BROADCAST_CHANNEL_NAME);
+                console.log(`[Multithread] Mode: ${CURRENT_MODE}, BroadcastChannel initialized`);
+            }
+            return broadcastChannel;
+        }
+
+        // =================================================================
+        // MASTER MODE
+        // =================================================================
+        if (CURRENT_MODE === 'MASTER') {
+            window.MULTITHREAD_MASTER = {
+                payloadTemplate: null,
+                workerTabIds: [],
+                chunks: [],
+                chunkBlobs: [],
+                currentChunkIndex: 0,
+                workersReady: [],
+                workersBusy: {},
+                isMultithreadEnabled: false,
+                workerCount: 1,
+                chunk1Completed: false,
+            };
+
+            // Capture Payload sau Chunk 1 thành công
+            function captureMasterPayload() {
+                const checkPayload = setInterval(() => {
+                    // Tìm payload từ network interceptor (33.js đã có sẵn)
+                    if (window.lastCapturedPayload || window.INTERCEPT_PAYLOAD) {
+                        const payload = window.lastCapturedPayload || window.INTERCEPT_PAYLOAD;
+                        if (payload && typeof payload === 'object') {
+                            window.MULTITHREAD_MASTER.payloadTemplate = JSON.parse(JSON.stringify(payload));
+                            console.log('[Multithread Master] ✅ Đã capture Payload mẫu');
+                            clearInterval(checkPayload);
+                            if (window.MULTITHREAD_MASTER.isMultithreadEnabled) {
+                                spawnWorkers();
+                            }
+                        }
+                    }
+                }, 500);
+
+                setTimeout(() => clearInterval(checkPayload), 30000);
+            }
+
+            async function spawnWorkers() {
+                const workerCount = window.MULTITHREAD_MASTER.workerCount || 1;
+                if (workerCount <= 1) return;
+
+                console.log(`[Multithread Master] Đang spawn ${workerCount} worker tabs...`);
+
+                if (typeof chrome !== 'undefined' && chrome.runtime) {
+                    chrome.runtime.sendMessage({
+                        action: 'spawn_worker_tabs',
+                        count: workerCount
+                    }, (response) => {
+                        if (response && response.success) {
+                            window.MULTITHREAD_MASTER.workerTabIds = response.tabIds || [];
+                            console.log('[Multithread Master] ✅ Đã spawn workers:', window.MULTITHREAD_MASTER.workerTabIds);
+                            waitForWorkersReady();
+                        }
+                    });
+                }
+            }
+
+            function waitForWorkersReady() {
+                const expectedWorkers = window.MULTITHREAD_MASTER.workerTabIds.length;
+                let readyCount = 0;
+                const timeout = setTimeout(() => {
+                    if (readyCount > 0) startDistributingTasks();
+                }, MULTITHREAD_CONFIG.WORKER_READY_TIMEOUT);
+
+                initBroadcastChannel().addEventListener('message', function onWorkerReady(event) {
+                    if (event.data.type === 'WORKER_READY') {
+                        readyCount++;
+                        if (readyCount >= expectedWorkers) {
+                            clearTimeout(timeout);
+                            broadcastChannel.removeEventListener('message', onWorkerReady);
+                            startDistributingTasks();
+                        }
+                    }
+                });
+            }
+
+            function startDistributingTasks() {
+                if (!window.MULTITHREAD_MASTER.payloadTemplate) {
+                    console.error('[Multithread Master] ❌ Chưa có Payload mẫu!');
+                    return;
+                }
+                distributeChunksToWorkers(1); // Bắt đầu từ chunk index 1
+            }
+
+            function distributeChunksToWorkers(startIndex) {
+                const chunks = window.MULTITHREAD_MASTER.chunks || window.SI$acY || [];
+                const workers = window.MULTITHREAD_MASTER.workerTabIds || [];
+                
+                if (chunks.length <= startIndex) return;
+
+                for (let i = startIndex; i < chunks.length; i++) {
+                    const workerIndex = findAvailableWorker();
+                    if (workerIndex === -1) break;
+
+                    const workerId = workers[workerIndex];
+                    const chunkText = chunks[i];
+                    sendTaskToWorker(workerId, i, chunkText);
+                }
+            }
+
+            function findAvailableWorker() {
+                const workers = window.MULTITHREAD_MASTER.workerTabIds || [];
+                const busy = window.MULTITHREAD_MASTER.workersBusy || {};
+                for (let i = 0; i < workers.length; i++) {
+                    if (!busy[workers[i]]) return i;
+                }
+                return -1;
+            }
+
+            function sendTaskToWorker(workerId, chunkIndex, chunkText) {
+                const payload = JSON.parse(JSON.stringify(window.MULTITHREAD_MASTER.payloadTemplate));
+                
+                // Thay text trong payload
+                if (payload.text) payload.text = chunkText;
+                else if (payload.content) payload.content = chunkText;
+                else if (payload.data && payload.data.text) payload.data.text = chunkText;
+
+                window.MULTITHREAD_MASTER.workersBusy[workerId] = chunkIndex;
+
+                initBroadcastChannel().postMessage({
+                    type: 'TASK_ASSIGN',
+                    targetWorker: workerId,
+                    chunkIndex: chunkIndex,
+                    chunkText: chunkText,
+                    payload: payload
+                });
+
+                console.log(`[Multithread Master] 📤 Đã gửi Chunk ${chunkIndex + 1} cho Worker ${workerId}`);
+            }
+
+            function setupMasterListener() {
+                initBroadcastChannel().addEventListener('message', (event) => {
+                    const data = event.data;
+                    if (data.type === 'TASK_RESULT') {
+                        const { workerId, chunkIndex, blobData, success, error } = data;
+                        delete window.MULTITHREAD_MASTER.workersBusy[workerId];
+                        
+                        if (success && blobData) {
+                            const blob = base64ToBlob(blobData);
+                            window.MULTITHREAD_MASTER.chunkBlobs[chunkIndex] = blob;
+                            // Cũng lưu vào window.chunkBlobs để tương thích với code hiện tại
+                            if (!window.chunkBlobs) window.chunkBlobs = [];
+                            window.chunkBlobs[chunkIndex] = blob;
+                            
+                            console.log(`[Multithread Master] ✅ Nhận được Chunk ${chunkIndex + 1} từ Worker ${workerId}`);
+                            checkAllChunksComplete();
+                            distributeChunksToWorkers(window.MULTITHREAD_MASTER.currentChunkIndex + 1);
+                        }
+                    }
+                });
+            }
+
+            function checkAllChunksComplete() {
+                const chunks = window.MULTITHREAD_MASTER.chunks || window.SI$acY || [];
+                const chunkBlobs = window.chunkBlobs || [];
+                
+                let completedCount = 0;
+                for (let i = 0; i < chunks.length; i++) {
+                    if (chunkBlobs[i] !== null && chunkBlobs[i] !== undefined) completedCount++;
+                }
+
+                if (completedCount >= chunks.length) {
+                    console.log('[Multithread Master] ✅ Tất cả chunks đã hoàn thành!');
+                    closeWorkerTabs();
+                }
+            }
+
+            function closeWorkerTabs() {
+                const tabIds = window.MULTITHREAD_MASTER.workerTabIds || [];
+                if (typeof chrome !== 'undefined' && chrome.runtime && tabIds.length > 0) {
+                    chrome.runtime.sendMessage({
+                        action: 'close_worker_tabs',
+                        tabIds: tabIds
+                    });
+                }
+            }
+
+            function base64ToBlob(base64, mimeType = 'audio/mpeg') {
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                return new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+            }
+
+            window.MULTITHREAD_MASTER.capturePayload = captureMasterPayload;
+            window.MULTITHREAD_MASTER.setupListener = setupMasterListener;
+            window.MULTITHREAD_MASTER.distributeChunks = distributeChunksToWorkers;
+
+            setupMasterListener();
+
+            // Hook vào khi Chunk 1 hoàn thành
+            const originalCheckComplete = window.checkChunkComplete || function() {};
+            window.checkChunkComplete = function(chunkIndex) {
+                originalCheckComplete(chunkIndex);
+                if (chunkIndex === 0 && !window.MULTITHREAD_MASTER.chunk1Completed) {
+                    window.MULTITHREAD_MASTER.chunk1Completed = true;
+                    setTimeout(() => {
+                        captureMasterPayload();
+                    }, 1000);
+                }
+            };
+        }
+
+        // =================================================================
+        // WORKER MODE
+        // =================================================================
+        if (CURRENT_MODE === 'WORKER') {
+            sessionStorage.setItem('multithread_worker', 'true');
+            
+            function hideWorkerUI() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    body > div:not(.multithread-worker-status) { opacity: 0.1; pointer-events: none; }
+                    .multithread-worker-status {
+                        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                        z-index: 999999; background: rgba(0,0,0,0.9); color: white;
+                        padding: 20px; border-radius: 8px; font-family: monospace;
+                    }
+                `;
+                document.head.appendChild(style);
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'multithread-worker-status';
+                statusDiv.innerHTML = '<div>🔄 Worker Mode - Đang chờ lệnh từ Master...</div>';
+                document.body.appendChild(statusDiv);
+            }
+
+            function sendWorkerReady() {
+                const workerId = new URLSearchParams(window.location.search).get('workerId') || 'unknown';
+                sessionStorage.setItem('multithread_worker_id', workerId);
+                initBroadcastChannel().postMessage({ type: 'WORKER_READY', workerId: workerId });
+            }
+
+            function executeRenderTask(chunkIndex, chunkText, payload) {
+                console.log(`[Multithread Worker] 📥 Nhận task: Chunk ${chunkIndex + 1}`);
+                window.INTERCEPT_CURRENT_TEXT = chunkText;
+                window.INTERCEPT_CURRENT_INDEX = chunkIndex;
+                window.lastCapturedPayload = payload;
+                triggerRenderRequest(chunkIndex, chunkText);
+            }
+
+            function triggerRenderRequest(chunkIndex, chunkText) {
+                const textarea = document.querySelector('textarea[id*="text"], textarea[class*="text"]');
+                const generateButton = document.querySelector('button:contains("Generate"), button:contains("Tạo"), button[id*="start"]');
+                
+                if (textarea && generateButton) {
+                    textarea.value = chunkText;
+                    generateButton.click();
+                    waitForRenderResult(chunkIndex);
+                } else {
+                    sendTaskResult(chunkIndex, null, false, 'Không tìm thấy UI elements');
+                }
+            }
+
+            function waitForRenderResult(chunkIndex) {
+                const checkInterval = setInterval(() => {
+                    let blob = null;
+                    if (window.lastAudioBlob) blob = window.lastAudioBlob;
+                    else if (window.chunkBlobs && window.chunkBlobs[chunkIndex]) blob = window.chunkBlobs[chunkIndex];
+                    
+                    if (blob) {
+                        clearInterval(checkInterval);
+                        blobToBase64(blob).then(base64 => {
+                            sendTaskResult(chunkIndex, base64, true, null);
+                        });
+                    }
+                }, 500);
+
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    sendTaskResult(chunkIndex, null, false, 'Timeout');
+                }, 60000);
+            }
+
+            function sendTaskResult(chunkIndex, blobData, success, error) {
+                const workerId = sessionStorage.getItem('multithread_worker_id') || 'unknown';
+                initBroadcastChannel().postMessage({
+                    type: 'TASK_RESULT',
+                    workerId: workerId,
+                    chunkIndex: chunkIndex,
+                    blobData: blobData,
+                    success: success,
+                    error: error
+                });
+            }
+
+            function blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            function setupWorkerListener() {
+                initBroadcastChannel().addEventListener('message', (event) => {
+                    const data = event.data;
+                    if (data.type === 'TASK_ASSIGN') {
+                        const workerId = sessionStorage.getItem('multithread_worker_id') || 'unknown';
+                        if (data.targetWorker === workerId || !data.targetWorker) {
+                            executeRenderTask(data.chunkIndex, data.chunkText, data.payload);
+                        }
+                    }
+                });
+            }
+
+            hideWorkerUI();
+            setupWorkerListener();
+            setTimeout(sendWorkerReady, 2000);
+        }
+
+        window.initMultithreadSystem = function(workerCount = 1) {
+            if (CURRENT_MODE === 'MASTER') {
+                window.MULTITHREAD_MASTER.workerCount = workerCount;
+                window.MULTITHREAD_MASTER.isMultithreadEnabled = workerCount > 1;
+                
+                // Đồng bộ chunks từ window.SI$acY nếu có
+                if (window.SI$acY && Array.isArray(window.SI$acY) && window.SI$acY.length > 0) {
+                    window.MULTITHREAD_MASTER.chunks = window.SI$acY;
+                    window.MULTITHREAD_MASTER.chunkBlobs = new Array(window.SI$acY.length).fill(null);
+                    console.log(`[Multithread] Đã đồng bộ ${window.SI$acY.length} chunks vào MULTITHREAD_MASTER`);
+                } else if (window.MULTITHREAD_MASTER.chunks && window.MULTITHREAD_MASTER.chunks.length > 0) {
+                    window.MULTITHREAD_MASTER.chunkBlobs = new Array(window.MULTITHREAD_MASTER.chunks.length).fill(null);
+                }
+                
+                // Log trạng thái
+                if (window.MULTITHREAD_MASTER.isMultithreadEnabled) {
+                    console.log(`[Multithread] ✅ Multithread mode đã được BẬT với ${workerCount} workers`);
+                } else {
+                    console.log(`[Multithread] ℹ️ Multithread mode đã được TẮT (workerCount = ${workerCount})`);
+                }
+            }
+        };
+
+        if (CURRENT_MODE === 'MASTER') {
+            console.log('[Multithread] Master mode detected');
+        } else {
+            console.log('[Multithread] Worker mode detected');
+        }
+    })();
