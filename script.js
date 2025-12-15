@@ -3311,7 +3311,17 @@ pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0
         return chunks;
     }
 
+    // Hàm phát hiện văn bản tiếng Nhật
+    function isJapaneseText(text) {
+        // Kiểm tra các ký tự tiếng Nhật: Hiragana, Katakana, Kanji
+        const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/;
+        return japaneseRegex.test(text);
+    }
+
     let currentText = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    
+    // Phát hiện ngôn ngữ cho toàn bộ văn bản
+    const containsJapanese = isJapaneseText(currentText);
 
     // ƯU TIÊN: Nếu văn bản có dòng trống phân tách đoạn, tách theo đoạn NGAY LẬP TỨC
     // Điều này giúp văn bản < 700 ký tự nhưng có 2-3 đoạn vẫn tách thành nhiều chunk đúng ý
@@ -3379,16 +3389,38 @@ pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0
             }
         } else if (splitIndex === -1) {
             // Ưu tiên 3: Tìm dấu câu kết thúc câu (đã bỏ qua các dấu trong thẻ)
-            const lastPeriod = tempSlice.lastIndexOf('.');
-            const lastQuestionMark = tempSlice.lastIndexOf('?');
-            const bestEndSentenceIndex = Math.max(lastPeriod, lastQuestionMark);
+            // Xử lý khác nhau cho tiếng Nhật và tiếng Việt
+            let lastPeriod = tempSlice.lastIndexOf('.');
+            let lastQuestionMark = tempSlice.lastIndexOf('?');
+            let lastExclamation = tempSlice.lastIndexOf('!');
+            
+            // Nếu là tiếng Nhật, tìm thêm dấu câu tiếng Nhật
+            if (containsJapanese) {
+                const lastJapanesePeriod = tempSlice.lastIndexOf('。'); // Dấu chấm tiếng Nhật
+                const lastJapaneseComma = tempSlice.lastIndexOf('、'); // Dấu phẩy tiếng Nhật
+                const lastJapaneseQuestion = tempSlice.lastIndexOf('？'); // Dấu hỏi tiếng Nhật
+                const lastJapaneseExclamation = tempSlice.lastIndexOf('！'); // Dấu chấm than tiếng Nhật
+                
+                // So sánh và lấy vị trí lớn nhất
+                lastPeriod = Math.max(lastPeriod, lastJapanesePeriod);
+                lastQuestionMark = Math.max(lastQuestionMark, lastJapaneseQuestion);
+                lastExclamation = Math.max(lastExclamation, lastJapaneseExclamation);
+            }
+            
+            const bestEndSentenceIndex = Math.max(lastPeriod, lastQuestionMark, lastExclamation);
 
             if (bestEndSentenceIndex >= minLength) {
                 // SỬA LỖI: Cắt SAU dấu câu thay vì cắt TẠI dấu câu
                 splitIndex = bestEndSentenceIndex + 1;
             } else {
                 // Ưu tiên 4: Tìm dấu phẩy
-                const lastComma = tempSlice.lastIndexOf(',');
+                let lastComma = tempSlice.lastIndexOf(',');
+                // Nếu là tiếng Nhật, tìm thêm dấu phẩy tiếng Nhật
+                if (containsJapanese) {
+                    const lastJapaneseComma = tempSlice.lastIndexOf('、');
+                    lastComma = Math.max(lastComma, lastJapaneseComma);
+                }
+                
                 if (lastComma >= minLength) {
                     splitIndex = lastComma + 1;
                 } else {
@@ -3398,13 +3430,18 @@ pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0
                         splitIndex = lastSpace;
                     } else {
                         // CẢI THIỆN: Thay vì cắt cứng, tìm điểm cắt gần nhất trong phạm vi cho phép
-                        // Tìm bất kỳ ký tự nào không phải chữ cái/số gần cuối (dấu câu, ký tự đặc biệt)
+                        // Sử dụng 600 thay vì 700 làm giới hạn tìm kiếm
+                        const fallbackMaxLength = 600; // Đổi từ 700 xuống 600
                         let bestSplit = -1;
-                        // Tìm từ cuối lên, trong phạm vi minLength đến actualMaxLength
-                        for (let i = Math.min(actualMaxLength - 1, tempSlice.length - 1); i >= minLength; i--) {
+                        // Tìm từ cuối lên, trong phạm vi minLength đến fallbackMaxLength (600)
+                        const searchEnd = Math.min(fallbackMaxLength - 1, tempSlice.length - 1);
+                        for (let i = searchEnd; i >= minLength; i--) {
                             const char = tempSlice[i];
-                            // Nếu là ký tự không phải chữ cái/số (dấu câu, ký tự đặc biệt)
-                            if (!/[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/.test(char)) {
+                            // Regex cập nhật: Bao gồm cả ký tự tiếng Nhật (Hiragana, Katakana, Kanji)
+                            // \u3040-\u309F: Hiragana
+                            // \u30A0-\u30FF: Katakana  
+                            // \u4E00-\u9FAF: Kanji (CJK Unified Ideographs)
+                            if (!/[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(char)) {
                                 bestSplit = i + 1; // Cắt sau ký tự này
                                 break;
                             }
@@ -3417,11 +3454,11 @@ pemHAD[j$DXl$iN(0x1fb)][j$DXl$iN(0x24b)]=W_gEcM_tWt+'%',SCOcXEQXTPOOS[j$DXl$iN(0
                                 addLogEntry(`⚠️ Chunk được cắt tại vị trí ${bestSplit} (không tìm được điểm cắt lý tưởng)`, 'warning');
                             }
                         } else {
-                            // Giải pháp cuối cùng: Cắt cứng tại độ dài lý tưởng
-                            splitIndex = idealLength;
+                            // Giải pháp cuối cùng: Cắt cứng tại 600 thay vì idealLength
+                            splitIndex = fallbackMaxLength; // Sử dụng 600 thay vì idealLength
                             // Log cảnh báo khi phải cắt cứng
                             if (typeof addLogEntry === 'function') {
-                                addLogEntry(`⚠️ CẢNH BÁO: Phải cắt cứng chunk tại vị trí ${idealLength} - có thể cắt giữa từ/câu!`, 'warning');
+                                addLogEntry(`⚠️ CẢNH BÁO: Phải cắt cứng chunk tại vị trí ${fallbackMaxLength} - có thể cắt giữa từ/câu!`, 'warning');
                             }
                         }
                     }
